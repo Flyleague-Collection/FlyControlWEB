@@ -9,10 +9,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.3.2",
+    "@types/echarts": "^4.9.22",
+    "echarts": "^5.6.0",
     "element-plus": "^2.11.1",
     "unplugin-auto-import": "^20.0.0",
     "unplugin-vue-components": "^29.0.0",
-    "vue": "^3.5.18"
+    "vue": "^3.5.18",
+    "vue-echarts": "^7.0.3",
+    "vue-router": "^4.5.1"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",

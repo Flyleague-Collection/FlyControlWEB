@@ -6,17 +6,26 @@
 
 ---
 [![ReleaseCard]][Release]![ReleaseDataCard]  
-![LastCommitCard]![BuildStateCard]  
-![ProjectLanguageCard]![ProjectLicense]
+![LastCommitCard]![ProjectLanguageCard]![ProjectLicense]
 ---
+
+## 开源协议
+
+MIT License
+
+Copyright © 2025 Half_nothing
+
+无附加条款。
+
+## 行为准则
+
+在[CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)中查阅
 
 [ReleaseCard]: https://img.shields.io/github/v/release/Flyleague-Collection/FlyControlWEB?style=for-the-badge&logo=github
 
 [ReleaseDataCard]: https://img.shields.io/github/release-date/Flyleague-Collection/FlyControlWEB?display_date=published_at&style=for-the-badge&logo=github
 
 [LastCommitCard]: https://img.shields.io/github/last-commit/Flyleague-Collection/FlyControlWEB?display_timestamp=committer&style=for-the-badge&logo=github
-
-[BuildStateCard]: https://img.shields.io/github/actions/workflow/status/Flyleague-Collection/FlyControlWEB/go-build.yml?style=for-the-badge&logo=github
 
 [ProjectLanguageCard]: https://img.shields.io/github/languages/top/Flyleague-Collection/FlyControlWEB?style=for-the-badge&logo=github
 
