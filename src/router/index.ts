@@ -2,8 +2,8 @@ import {createRouter, createWebHistory, RouteRecordRaw} from "vue-router";
 
 const routes: RouteRecordRaw[] = [
     {
-        path: "/",
-        name: "Home",
+        path: "",
+        name: "Root",
         component: () => import("@/pages/Home.vue"),
         meta: {
             requireAuth: true,
@@ -29,9 +29,18 @@ const routes: RouteRecordRaw[] = [
         }
     },
     {
-        path: "/activity",
+        path: "/activities",
         name: "Activity",
         component: () => import("@/pages/Activity.vue"),
+        meta: {
+            requireAuth: false,
+            title: "登录页"
+        }
+    },
+    {
+        path: "/activities/:id",
+        name: "ActivityDetail",
+        component: () => import("@/pages/ActivityDetail.vue"),
         meta: {
             requireAuth: false,
             title: "登录页"

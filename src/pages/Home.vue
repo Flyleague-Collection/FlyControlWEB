@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import {ArrowLeft, ArrowRight, Calendar} from "@element-plus/icons-vue";
 import {use, registerTheme} from "echarts/core";
 import {BarChart} from "echarts/charts";
-import {GridComponent, DatasetComponent, TooltipComponent} from "echarts/components";
+import {GridComponent, DatasetComponent, TitleComponent, TooltipComponent} from "echarts/components";
 import {SVGRenderer} from 'echarts/renderers';
 import VChart from 'vue-echarts';
 import {ref} from 'vue';
+import ActivityCalendar from "@/components/ActivityCalendar.vue";
 
-use([BarChart, TooltipComponent, DatasetComponent, GridComponent, SVGRenderer]);
+use([BarChart, TitleComponent, TooltipComponent, DatasetComponent, GridComponent, SVGRenderer]);
 
-const value = ref(new Date())
 
 const option = ref({
         title: {
@@ -46,14 +45,6 @@ const option = ref({
     }
 );
 
-type Activity = {
-    "time": string,
-    "title": string
-}
-
-const activities = ref(new Map<string, Activity>([
-    ["2025-08-21", {"time": "11:30", "title": "测试活动"}]
-]))
 </script>
 
 <template>
@@ -93,31 +84,7 @@ const activities = ref(new Map<string, Activity>([
                 </el-card>
             </el-col>
         </el-row>
-        <el-card class="calendar">
-            <el-calendar v-model="value">
-                <template #header="{ date }">
-                    <div class="calendar-header">
-                        <el-icon>
-                            <Calendar/>
-                        </el-icon>
-                        <span>联飞活动</span>
-                    </div>
-                    <div>
-                        <el-button :icon="ArrowLeft"></el-button>
-                        <el-button>{{ date }}</el-button>
-                        <el-button :icon="ArrowRight"></el-button>
-                        <el-button>今天</el-button>
-                    </div>
-                </template>
-                <template #date-cell="{ data }">
-                    {{ data.day.split("-")[2] }}
-                    <div v-if="activities.get(data.day) != null" class="activity">
-                        <span>{{ activities.get(data.day)?.time }}</span>
-                        <span>{{ activities.get(data.day)?.title }}</span>
-                    </div>
-                </template>
-            </el-calendar>
-        </el-card>
+        <ActivityCalendar class="calendar"/>
         <el-card class="chart-card">
             <v-chart class="chart" :option="option" autoresize/>
         </el-card>
@@ -125,27 +92,9 @@ const activities = ref(new Map<string, Activity>([
 </template>
 
 <style scoped>
-.activity {
-    margin: 5px 0;
-    border-radius: 5px;
-    background-color: #5856d6;
-    color: #ffffff;
-    display: flex;
-    flex-direction: column;
-
-    span {
-        margin: 1px 0;
-        font-size: 10px;
-        padding: 0 5px;
-    }
-}
-
-.calendar-header {
-    display: flex;
-    align-items: center;
-
-    span {
-        margin: 0 5px;
+@media (max-width: 560px) {
+    .calendar {
+        display: none;
     }
 }
 
@@ -154,8 +103,7 @@ const activities = ref(new Map<string, Activity>([
 }
 
 .welcome,
-.calendar,
-.status-card,
+.el-col,
 .chart-card {
     border-radius: 20px;
     margin-bottom: 15px;
@@ -183,5 +131,4 @@ const activities = ref(new Map<string, Activity>([
     font-size: 1.2rem;
     font-weight: bold;
 }
-
 </style>

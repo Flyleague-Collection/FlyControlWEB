@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import config from "@/config/index.js";
-import {
-    Expand, Fold, HomeFilled, Calendar, MapLocation, UserFilled, Management, Setting, Operation
-} from "@element-plus/icons-vue";
+import {HomeFilled, Calendar, MapLocation, UserFilled, Setting, Operation} from "@element-plus/icons-vue";
 import {ref} from "vue";
 import PersonCard from "@/components/PersonCard.vue";
 
 const menuExpend = ref(true);
+
+const mql = window.matchMedia("(max-width: 1000px)");
+
+mql.onchange = (e) => {
+    if (e.matches && menuExpend.value) {
+        menuExpend.value = false;
+    }
+}
 </script>
 
 <template>
@@ -35,7 +41,7 @@ const menuExpend = ref(true);
                         </el-icon>
                         <span>首页</span>
                     </el-menu-item>
-                    <el-menu-item index="/activity">
+                    <el-menu-item index="/activities">
                         <el-icon>
                             <Calendar/>
                         </el-icon>

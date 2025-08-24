@@ -18,3 +18,12 @@ body {
 .el-calendar-table td.is-selected {
     border-top: #5856d6 2px solid;
 }
+
+.el-card {
+    border-radius: 20px !important;
+    margin-bottom: 15px;
+}
+
+.el-card:hover {
+    transform: translateY(-5px);
+}
