@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import {UserFilled} from "@element-plus/icons-vue";
+import config from "@/config/index.js";
+import {useAuthStore} from "@/store/auth.js";
+import {useServerConfigStore} from "@/store/server_config.js";
 
 defineProps({
     expend: {
@@ -8,15 +11,22 @@ defineProps({
         required: true
     }
 })
+
+const authStore = useAuthStore();
+const serverConfigStore = useServerConfigStore();
 </script>
 
 <template>
     <div class="person-card">
-        <el-avatar :icon="UserFilled"></el-avatar>
+        <el-avatar v-if="authStore.avatarUrl != ''" :src="authStore.avatarUrl"></el-avatar>
+        <el-avatar v-else>{{ authStore.cid }}</el-avatar>
         <Transition>
             <div class="user-info" v-if="expend">
-                <span class="username">Half_nothing</span>
-                <span class="level">C3</span>
+                <span class="username">{{ authStore.username }}</span>
+                <el-tag class="level text-color-white border-none" size="large" round
+                        :color="config.rating_color[authStore.rating]">
+                    {{ serverConfigStore.ratings[authStore.rating + 1].short_name }}
+                </el-tag>
             </div>
         </Transition>
     </div>
@@ -30,8 +40,6 @@ defineProps({
 
 .level {
     font-size: 15px;
-    background-color: #ccafbb;
-    border-radius: 5px;
     padding: 0 10px;
 }
 

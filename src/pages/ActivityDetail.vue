@@ -1,19 +1,96 @@
 <script setup lang="ts">
 import {useActivityStore} from "@/store/activity.js";
 import {useRoute} from "vue-router";
-import {ref} from "vue";
+import {computed, onMounted, onUnmounted, Ref, ref} from "vue";
 import moment from "moment";
 import {Document} from "@element-plus/icons-vue";
+import {Timer} from "@/utils/timer.js";
+import config from "@/config/index.js";
+import ActivityPilotCard from "@/components/card/ActivityPilotCard.vue";
+import ActivityFacilityCard from "@/components/card/ActivityFacilityCard.vue";
+import type {TabBarInstance, TabsPaneContext} from "element-plus";
+import ActivityPilotSignDialog from "@/components/dialog/ActivityPilotSignDialog.vue";
+import {useAuthStore} from "@/store/auth.js";
 
 const route = useRoute();
-
 const activityStore = useActivityStore();
+const authStore = useAuthStore();
+const activity: Ref<ActivityModel | null> = ref(activityStore.getActivityById(Number(route.params.id)))
 
-const activity = ref(activityStore.getActivityById(Number(route.params.id)))
+const timeRemain = ref("0天00:00:00")
+const signTimeout = ref(false)
 
+let timer: Timer | null;
+
+onMounted(() => {
+    const timerOperation: TimerOption = {
+        duration: moment(activity.value?.active_time).diff(moment(), "seconds"),
+        onTick: remainingSeconds => {
+            const time = moment.duration(remainingSeconds, 'seconds')
+            timeRemain.value = moment({
+                day: time.days(),
+                hour: time.hours(),
+                minute: time.minutes(),
+                seconds: time.seconds()
+            }).format('D天HH:mm:ss')
+        },
+        onComplete: () => {
+            signTimeout.value = true
+            timeRemain.value = "报名已截止"
+        },
+        autoStart: true
+    }
+    if (timerOperation.duration <= 0) {
+        timerOperation.onComplete?.()
+        return
+    }
+    timer = new Timer(timerOperation)
+})
+
+onUnmounted(() => {
+    timer?.pause()
+})
+
+const selectedValue = ref("pilot")
+const activityTabs = ref<TabBarInstance>()
+
+const controllerSignButton = () => {
+    selectedValue.value = 'controller';
+    activityTabs.value?.$el?.scrollIntoView({behavior: "smooth"});
+}
+
+const showPilotSignDialog = ref(false);
+const showPilotSignDialogCloseCallback = () => {
+    showPilotSignDialog.value = false;
+}
+
+const activitySignedCallsign = ref("")
+
+const alreadySignedPilot = computed(() => {
+    // @ts-ignore
+    const pilot = activity.value?.pilots?.find((element: ActivityPilotModel) => element.cid == authStore.cid) as ActivityPilotModel
+    if (pilot) {
+        activitySignedCallsign.value = pilot.callsign;
+        return true;
+    }
+    return false;
+})
+
+const alreadySignedController = computed(() => {
+    // @ts-ignore
+    const facility = activity.value?.facilities?.find((element: ActivityFacilityModel) => element.controller?.cid == authStore.cid) as ActivityFacilityModel
+    if (facility) {
+        activitySignedCallsign.value = facility.callsign;
+        return true;
+    }
+    return false;
+})
+
+const alreadySigned = computed(() => alreadySignedPilot.value || alreadySignedController.value)
 </script>
 
 <template>
+    <ActivityPilotSignDialog :show-dialog="showPilotSignDialog" @dialog-close-event="showPilotSignDialogCloseCallback"/>
     <div class="outside-layout">
         <span class="activity-title">{{ activity?.title }}</span>
         <div class="activity-content">
@@ -69,12 +146,54 @@ const activity = ref(activityStore.getActivityById(Number(route.params.id)))
                     </template>
                     {{ activity?.NOTAMS }}
                 </el-descriptions-item>
+                <el-descriptions-item v-if="alreadySigned">
+                    <template #label>
+                        报名信息
+                    </template>
+                    <div class="flex flex-direction-column align-items-center display-over-450px"
+                         v-if="alreadySignedPilot">
+                        <el-tag effect="dark" class="margin-bottom-5px" type="success"> 你已报名作为机组, 呼号:
+                            {{ activitySignedCallsign }}
+                        </el-tag>
+                        <el-tag effect="dark"> 祝联飞顺利</el-tag>
+                    </div>
+                    <div class="flex flex-direction-column align-items-center display-over-450px" v-else>
+                        <el-tag effect="dark" class="margin-bottom-5px" type="success"> 你已报名作为管制, 席位:
+                            {{ activitySignedCallsign }}
+                        </el-tag>
+                        <el-tag effect="dark"> 请及时参与管制协调会, 祝管制顺利</el-tag>
+                    </div>
+                    <div
+                        class="display-none display-flex-below-450px flex-direction-column align-items-center"
+                        v-if="alreadySignedPilot">
+                        <el-tag effect="dark" class="margin-bottom-5px" type="success">你已报名作为机组</el-tag>
+                        <el-tag effect="dark" class="margin-bottom-5px">呼号: {{ activitySignedCallsign }}</el-tag>
+                        <el-tag effect="dark"> 祝联飞顺利</el-tag>
+                    </div>
+                    <div
+                        class="display-none display-flex-below-450px flex-direction-column align-items-center"
+                        v-else>
+                        <el-tag effect="dark" class="margin-bottom-5px" type="success">你已报名作为管制</el-tag>
+                        <el-tag effect="dark" class="margin-bottom-5px">席位: {{ activitySignedCallsign }}</el-tag>
+                        <el-tag effect="dark" class="margin-bottom-5px"> 请及时参与管制协调会</el-tag>
+                        <el-tag effect="dark"> 祝管制顺利</el-tag>
+                    </div>
+                </el-descriptions-item>
                 <el-descriptions-item>
                     <template #label>
                         立刻报名
                     </template>
-                    <el-button type="primary">飞行员报名</el-button>
-                    <el-button type="primary">管制员报名</el-button>
+                    <div class="join-activity" v-if="!alreadySigned">
+                        <el-button type="primary" @click="showPilotSignDialog = true" :disabled="alreadySigned">
+                            飞行员报名
+                        </el-button>
+                        <el-button type="primary" @click="controllerSignButton" :disabled="alreadySigned">
+                            管制员报名
+                        </el-button>
+                    </div>
+                    <div class="join-activity" v-else>
+                        <el-button type="danger">取消报名</el-button>
+                    </div>
                 </el-descriptions-item>
             </el-descriptions>
         </div>
@@ -96,30 +215,66 @@ const activity = ref(activityStore.getActivityById(Number(route.params.id)))
                 </el-card>
             </el-col>
             <el-col :xs="24" :sm="12" :md="6" :lg="6" :xl="6">
-                <el-card class="card">
+                <el-card class="card"
+                         :class="{'activity-signing': !signTimeout, 'activity-signed': signTimeout}">
                     <div class="card-item">
                         <span class="card-item-title">报名剩余时间</span>
-                        <span class="card-item-content">1</span>
+                        <span class="card-item-content">{{ timeRemain }}</span>
                     </div>
                 </el-card>
             </el-col>
             <el-col :xs="24" :sm="12" :md="6" :lg="6" :xl="6">
-                <el-card class="card">
+                <el-card class="card" :class="config.activity_status[activity?.status-1].class">
                     <div class="card-item">
                         <span class="card-item-title">活动状态</span>
-                        <span class="card-item-content">1</span>
+                        <span class="card-item-content">
+                            {{ config.activity_status[activity?.status - 1].text }}
+                        </span>
                     </div>
                 </el-card>
             </el-col>
         </el-row>
-        <el-tabs class="demo-tabs">
-            <el-tab-pane label="飞行员" name="first"></el-tab-pane>
-            <el-tab-pane label="管制员" name="second"></el-tab-pane>
+        <el-tabs class="demo-tabs" :model-value="selectedValue" type="border-card" ref="activityTabs"
+                 @tab-click="(e: TabsPaneContext) => selectedValue=e.paneName as string">
+            <el-tab-pane label="飞行员" name="pilot">
+                <el-row :gutter="15">
+                    <el-col v-for="pilot in activity?.pilots" :xs="24" :sm="12" :md="8" :lg="6" :xl="4">
+                        <ActivityPilotCard :pilot="pilot"/>
+                    </el-col>
+                </el-row>
+            </el-tab-pane>
+            <el-tab-pane label="管制员" name="controller">
+                <el-row :gutter="15" v-if="activity && activity.facilities">
+                    <el-col v-for="facility in activity?.facilities" :xs="24" :sm="24" :md="12" :lg="8" :xl="6">
+                        <ActivityFacilityCard :facility="facility" :already-signed="alreadySigned"/>
+                    </el-col>
+                </el-row>
+            </el-tab-pane>
         </el-tabs>
     </div>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
+.el-tab-pane {
+    padding-top: 10px;
+}
+
+.activity-status-sign,
+.activity-status-under,
+.activity-status-end {
+    font-size: var(--el-font-size-base) !important;
+    font-weight: var(--el-button-font-weight) !important;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border-radius: 10px;
+    height: 87px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1;
+}
+
 .outside-layout {
     display: flex;
     flex-flow: column;
@@ -167,9 +322,15 @@ const activity = ref(activityStore.getActivityById(Number(route.params.id)))
         font-size: 1.2rem;
         font-weight: bold;
     }
+
+    .join-activity {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 }
 
-@media (max-width: 1025px) {
+@media (max-width: 1250px) {
     .outside-layout {
         .activity-img {
             width: 100% !important;
@@ -178,6 +339,26 @@ const activity = ref(activityStore.getActivityById(Number(route.params.id)))
 
         .activity-content {
             flex-direction: column;
+        }
+
+        .join-activity {
+            flex-direction: row;
+
+            * {
+                margin: 0 5px;
+            }
+        }
+    }
+}
+
+@media (max-width: 450px) {
+    .outside-layout {
+        .join-activity {
+            flex-direction: column;
+
+            * {
+                margin: 5px 0;
+            }
         }
     }
 }

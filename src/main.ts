@@ -1,5 +1,4 @@
 import {createApp} from 'vue'
-import "@/assets/css/style.css"
 import App from './App.vue'
 import router from "@/router/index.js";
 import ElementPlus from 'element-plus'
@@ -9,6 +8,10 @@ import Toast, {PluginOptions} from "vue-toastification";
 import "vue-toastification/dist/index.css";
 import pinia from "@/store/index.js";
 import {useActivityStore} from "@/store/activity.js";
+
+import "@/assets/css/style.scss"
+import "@/assets/css/define.scss"
+import "@/assets/css/media.scss"
 
 const app = createApp(App)
 

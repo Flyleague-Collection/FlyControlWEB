@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ActivityCalendar from "@/components/ActivityCalendar.vue";
 import {Clock} from "@element-plus/icons-vue";
-import ActivityCard from "@/components/ActivityCard.vue";
+import ActivityCard from "@/components/card/ActivityCard.vue";
 import {useActivityStore} from "@/store/activity.js";
 import {computed} from "vue";
 

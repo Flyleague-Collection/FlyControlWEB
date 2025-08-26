@@ -1,4 +1,61 @@
 {
     "title": "FlyControlSystem",
-    "icon_path": "/images/half.jpg"
+    "icon_path": "/images/half.jpg",
+    "rating_color": [
+        "#cccccc",
+        "#abb7cc",
+        "#abc1cc",
+        "#a9c2b5",
+        "#ccbdaf",
+        "#ccc4a3",
+        "#c9afcc",
+        "#ccafbb",
+        "#b0b2b6",
+        "#8aa2cc",
+        "#8ab6cc",
+        "#8ab59e",
+        "#cc918f"
+    ],
+    "facility_color": [
+        "#a9c2b5",
+        "#ccb0af",
+        "#ccbdaf",
+        "#ccc4a3",
+        "#c9afcc",
+        "#ccafbb",
+        "#b0b2b6",
+        "#8aa2cc"
+    ],
+    "activity_status": [
+        {
+            "text": "报名中",
+            "class": "activity-status-sign"
+        },
+        {
+            "text": "活动中",
+            "class": "activity-status-under"
+        },
+        {
+            "text": "已结束",
+            "class": "activity-status-end"
+        }
+    ],
+    "pilot_status": [
+        {
+            "text": "已报名",
+            "class": "pilot-status-sign"
+        },
+        {
+            "text": "已放行",
+            "class": "pilot-status-clearance"
+        },
+        {
+            "text": "已起飞",
+            "class": "pilot-status-takeoff"
+        },
+        {
+            "text": "已落地",
+            "class": "pilot-status-land"
+        }
+    ]
 }

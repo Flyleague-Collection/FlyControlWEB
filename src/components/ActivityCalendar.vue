@@ -8,6 +8,8 @@ import {useRouter} from "vue-router";
 const calendar = ref<CalendarInstance>()
 const router = useRouter();
 
+const activityStatusClass = ["activity-status-sign", "activity-status-under", "activity-status-end"]
+
 const activityStore = useActivityStore()
 
 const selectDate = (val: CalendarDateType) => {
@@ -38,6 +40,7 @@ const selectDate = (val: CalendarDateType) => {
             <template #date-cell="{ data }">
                 {{ data.day.split("-")[2] }}
                 <div v-if="activityStore.activitiesRecord[data.day] != null" class="activity"
+                     :class="activityStatusClass[activityStore.activitiesRecord[data.day].status-1]"
                      @click="router.push(`/activities/${activityStore.activitiesRecord[data.day].id}`)">
                     <span>{{ activityStore.activitiesRecord[data.day].start_time }}</span>
                     <span>{{ activityStore.activitiesRecord[data.day].title }}</span>
@@ -47,12 +50,12 @@ const selectDate = (val: CalendarDateType) => {
     </el-card>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 .activity {
     margin: 5px 0;
     border-radius: 5px;
-    background-color: #5856d6;
-    color: #ffffff;
+    background-color: var(--bg-color);
+    color: var(--text-color);
     display: flex;
     flex-direction: column;
     justify-content: flex-start;

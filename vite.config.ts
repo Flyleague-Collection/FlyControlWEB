@@ -32,9 +32,11 @@ export default defineConfig({
         ]
     },
     css: {
+        preprocessorMaxWorkers: true,
         preprocessorOptions: {
             scss: {
-                api: "modern-compiler"
+                api: "modern-compiler",
+                additionalData: `@use "@/assets/css/variables" as *;`
             }
         }
     },
