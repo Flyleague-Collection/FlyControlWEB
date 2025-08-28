@@ -28,26 +28,26 @@ const authStore = useAuthStore();
                 <span v-if="facility.controller">CID: {{ facility.controller?.cid }}</span>
                 <span v-else>CID: 未报名</span>
                 <div class="flex flex-direction-column-below-425px">
-                    <el-tag class="border-none margin-bottom-5px-below-425px" round effect="dark">{{
+                    <el-tag class="border-none margin-bottom-5-below-425px" round effect="dark">{{
                             facility.frequency
                         }}
                     </el-tag>
                     <el-tag v-if="facility.controller"
-                            class="border-none margin-left-10 margin-0-below-425px margin-bottom-5px-below-425px" round
+                            class="border-none margin-left-10 margin-0-below-425px margin-bottom-5-below-425px" round
                             effect="dark" type="success">已报名
                     </el-tag>
                     <el-tag v-else
-                            class="border-none margin-left-10 margin-0-below-425px margin-bottom-5px-below-425px" round
+                            class="border-none margin-left-10 margin-0-below-425px margin-bottom-5-below-425px" round
                             effect="dark"
                             type="warning">未报名
                     </el-tag>
-                    <el-button class="margin-left-10 margin-0-below-425px margin-bottom-5px-below-425px" round
+                    <el-button class="margin-left-10 margin-0-below-425px margin-bottom-5-below-425px" round
                                type="danger" size="small"
                                v-if="facility.controller"
                                :disabled="facility.controller.cid != authStore.cid">
                         取消报名
                     </el-button>
-                    <el-button class="margin-left-10 margin-0-below-425px margin-bottom-5px-below-425px" round
+                    <el-button class="margin-left-10 margin-0-below-425px margin-bottom-5-below-425px" round
                                type="primary" size="small"
                                v-else
                                :disabled="alreadySigned || facility.min_rating > authStore.rating">

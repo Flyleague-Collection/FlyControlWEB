@@ -6,9 +6,11 @@ import {SVGRenderer} from 'echarts/renderers';
 import VChart from 'vue-echarts';
 import {ref} from 'vue';
 import ActivityCalendar from "@/components/ActivityCalendar.vue";
+import {useAuthStore} from "@/store/auth.js";
 
 use([BarChart, TitleComponent, TooltipComponent, DatasetComponent, GridComponent, SVGRenderer]);
 
+const authStore = useAuthStore();
 
 const option = ref({
         title: {
@@ -49,7 +51,7 @@ const option = ref({
 
 <template>
     <div class="container">
-        <el-card class="welcome">欢迎, Half_nothing, 今天想飞哪里？</el-card>
+        <el-card class="welcome">欢迎, {{ authStore.userData.username }}, 今天想飞哪里？</el-card>
         <el-row class="status-card" :gutter="20">
             <el-col :xs="24" :sm="12" :md="6" :lg="6" :xl="6">
                 <el-card class="card">

@@ -34,9 +34,9 @@ mql.onchange = (e) => {
         <el-menu-item
             style="color: var(--el-menu-text-color); user-select: none; padding-left: 6px"
             @click="menuExpend=!menuExpend">
-            <div class="header">
-                <img :src="config.icon_path" alt="Icon"/>
-                <div class="title" v-if="menuExpend">
+            <div class="flex align-items-center">
+                <img class="padding-left-5 padding-right-5" :src="config.icon_path" alt="Icon"/>
+                <div class="title padding-left-5 padding-right-5" v-if="menuExpend">
                     {{ config.title }}
                 </div>
             </div>
@@ -85,9 +85,11 @@ mql.onchange = (e) => {
                 <span>管理员中心</span>
             </template>
             <el-menu-item index="/admin/users">用户管理</el-menu-item>
-            <el-menu-item index="/admin/controllers">管制员申请管理</el-menu-item>
+            <el-menu-item index="/admin/controllers">管制员管理</el-menu-item>
             <el-menu-item index="/admin/activities">活动管理</el-menu-item>
             <el-menu-item index="/admin/tickets">工单管理</el-menu-item>
+            <el-menu-item index="/admin/permissions">权限管理</el-menu-item>
+            <el-menu-item index="/admin/audit">审计日志</el-menu-item>
         </el-sub-menu>
         <el-menu-item index="/profile">
             <el-icon>
@@ -112,11 +114,6 @@ mql.onchange = (e) => {
 
 .menu {
     flex-grow: 1;
-}
-
-.header {
-    display: flex;
-    align-items: center;
 }
 
 .header > * {

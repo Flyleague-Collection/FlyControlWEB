@@ -69,3 +69,60 @@ body {
   --bg-color: #{$pilots-status-land-text-color};
 
 }
+
+:root {
+    --el-bg-color: #ffffff;
+    --el-bg-color-overlay: #f5f7fa;
+    --el-text-color-primary: #303133;
+    --el-text-color-secondary: #909399;
+    --el-border-color: #dcdfe6;
+    --el-fill-color-light: #f5f7fa;
+    --el-fill-color-darker: #e4e7ed;
+    --primary-color: #1a73e8;
+    --secondary-color: #f8f9fa;
+    --accent-color: #ff9800;
+}
+
+[data-theme='dark'] {
+    --el-bg-color: #1a1a1a;
+    --el-bg-color-overlay: #242424;
+    --el-text-color-primary: #ffffff;
+    --el-text-color-secondary: #a8abb2;
+    --el-border-color: #4c4d4f;
+    --el-fill-color-light: #242424;
+    --el-fill-color-darker: #1a1a1a;
+    --primary-color: #4285f4;
+    --secondary-color: #2d2d2d;
+    --accent-color: #ffb74d;
+}
+
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--el-bg-color-overlay);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--el-border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--el-text-color-secondary);
+}
+
+/* 全局字体设置 */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    padding: 0;
+}

@@ -1,6 +1,7 @@
 type Config = {
     icon_path: string;
     title: string;
+    backend_url: string;
     rating_color: string[];
     activity_status: {
         text: string;
@@ -11,3 +12,5 @@ type Config = {
         class: string;
     }[]
 }
+
+type Airports = { value: string }[]

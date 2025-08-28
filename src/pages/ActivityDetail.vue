@@ -3,52 +3,51 @@ import {useActivityStore} from "@/store/activity.js";
 import {useRoute} from "vue-router";
 import {computed, onMounted, onUnmounted, Ref, ref} from "vue";
 import moment from "moment";
+import type {Moment} from "moment";
 import {Document} from "@element-plus/icons-vue";
-import {Timer} from "@/utils/timer.js";
 import config from "@/config/index.js";
 import ActivityPilotCard from "@/components/card/ActivityPilotCard.vue";
 import ActivityFacilityCard from "@/components/card/ActivityFacilityCard.vue";
 import type {TabBarInstance, TabsPaneContext} from "element-plus";
 import ActivityPilotSignDialog from "@/components/dialog/ActivityPilotSignDialog.vue";
 import {useAuthStore} from "@/store/auth.js";
+import {showError} from "@/utils/message.js";
 
 const route = useRoute();
 const activityStore = useActivityStore();
 const authStore = useAuthStore();
-const activity: Ref<ActivityModel | null> = ref(activityStore.getActivityById(Number(route.params.id)))
+const activity: Ref<ActivityModel> = ref({
+    id: 0,
+    publisher: 0,
+    title: "",
+    image_url: "",
+    active_time: "",
+    departure_airport: "",
+    arrival_airport: "",
+    route: "",
+    distance: 0,
+    status: 1,
+    NOTAMS: "",
+    pilots: [],
+    facilities: []
+});
 
-const timeRemain = ref("0天00:00:00")
 const signTimeout = ref(false)
 
-let timer: Timer | null;
+const value = ref<Moment>()
 
-onMounted(() => {
-    const timerOperation: TimerOption = {
-        duration: moment(activity.value?.active_time).diff(moment(), "seconds"),
-        onTick: remainingSeconds => {
-            const time = moment.duration(remainingSeconds, 'seconds')
-            timeRemain.value = moment({
-                day: time.days(),
-                hour: time.hours(),
-                minute: time.minutes(),
-                seconds: time.seconds()
-            }).format('D天HH:mm:ss')
-        },
-        onComplete: () => {
-            signTimeout.value = true
-            timeRemain.value = "报名已截止"
-        },
-        autoStart: true
-    }
-    if (timerOperation.duration <= 0) {
-        timerOperation.onComplete?.()
+onMounted(async () => {
+    console.log(1)
+    const data = await activityStore.getActivityById(Number(route.params.id))
+    if (data == null) {
+        showError("获取活动信息失败")
         return
     }
-    timer = new Timer(timerOperation)
-})
-
-onUnmounted(() => {
-    timer?.pause()
+    activity.value = data
+    value.value = moment(activity.value?.active_time)
+    if (value.value.isBefore(moment())) {
+        signTimeout.value = true
+    }
 })
 
 const selectedValue = ref("pilot")
@@ -68,7 +67,7 @@ const activitySignedCallsign = ref("")
 
 const alreadySignedPilot = computed(() => {
     // @ts-ignore
-    const pilot = activity.value?.pilots?.find((element: ActivityPilotModel) => element.cid == authStore.cid) as ActivityPilotModel
+    const pilot = activity.value?.pilots?.find((element: ActivityPilotModel) => element.cid == authStore.userData.cid) as ActivityPilotModel
     if (pilot) {
         activitySignedCallsign.value = pilot.callsign;
         return true;
@@ -78,7 +77,7 @@ const alreadySignedPilot = computed(() => {
 
 const alreadySignedController = computed(() => {
     // @ts-ignore
-    const facility = activity.value?.facilities?.find((element: ActivityFacilityModel) => element.controller?.cid == authStore.cid) as ActivityFacilityModel
+    const facility = activity.value?.facilities?.find((element: ActivityFacilityModel) => element.controller?.cid == authStore.userData.cid) as ActivityFacilityModel
     if (facility) {
         activitySignedCallsign.value = facility.callsign;
         return true;
@@ -87,6 +86,10 @@ const alreadySignedController = computed(() => {
 })
 
 const alreadySigned = computed(() => alreadySignedPilot.value || alreadySignedController.value)
+
+const controllersNumber = computed(() => {
+    return activity.value?.facilities?.filter((element: ActivityFacilityModel) => element.controller != null).length
+})
 </script>
 
 <template>
@@ -152,13 +155,13 @@ const alreadySigned = computed(() => alreadySignedPilot.value || alreadySignedCo
                     </template>
                     <div class="flex flex-direction-column align-items-center display-over-450px"
                          v-if="alreadySignedPilot">
-                        <el-tag effect="dark" class="margin-bottom-5px" type="success"> 你已报名作为机组, 呼号:
+                        <el-tag effect="dark" class="margin-bottom-5" type="success"> 你已报名作为机组, 呼号:
                             {{ activitySignedCallsign }}
                         </el-tag>
                         <el-tag effect="dark"> 祝联飞顺利</el-tag>
                     </div>
                     <div class="flex flex-direction-column align-items-center display-over-450px" v-else>
-                        <el-tag effect="dark" class="margin-bottom-5px" type="success"> 你已报名作为管制, 席位:
+                        <el-tag effect="dark" class="margin-bottom-5" type="success"> 你已报名作为管制, 席位:
                             {{ activitySignedCallsign }}
                         </el-tag>
                         <el-tag effect="dark"> 请及时参与管制协调会, 祝管制顺利</el-tag>
@@ -166,16 +169,16 @@ const alreadySigned = computed(() => alreadySignedPilot.value || alreadySignedCo
                     <div
                         class="display-none display-flex-below-450px flex-direction-column align-items-center"
                         v-if="alreadySignedPilot">
-                        <el-tag effect="dark" class="margin-bottom-5px" type="success">你已报名作为机组</el-tag>
-                        <el-tag effect="dark" class="margin-bottom-5px">呼号: {{ activitySignedCallsign }}</el-tag>
+                        <el-tag effect="dark" class="margin-bottom-5" type="success">你已报名作为机组</el-tag>
+                        <el-tag effect="dark" class="margin-bottom-5">呼号: {{ activitySignedCallsign }}</el-tag>
                         <el-tag effect="dark"> 祝联飞顺利</el-tag>
                     </div>
                     <div
                         class="display-none display-flex-below-450px flex-direction-column align-items-center"
                         v-else>
-                        <el-tag effect="dark" class="margin-bottom-5px" type="success">你已报名作为管制</el-tag>
-                        <el-tag effect="dark" class="margin-bottom-5px">席位: {{ activitySignedCallsign }}</el-tag>
-                        <el-tag effect="dark" class="margin-bottom-5px"> 请及时参与管制协调会</el-tag>
+                        <el-tag effect="dark" class="margin-bottom-5" type="success">你已报名作为管制</el-tag>
+                        <el-tag effect="dark" class="margin-bottom-5">席位: {{ activitySignedCallsign }}</el-tag>
+                        <el-tag effect="dark" class="margin-bottom-5"> 请及时参与管制协调会</el-tag>
                         <el-tag effect="dark"> 祝管制顺利</el-tag>
                     </div>
                 </el-descriptions-item>
@@ -202,7 +205,7 @@ const alreadySigned = computed(() => alreadySignedPilot.value || alreadySignedCo
                 <el-card class="card">
                     <div class="card-item">
                         <span class="card-item-title">飞行员报名数</span>
-                        <span class="card-item-content">1</span>
+                        <el-statistic class="card-item-content" :value="activity?.pilots?.length"></el-statistic>
                     </div>
                 </el-card>
             </el-col>
@@ -210,7 +213,7 @@ const alreadySigned = computed(() => alreadySignedPilot.value || alreadySignedCo
                 <el-card class="card">
                     <div class="card-item">
                         <span class="card-item-title">管制员报名数</span>
-                        <span class="card-item-content">1</span>
+                        <el-statistic class="card-item-content" :value="controllersNumber"></el-statistic>
                     </div>
                 </el-card>
             </el-col>
@@ -219,14 +222,14 @@ const alreadySigned = computed(() => alreadySignedPilot.value || alreadySignedCo
                          :class="{'activity-signing': !signTimeout, 'activity-signed': signTimeout}">
                     <div class="card-item">
                         <span class="card-item-title">报名剩余时间</span>
-                        <span class="card-item-content">{{ timeRemain }}</span>
+                        <el-countdown class="card-item-content" :value="value" format="HH:mm:ss"/>
                     </div>
                 </el-card>
             </el-col>
             <el-col :xs="24" :sm="12" :md="6" :lg="6" :xl="6">
-                <el-card class="card" :class="config.activity_status[activity?.status-1].class">
+                <el-card class="card" :class="config.activity_status[activity?.status - 1].class">
                     <div class="card-item">
-                        <span class="card-item-title">活动状态</span>
+                        <span class="card-item-title margin-bottom-10">活动状态</span>
                         <span class="card-item-content">
                             {{ config.activity_status[activity?.status - 1].text }}
                         </span>
@@ -245,7 +248,8 @@ const alreadySigned = computed(() => alreadySignedPilot.value || alreadySignedCo
             </el-tab-pane>
             <el-tab-pane label="管制员" name="controller">
                 <el-row :gutter="15" v-if="activity && activity.facilities">
-                    <el-col v-for="facility in activity?.facilities" :xs="24" :sm="24" :md="12" :lg="8" :xl="6">
+                    <el-col v-for="facility in activity?.facilities"
+                            :xs="24" :sm="24" :md="12" :lg="8" :xl="6">
                         <ActivityFacilityCard :facility="facility" :already-signed="alreadySigned"/>
                     </el-col>
                 </el-row>

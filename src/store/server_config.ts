@@ -131,5 +131,5 @@ export const useServerConfigStore = defineStore("server-config-store", () => {
         }
     )
 
-    return {config, ratings: config.value.ratings, facilities: config.value.facilities}
+    return {config, ratings: config.value.ratings, facilities: config.value.facilities, limits: config.value.limits}
 })

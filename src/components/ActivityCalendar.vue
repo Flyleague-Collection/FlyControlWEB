@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import {ArrowLeft, ArrowRight, Calendar} from "@element-plus/icons-vue";
 import type {CalendarDateType, CalendarInstance} from 'element-plus'
-import {ref} from "vue";
+import {onMounted, ref} from "vue";
 import {useActivityStore} from "@/store/activity.js";
 import {useRouter} from "vue-router";
+import {showError} from "@/utils/message.js";
+import moment from "moment";
 
 const calendar = ref<CalendarInstance>()
 const router = useRouter();
@@ -16,6 +18,24 @@ const selectDate = (val: CalendarDateType) => {
     if (!calendar.value) return
     calendar.value.selectDate(val)
 }
+
+const activities = ref<ActivityModel[]>()
+const activitiesRecord = ref<{ [key: string]: ActivityModel }>({})
+
+const fetchActivities = async (date: number) => {
+    const time = moment(date).format('YYYY-MM')
+    const data = await activityStore.getActivities(time)
+    if (data == null) {
+        showError("获取活动数据失败")
+        return
+    }
+    activities.value = data
+    activitiesRecord.value = activityStore.translateActivityData(activities.value)
+}
+
+onMounted(async () => {
+    await fetchActivities(Date.now())
+})
 </script>
 
 <template>
@@ -39,11 +59,11 @@ const selectDate = (val: CalendarDateType) => {
             </template>
             <template #date-cell="{ data }">
                 {{ data.day.split("-")[2] }}
-                <div v-if="activityStore.activitiesRecord[data.day] != null" class="activity"
-                     :class="activityStatusClass[activityStore.activitiesRecord[data.day].status-1]"
-                     @click="router.push(`/activities/${activityStore.activitiesRecord[data.day].id}`)">
-                    <span>{{ activityStore.activitiesRecord[data.day].start_time }}</span>
-                    <span>{{ activityStore.activitiesRecord[data.day].title }}</span>
+                <div v-if="activitiesRecord[data.day] != null" class="activity"
+                     :class="activityStatusClass[activitiesRecord[data.day].status-1]"
+                     @click="router.push(`/activities/${activitiesRecord[data.day].id}`)">
+                    <span>{{ activitiesRecord[data.day].start_time }}</span>
+                    <span>{{ activitiesRecord[data.day].title }}</span>
                 </div>
             </template>
         </el-calendar>

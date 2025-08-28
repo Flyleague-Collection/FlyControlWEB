@@ -1,6 +1,7 @@
 {
     "title": "FlyControlSystem",
     "icon_path": "/images/half.jpg",
+    "backend_url": "/api",
     "rating_color": [
         "#cccccc",
         "#abb7cc",

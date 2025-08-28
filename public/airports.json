@@ -1,0 +1,245 @@
+[
+    {
+        "value": "ZBAA 北京/首都"
+    },
+    {
+        "value": "ZBAD 北京/大兴"
+    },
+    {
+        "value": "ZBDS 鄂尔多斯/伊金霍洛"
+    },
+    {
+        "value": "ZBDT 大同/云冈"
+    },
+    {
+        "value": "ZBER 二连浩特/赛乌素"
+    },
+    {
+        "value": "ZBHH 呼和浩特/白塔"
+    },
+    {
+        "value": "ZBLA 呼伦贝尔/海拉尔"
+    },
+    {
+        "value": "ZBMZ 满洲里/西郊"
+    },
+    {
+        "value": "ZBOW 包头/东河"
+    },
+    {
+        "value": "ZBSJ 石家庄/正定"
+    },
+    {
+        "value": "ZBTJ 天津/滨海"
+    },
+    {
+        "value": "ZBYC 运城/盐湖"
+    },
+    {
+        "value": "ZBYN 太原/武宿"
+    },
+    {
+        "value": "ZGDY 张家界/荷花"
+    },
+    {
+        "value": "ZGGG 广州/白云"
+    },
+    {
+        "value": "ZGHA 长沙/黄花"
+    },
+    {
+        "value": "ZGKL 桂林/两江"
+    },
+    {
+        "value": "ZGNN 南宁/吴圩"
+    },
+    {
+        "value": "ZGOW 揭阳/潮汕"
+    },
+    {
+        "value": "ZGSZ 深圳/宝安"
+    },
+    {
+        "value": "ZHCC 郑州/新郑"
+    },
+    {
+        "value": "ZHEC 鄂州/花湖"
+    },
+    {
+        "value": "ZHES 恩施/许家坪"
+    },
+    {
+        "value": "ZHHH 武汉/天河"
+    },
+    {
+        "value": "ZHYC 宜昌/三峡"
+    },
+    {
+        "value": "ZJHK 海口/美兰"
+    },
+    {
+        "value": "ZJQH 琼海/博鳌"
+    },
+    {
+        "value": "ZJSY 三亚/凤凰"
+    },
+    {
+        "value": "ZLDH 敦煌/莫高"
+    },
+    {
+        "value": "ZLIC 银川/河东"
+    },
+    {
+        "value": "ZLLL 兰州/中川"
+    },
+    {
+        "value": "ZLXN 西宁/曹家堡"
+    },
+    {
+        "value": "ZLXY 西安/咸阳"
+    },
+    {
+        "value": "ZPJH 西双版纳/嘎洒"
+    },
+    {
+        "value": "ZPLJ 丽江/三义"
+    },
+    {
+        "value": "ZPMS 德宏/芒市"
+    },
+    {
+        "value": "ZPPP 昆明/长水"
+    },
+    {
+        "value": "ZSAM 厦门/高崎"
+    },
+    {
+        "value": "ZSCG 常州/奔牛"
+    },
+    {
+        "value": "ZSCN 南昌/昌北"
+    },
+    {
+        "value": "ZSFZ 福州/长乐"
+    },
+    {
+        "value": "ZSHC 杭州/萧山"
+    },
+    {
+        "value": "ZSJN 济南/遥墙"
+    },
+    {
+        "value": "ZSLG 连云港/花果山"
+    },
+    {
+        "value": "ZSLY 临沂/启阳"
+    },
+    {
+        "value": "ZSNB 宁波/栎社"
+    },
+    {
+        "value": "ZSNJ 南京/禄口"
+    },
+    {
+        "value": "ZSNT 南通/兴东"
+    },
+    {
+        "value": "ZSOF 合肥/新桥"
+    },
+    {
+        "value": "ZSPD 上海/浦东"
+    },
+    {
+        "value": "ZSQD 青岛/胶东"
+    },
+    {
+        "value": "ZSQZ 泉州/晋江"
+    },
+    {
+        "value": "ZSSH 淮安/涟水"
+    },
+    {
+        "value": "ZSSS 上海/虹桥"
+    },
+    {
+        "value": "ZSTX 黄山/屯溪"
+    },
+    {
+        "value": "ZSWH 威海/大水泊"
+    },
+    {
+        "value": "ZSWX 无锡/硕放"
+    },
+    {
+        "value": "ZSWZ 温州/龙湾"
+    },
+    {
+        "value": "ZSXZ 徐州/观音"
+    },
+    {
+        "value": "ZSYA 扬州/泰州"
+    },
+    {
+        "value": "ZSYN 盐城/南洋"
+    },
+    {
+        "value": "ZSYT 烟台/蓬莱"
+    },
+    {
+        "value": "ZSYW 义乌"
+    },
+    {
+        "value": "ZSZS 舟山/普陀山"
+    },
+    {
+        "value": "ZUCK 重庆/江北"
+    },
+    {
+        "value": "ZUGY 贵阳/龙洞堡"
+    },
+    {
+        "value": "ZULS 拉萨/贡嘎"
+    },
+    {
+        "value": "ZUTF 成都/天府"
+    },
+    {
+        "value": "ZUUU 成都/双流"
+    },
+    {
+        "value": "ZUXC 西昌/青山"
+    },
+    {
+        "value": "ZWSH 喀什/徕宁"
+    },
+    {
+        "value": "ZWTN 和田/昆冈"
+    },
+    {
+        "value": "ZWWW 乌鲁木齐/天山"
+    },
+    {
+        "value": "ZYCC 长春/龙嘉"
+    },
+    {
+        "value": "ZYHB 哈尔滨/太平"
+    },
+    {
+        "value": "ZYJM 佳木斯"
+    },
+    {
+        "value": "ZYMD 牡丹江/海浪"
+    },
+    {
+        "value": "ZYQQ 齐齐哈尔/三家子"
+    },
+    {
+        "value": "ZYTL 大连/周水子"
+    },
+    {
+        "value": "ZYTX 沈阳/桃仙"
+    },
+    {
+        "value": "ZYYJ 延吉/朝阳川"
+    }
+]
