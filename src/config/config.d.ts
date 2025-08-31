@@ -4,13 +4,19 @@ type Config = {
     backend_url: string;
     rating_color: string[];
     activity_status: {
-        text: string;
+        label: string;
         class: string;
-    }[]
+        value: number;
+    }[];
     pilot_status: {
-        text: string;
+        label: string;
         class: string;
-    }[]
+        value: number;
+    }[];
+    ratings: {
+        label: string;
+        value: number;
+    }[];
 }
 
 type Airports = { value: string }[]

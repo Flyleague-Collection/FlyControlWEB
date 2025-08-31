@@ -3,13 +3,13 @@ import {ref, reactive} from 'vue'
 import {useRouter} from 'vue-router'
 import type {FormInstance, FormRules} from 'element-plus'
 import {User, Lock, Message, Edit} from '@element-plus/icons-vue';
-import {useAuthStore} from "@/store/auth.js";
+import {useUserStore} from "@/store/user.js";
 import {showError, showSuccess} from "@/utils/message.js";
 import config from "@/config/index.js";
 import {useServerConfigStore} from "@/store/server_config.js";
 import request from "@/utils/request.js";
 
-const authStore = useAuthStore()
+const userStore = useUserStore()
 const router = useRouter()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
@@ -124,7 +124,7 @@ const handleRegister = async () => {
     try {
         await formRef.value?.validate()
         loading.value = true
-        await authStore.register(registerForm)
+        await userStore.register(registerForm)
         showSuccess('注册成功，请登录')
         new Promise(_ => setTimeout(goToLogin, 1000))
     } finally {

@@ -29,34 +29,99 @@
     ],
     "activity_status": [
         {
-            "text": "报名中",
-            "class": "activity-status-sign"
+            "label": "报名中",
+            "class": "activity-status-sign",
+            "value": 1
         },
         {
-            "text": "活动中",
-            "class": "activity-status-under"
+            "label": "活动中",
+            "class": "activity-status-under",
+            "value": 2
         },
         {
-            "text": "已结束",
-            "class": "activity-status-end"
+            "label": "已结束",
+            "class": "activity-status-end",
+            "value": 3
         }
     ],
     "pilot_status": [
         {
-            "text": "已报名",
-            "class": "pilot-status-sign"
+            "label": "已报名",
+            "class": "pilot-status-sign",
+            "value": 1
         },
         {
-            "text": "已放行",
-            "class": "pilot-status-clearance"
+            "label": "已放行",
+            "class": "pilot-status-clearance",
+            "value": 2
         },
         {
-            "text": "已起飞",
-            "class": "pilot-status-takeoff"
+            "label": "已起飞",
+            "class": "pilot-status-takeoff",
+            "value": 3
         },
         {
-            "text": "已落地",
-            "class": "pilot-status-land"
+            "label": "已落地",
+            "class": "pilot-status-land",
+            "value": 4
+        }
+    ],
+    "ratings": [
+        {
+            "value": -1,
+            "label": "Ban/已封禁"
+        },
+        {
+            "value": 0,
+            "label": "Pilot/飞行员"
+        },
+        {
+            "value": 1,
+            "label": "OBS/观察员"
+        },
+        {
+            "value": 2,
+            "label": "S1/放行/地面"
+        },
+        {
+            "value": 3,
+            "label": "S2/塔台"
+        },
+        {
+            "value": 4,
+            "label": "S3/进近"
+        },
+        {
+            "value": 5,
+            "label": "C1/区域"
+        },
+        {
+            "value": 6,
+            "label": "C2/区域"
+        },
+        {
+            "value": 7,
+            "label": "C3/区域"
+        },
+        {
+            "value": 8,
+            "label": "I1/教员"
+        },
+        {
+            "value": 9,
+            "label": "I2/教员"
+        },
+        {
+            "value": 10,
+            "label": "I3/教员"
+        },
+        {
+            "value": 11,
+            "label": "SUP/监察员"
+        },
+        {
+            "value": 12,
+            "label": "ADM/管理员"
         }
     ]
 }

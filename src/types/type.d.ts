@@ -11,8 +11,9 @@ type ActivityModel = {
     status: number;
     NOTAMS: string;
     start_time?: string;
-    pilots?: ActivityPilotModel[];
-    facilities?: ActivityFacilityModel[];
+    pilots: ActivityPilotModel[];
+    controllers: ActivityControllerModel[];
+    facilities: ActivityFacilityModel[];
 }
 
 type ActivityControllerModel = {

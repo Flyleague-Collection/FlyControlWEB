@@ -17,3 +17,53 @@ type HistoryModel = {
     online_time: number;
 }
 
+type OnlineControllerModel = {
+    atc_info: string[];
+    callsign: string;
+    cid: number;
+    facility: number;
+    frequency: number;
+    latitude: number;
+    logon_time: string;
+    longitude: number;
+    rating: number;
+    real_name: string;
+}
+
+type OnlinePilotModel = {
+    altitude: number;
+    callsign: string;
+    cid: number;
+    flight_plan: FlightPlanModel;
+    ground_speed: number;
+    heading: number;
+    latitude: number;
+    logon_time: string;
+    longitude: number;
+    paths: {
+        latitude: number;
+        longitude: number;
+        altitude: number;
+    }[];
+    real_name: string;
+    transponder: string;
+}
+
+type FlightPlanModel = {
+    aircraft: string;
+    alternate: string;
+    altitude: string;
+    arrival: string;
+    callsign: string;
+    cid: number;
+    cruise_tas: number;
+    departure: string;
+    departure_time: number;
+    flight_rules: string;
+    fuel_time_hour: string;
+    fuel_time_minute: string;
+    remarks: string;
+    route: string;
+    route_time_hour: string;
+    route_time_minute: string;
+}

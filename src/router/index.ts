@@ -1,5 +1,5 @@
 import {createRouter, createWebHistory, RouteRecordRaw} from "vue-router";
-import {useAuthStore} from "@/store/auth.js";
+import {useUserStore} from "@/store/user.js";
 
 const routes: RouteRecordRaw[] = [
     {
@@ -14,7 +14,7 @@ const routes: RouteRecordRaw[] = [
     {
         path: "/login",
         name: "Login",
-        component: () => import("@/pages/Login.vue"),
+        component: () => import("@/pages/user/Login.vue"),
         meta: {
             requireAuth: false,
             title: "登录页"
@@ -23,7 +23,7 @@ const routes: RouteRecordRaw[] = [
     {
         path: "/register",
         name: "Register",
-        component: () => import("@/pages/Register.vue"),
+        component: () => import("@/pages/user/Register.vue"),
         meta: {
             requireAuth: false,
             title: "注册页"
@@ -49,7 +49,7 @@ const routes: RouteRecordRaw[] = [
             {
                 path: "/activities",
                 name: "Activity",
-                component: () => import("@/pages/Activity.vue"),
+                component: () => import("@/pages/activity/Activity.vue"),
                 meta: {
                     requireAuth: true,
                     title: "活动页"
@@ -58,7 +58,7 @@ const routes: RouteRecordRaw[] = [
             {
                 path: "/activities/:id",
                 name: "ActivityDetail",
-                component: () => import("@/pages/ActivityDetail.vue"),
+                component: () => import("@/pages/activity/ActivityDetail.vue"),
                 meta: {
                     requireAuth: true,
                     title: "活动详情页"
@@ -74,18 +74,54 @@ const routes: RouteRecordRaw[] = [
                 }
             },
             {
-                path: "/controller",
-                name: "Controller",
-                component: () => import("@/pages/Controller.vue"),
+                path: "/controllers/application",
+                name: "Application",
+                component: () => import("@/pages/controller/Application.vue"),
                 meta: {
                     requireAuth: true,
-                    title: "管制员中心"
+                    title: "管制员申请"
+                }
+            },
+            {
+                path: "/controllers/activity",
+                name: "ControllerActivity",
+                component: () => import("@/pages/controller/Activity.vue"),
+                meta: {
+                    requireAuth: true,
+                    title: "活动登记"
+                }
+            },
+            {
+                path: "/controllers/booking",
+                name: "Booking",
+                component: () => import("@/pages/controller/Booking.vue"),
+                meta: {
+                    requireAuth: true,
+                    title: "考核预约"
+                }
+            },
+            {
+                path: "/controllers/profile",
+                name: "ControllerProfile",
+                component: () => import("@/pages/controller/Profile.vue"),
+                meta: {
+                    requireAuth: true,
+                    title: "管制员档案"
+                }
+            },
+            {
+                path: "/ticket",
+                name: "Ticket",
+                component: () => import("@/pages/Ticket.vue"),
+                meta: {
+                    requireAuth: true,
+                    title: "投诉与反馈中心"
                 }
             },
             {
                 path: "/admin/users",
                 name: "AdminUsers",
-                component: () => import("@/pages/admin/Users.vue"),
+                component: () => import("@/pages/admin/user/Users.vue"),
                 meta: {
                     requireAuth: true,
                     title: "用户管理"
@@ -94,7 +130,7 @@ const routes: RouteRecordRaw[] = [
             {
                 path: "/admin/controllers",
                 name: "AdminControllers",
-                component: () => import("@/pages/admin/Controllers.vue"),
+                component: () => import("@/pages/admin/controller/Controllers.vue"),
                 meta: {
                     requireAuth: true,
                     title: "管制员管理"
@@ -157,7 +193,7 @@ const routes: RouteRecordRaw[] = [
             {
                 path: "/profile",
                 name: "Profile",
-                component: () => import("@/pages/Settings.vue"),
+                component: () => import("@/pages/user/Settings.vue"),
                 meta: {
                     requireAuth: true,
                     title: "个人中心"
@@ -177,10 +213,9 @@ router.beforeEach((to, _, next) => {
     if (to.meta.title != null) {
         document.title = to.meta.title;
     }
-    const authStore = useAuthStore();
+    const userStore = useUserStore();
     if (to.meta.requireAuth) {
-        console.log(authStore.isLogin)
-        if (authStore.isLogin) {
+        if (userStore.isLogin) {
             next()
         } else {
             next({

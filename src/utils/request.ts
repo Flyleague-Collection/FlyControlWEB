@@ -1,5 +1,5 @@
 import axios from 'axios'
-import {useAuthStore} from "@/store/auth.js";
+import {useUserStore} from "@/store/user.js";
 import config from "@/config/index.js";
 import {showApiErrorMsg} from "@/utils/message.js";
 
@@ -10,9 +10,9 @@ const request = axios.create({
 
 request.interceptors.request.use(
     config => {
-        const authStore = useAuthStore()
-        if (authStore.isLogin) {
-            config.headers.Authorization = `Bearer ${authStore.token}`
+        const userStore = useUserStore()
+        if (userStore.isLogin) {
+            config.headers.Authorization = `Bearer ${userStore.token}`
         }
         return config
     },
@@ -23,7 +23,9 @@ request.interceptors.request.use(
 
 request.interceptors.response.use(
     response => {
-        response.data = response.data.data
+        if (response.data.data) {
+            response.data = response.data.data
+        }
         return response;
     },
     error => {

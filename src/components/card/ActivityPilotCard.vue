@@ -15,13 +15,13 @@ defineProps<{ pilot: ActivityPilotModel }>()
             <div class="flex flex-direction-column margin-left-10">
                 <span class="callsign">{{ pilot.callsign }}</span>
                 <span>CID: {{ pilot.cid }}</span>
-                <div class="flex" :class="config.pilot_status[pilot.status - 1].class">
+                <div class="flex" :class="config.pilot_status[pilot.status].class">
                     <el-tag class="border-none" round effect="dark">{{
                             pilot.aircraft_type
                         }}
                     </el-tag>
                     <el-tag class="pilot-status margin-left-10 border-none" round effect="dark">
-                        {{ config.pilot_status[pilot.status - 1].text }}
+                        {{ config.pilot_status[pilot.status].text }}
                     </el-tag>
                 </div>
             </div>

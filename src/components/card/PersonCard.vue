@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import config from "@/config/index.js";
-import {useAuthStore} from "@/store/auth.js";
+import {useUserStore} from "@/store/user.js";
 import {useServerConfigStore} from "@/store/server_config.js";
 
 defineProps({
@@ -11,10 +11,10 @@ defineProps({
     }
 })
 
-const authStore = useAuthStore();
+const userStore = useUserStore();
 const serverConfigStore = useServerConfigStore();
 
-const userData = authStore.userData;
+const userData = userStore.userData;
 </script>
 
 <template>

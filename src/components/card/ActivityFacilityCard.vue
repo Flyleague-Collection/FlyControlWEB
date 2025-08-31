@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import config from "@/config/index.js";
 import {useServerConfigStore} from "@/store/server_config.js";
-import {useAuthStore} from "@/store/auth.js";
+import {useUserStore} from "@/store/user.js";
 
 defineProps<{ facility: ActivityFacilityModel, alreadySigned: boolean }>();
+const emits = defineEmits<{
+    (e: "ControllerSignEvent", facilityId: number): void
+    (e: "ControllerUnsignEvent", facilityId: number): void
+}>()
 
 const serverConfigStore = useServerConfigStore();
 const ratings = serverConfigStore.ratings;
-const authStore = useAuthStore();
+const userStore = useUserStore();
 </script>
 
 <template>
@@ -44,13 +48,15 @@ const authStore = useAuthStore();
                     <el-button class="margin-left-10 margin-0-below-425px margin-bottom-5-below-425px" round
                                type="danger" size="small"
                                v-if="facility.controller"
-                               :disabled="facility.controller.cid != authStore.cid">
+                               :disabled="facility.controller.cid != userStore.userData.cid"
+                               @click="emits('ControllerUnsignEvent', facility.id)">
                         取消报名
                     </el-button>
                     <el-button class="margin-left-10 margin-0-below-425px margin-bottom-5-below-425px" round
                                type="primary" size="small"
                                v-else
-                               :disabled="alreadySigned || facility.min_rating > authStore.rating">
+                               :disabled="alreadySigned || facility.min_rating > userStore.userData.rating"
+                               @click="emits('ControllerSignEvent', facility.id)">
                         立刻报名
                     </el-button>
                 </div>

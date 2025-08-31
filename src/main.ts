@@ -12,6 +12,7 @@ import {useActivityStore} from "@/store/activity.js";
 import "@/assets/css/style.scss"
 import "@/assets/css/define.scss"
 import "@/assets/css/media.scss"
+import {useUserStore} from "@/store/user.js";
 
 const app = createApp(App)
 
@@ -28,6 +29,7 @@ app.use(pinia)
 
 app.use(router)
 
-useActivityStore()
-
-app.mount('#app')
+const userStore = useUserStore();
+userStore.initUser().finally(() => {
+    app.mount('#app')
+})

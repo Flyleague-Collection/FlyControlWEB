@@ -5,7 +5,7 @@ import {onMounted, ref} from "vue";
 import {useActivityStore} from "@/store/activity.js";
 import {useRouter} from "vue-router";
 import {showError} from "@/utils/message.js";
-import moment from "moment";
+import moment, {Moment} from "moment";
 
 const calendar = ref<CalendarInstance>()
 const router = useRouter();
@@ -14,16 +14,29 @@ const activityStatusClass = ["activity-status-sign", "activity-status-under", "a
 
 const activityStore = useActivityStore()
 
+let currentTime: Moment
+
 const selectDate = (val: CalendarDateType) => {
     if (!calendar.value) return
     calendar.value.selectDate(val)
+    switch (val) {
+        case "next-month":
+            fetchActivities(currentTime.add('months', 1))
+            break
+        case "prev-month":
+            fetchActivities(currentTime.subtract('months', 1))
+            break
+        case "today":
+            currentTime = moment()
+            fetchActivities(moment())
+    }
 }
 
 const activities = ref<ActivityModel[]>()
 const activitiesRecord = ref<{ [key: string]: ActivityModel }>({})
 
-const fetchActivities = async (date: number) => {
-    const time = moment(date).format('YYYY-MM')
+const fetchActivities = async (date: Moment) => {
+    const time = date.format('YYYY-MM')
     const data = await activityStore.getActivities(time)
     if (data == null) {
         showError("获取活动数据失败")
@@ -34,7 +47,8 @@ const fetchActivities = async (date: number) => {
 }
 
 onMounted(async () => {
-    await fetchActivities(Date.now())
+    currentTime = moment()
+    await fetchActivities(currentTime)
 })
 </script>
 

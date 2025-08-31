@@ -1,128 +1,148 @@
 @use "variables";
 
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 html {
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
 body {
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
 #app {
-    height: 100%;
-    width: 100%;
+  height: 100%;
+  width: 100%;
+}
+
+.el-upload-list--picture-card {
+  flex-wrap: nowrap !important;
+}
+
+.el-upload-list__item {
+  width: variables.$image-upload-width !important;
+  height: variables.$image-upload-height !important;
+}
+
+.el-upload--picture-card {
+  width: variables.$image-upload-width !important;
+  height: variables.$image-upload-height !important;
 }
 
 .el-calendar-table td.is-selected {
-    border-top: #5856d6 2px solid;
+  border-top: #5856d6 2px solid;
 }
 
 .el-card {
-    border-radius: 20px !important;
-    margin-bottom: 15px;
+  border-radius: 20px !important;
+  margin-bottom: 15px;
 }
 
 .el-card:hover {
-    transform: translateY(-5px);
+  transform: translateY(-5px);
 }
 
 .activity-signing {
-  --el-fill-color-blank: #{$activity-status-active-bg-color};
+  --el-fill-color-blank: #{variables.$activity-status-active-bg-color};
 }
 
 .activity-signed {
-  --el-fill-color-blank: #{$activity-status-close-bg-color};
+  --el-fill-color-blank: #{variables.$activity-status-close-bg-color};
 }
 
 .activity-status-sign {
-  --text-color: #{$activity-status-text-color};
-  --bg-color: #{$activity-status-open-bg-color};
+  --text-color: #{variables.$activity-status-text-color};
+  --bg-color: #{variables.$activity-status-open-bg-color};
 }
 
 .activity-status-under {
-  --text-color: #{$activity-status-text-color};
-  --bg-color: #{$activity-status-active-bg-color};
+  --text-color: #{variables.$activity-status-text-color};
+  --bg-color: #{variables.$activity-status-active-bg-color};
 }
 
 .activity-status-end {
-  --text-color: #{$activity-status-text-color};
-  --bg-color: #{$activity-status-close-bg-color};
+  --text-color: #{variables.$activity-status-text-color};
+  --bg-color: #{variables.$activity-status-close-bg-color};
 }
 
 .pilot-status-sign {
-  --bg-color: #{$pilots-status-sign-text-color}
+  --bg-color: #{variables.$pilots-status-sign-text-color}
 }
 
 .pilot-status-clearance {
-  --bg-color: #{$pilots-status-clearance-text-color};
+  --bg-color: #{variables.$pilots-status-clearance-text-color};
 }
 
 .pilot-status-takeoff {
-  --bg-color: #{$pilots-status-takeoff-text-color};
+  --bg-color: #{variables.$pilots-status-takeoff-text-color};
 }
 
 .pilot-status-land {
-  --bg-color: #{$pilots-status-land-text-color};
+  --bg-color: #{variables.$pilots-status-land-text-color};
 
 }
 
 :root {
-    --el-bg-color: #ffffff;
-    --el-bg-color-overlay: #f5f7fa;
-    --el-text-color-primary: #303133;
-    --el-text-color-secondary: #909399;
-    --el-border-color: #dcdfe6;
-    --el-fill-color-light: #f5f7fa;
-    --el-fill-color-darker: #e4e7ed;
-    --primary-color: #1a73e8;
-    --secondary-color: #f8f9fa;
-    --accent-color: #ff9800;
+  --el-bg-color: #ffffff;
+  --el-bg-color-overlay: #f5f7fa;
+  --el-text-color-primary: #303133;
+  --el-text-color-secondary: #909399;
+  --el-border-color: #dcdfe6;
+  --el-fill-color-light: #f5f7fa;
+  --el-fill-color-darker: #e4e7ed;
+  --primary-color: #1a73e8;
+  --secondary-color: #f8f9fa;
+  --accent-color: #ff9800;
 }
 
 [data-theme='dark'] {
-    --el-bg-color: #1a1a1a;
-    --el-bg-color-overlay: #242424;
-    --el-text-color-primary: #ffffff;
-    --el-text-color-secondary: #a8abb2;
-    --el-border-color: #4c4d4f;
-    --el-fill-color-light: #242424;
-    --el-fill-color-darker: #1a1a1a;
-    --primary-color: #4285f4;
-    --secondary-color: #2d2d2d;
-    --accent-color: #ffb74d;
+  --el-bg-color: #1a1a1a;
+  --el-bg-color-overlay: #242424;
+  --el-text-color-primary: #ffffff;
+  --el-text-color-secondary: #a8abb2;
+  --el-border-color: #4c4d4f;
+  --el-fill-color-light: #242424;
+  --el-fill-color-darker: #1a1a1a;
+  --primary-color: #4285f4;
+  --secondary-color: #2d2d2d;
+  --accent-color: #ffb74d;
 }
 
 * {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--el-bg-color-overlay);
+  background: var(--el-bg-color-overlay);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--el-border-color);
-    border-radius: 4px;
+  background: var(--el-border-color);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--el-text-color-secondary);
+  background: var(--el-text-color-secondary);
 }
 
 /* 全局字体设置 */
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    margin: 0;
-    padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
 }

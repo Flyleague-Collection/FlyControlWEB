@@ -11,6 +11,7 @@ declare module 'vue' {
     ActivityCal: typeof import('./src/components/ActivityCal.vue')['default']
     ActivityCalendar: typeof import('./src/components/ActivityCalendar.vue')['default']
     ActivityCard: typeof import('./src/components/card/ActivityCard.vue')['default']
+    ActivityEditCard: typeof import('./src/components/card/ActivityEditCard.vue')['default']
     ActivityFacilityCard: typeof import('./src/components/card/ActivityFacilityCard.vue')['default']
     ActivityPilotCard: typeof import('./src/components/card/ActivityPilotCard.vue')['default']
     ActivityPilotSignDialog: typeof import('./src/components/dialog/ActivityPilotSignDialog.vue')['default']

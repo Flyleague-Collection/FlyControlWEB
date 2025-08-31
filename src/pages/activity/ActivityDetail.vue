@@ -10,12 +10,12 @@ import ActivityPilotCard from "@/components/card/ActivityPilotCard.vue";
 import ActivityFacilityCard from "@/components/card/ActivityFacilityCard.vue";
 import type {TabBarInstance, TabsPaneContext} from "element-plus";
 import ActivityPilotSignDialog from "@/components/dialog/ActivityPilotSignDialog.vue";
-import {useAuthStore} from "@/store/auth.js";
-import {showError} from "@/utils/message.js";
+import {useUserStore} from "@/store/user.js";
+import {showError, showSuccess} from "@/utils/message.js";
 
 const route = useRoute();
 const activityStore = useActivityStore();
-const authStore = useAuthStore();
+const userStore = useUserStore();
 const activity: Ref<ActivityModel> = ref({
     id: 0,
     publisher: 0,
@@ -29,6 +29,7 @@ const activity: Ref<ActivityModel> = ref({
     status: 1,
     NOTAMS: "",
     pilots: [],
+    controllers: [],
     facilities: []
 });
 
@@ -36,17 +37,34 @@ const signTimeout = ref(false)
 
 const value = ref<Moment>()
 
-onMounted(async () => {
-    console.log(1)
+const getActivityInfo = async () => {
     const data = await activityStore.getActivityById(Number(route.params.id))
     if (data == null) {
         showError("获取活动信息失败")
         return
     }
     activity.value = data
+    for (const controller of data.controllers) {
+        for (const facility of data.facilities) {
+            if (facility.controller) {
+                continue
+            }
+            if (facility.id == controller.facility_id) {
+                facility.controller = controller
+                break
+            }
+        }
+    }
     value.value = moment(activity.value?.active_time)
     if (value.value.isBefore(moment())) {
         signTimeout.value = true
+    }
+}
+
+onMounted(async () => {
+    await getActivityInfo();
+    if (!activity.value.image_url.startsWith("http") && activity.value.image_url != "") {
+        activity.value.image_url = `${config.backend_url}/${activity.value.image_url}`
     }
 })
 
@@ -59,15 +77,26 @@ const controllerSignButton = () => {
 }
 
 const showPilotSignDialog = ref(false);
-const showPilotSignDialogCloseCallback = () => {
-    showPilotSignDialog.value = false;
+
+const submitPilotSign = async (data: ActivityPilotSignForm) => {
+    if (await activityStore.pilotSign(activity.value.id, data)) {
+        showSuccess("报名成功, 祝联飞顺利")
+        await getActivityInfo()
+    }
+}
+
+const submitControllerSign = async (facilityId: number) => {
+    if (await activityStore.controllerSign(activity.value.id, facilityId)) {
+        showSuccess("报名成功, 请及时参加管制协调会")
+        await getActivityInfo()
+    }
 }
 
 const activitySignedCallsign = ref("")
 
 const alreadySignedPilot = computed(() => {
     // @ts-ignore
-    const pilot = activity.value?.pilots?.find((element: ActivityPilotModel) => element.cid == authStore.userData.cid) as ActivityPilotModel
+    const pilot = activity.value?.pilots?.find((element: ActivityPilotModel) => element.cid == userStore.userData.cid) as ActivityPilotModel
     if (pilot) {
         activitySignedCallsign.value = pilot.callsign;
         return true;
@@ -77,7 +106,7 @@ const alreadySignedPilot = computed(() => {
 
 const alreadySignedController = computed(() => {
     // @ts-ignore
-    const facility = activity.value?.facilities?.find((element: ActivityFacilityModel) => element.controller?.cid == authStore.userData.cid) as ActivityFacilityModel
+    const facility = activity.value?.facilities?.find((element: ActivityFacilityModel) => element.controller?.cid == userStore.userData.cid) as ActivityFacilityModel
     if (facility) {
         activitySignedCallsign.value = facility.callsign;
         return true;
@@ -87,13 +116,30 @@ const alreadySignedController = computed(() => {
 
 const alreadySigned = computed(() => alreadySignedPilot.value || alreadySignedController.value)
 
-const controllersNumber = computed(() => {
-    return activity.value?.facilities?.filter((element: ActivityFacilityModel) => element.controller != null).length
-})
+const cancelSign = async (facilityId: number = 0) => {
+    if (!alreadySigned.value) {
+        return
+    }
+    if (alreadySignedPilot.value) {
+        if (await activityStore.pilotUnsign(activity.value.id)) {
+            showSuccess("取消报名成功, 下次活动再见")
+        }
+    }
+    if (alreadySignedController.value) {
+        if (facilityId == 0) {
+            const facility = activity.value.facilities?.find((element: ActivityFacilityModel) => element.controller?.cid == userStore.userData.cid) as ActivityFacilityModel
+            facilityId = facility.id
+        }
+        if (await activityStore.controllerUnsign(activity.value.id, facilityId)) {
+            showSuccess("取消报名成功, 下次活动再见")
+        }
+    }
+    await getActivityInfo()
+}
 </script>
 
 <template>
-    <ActivityPilotSignDialog :show-dialog="showPilotSignDialog" @dialog-close-event="showPilotSignDialogCloseCallback"/>
+    <ActivityPilotSignDialog v-model="showPilotSignDialog" @dialog-confirm-event="submitPilotSign"/>
     <div class="outside-layout">
         <span class="activity-title">{{ activity?.title }}</span>
         <div class="activity-content">
@@ -155,31 +201,31 @@ const controllersNumber = computed(() => {
                     </template>
                     <div class="flex flex-direction-column align-items-center display-over-450px"
                          v-if="alreadySignedPilot">
-                        <el-tag effect="dark" class="margin-bottom-5" type="success"> 你已报名作为机组, 呼号:
+                        <el-tag effect="dark" class="margin-bottom-5" type="success">你已报名作为机组, 呼号:
                             {{ activitySignedCallsign }}
                         </el-tag>
-                        <el-tag effect="dark"> 祝联飞顺利</el-tag>
+                        <el-tag effect="dark">祝联飞顺利</el-tag>
                     </div>
                     <div class="flex flex-direction-column align-items-center display-over-450px" v-else>
-                        <el-tag effect="dark" class="margin-bottom-5" type="success"> 你已报名作为管制, 席位:
+                        <el-tag effect="dark" class="margin-bottom-5" type="success">你已报名作为管制, 席位:
                             {{ activitySignedCallsign }}
                         </el-tag>
-                        <el-tag effect="dark"> 请及时参与管制协调会, 祝管制顺利</el-tag>
+                        <el-tag effect="dark">请及时参与管制协调会, 祝管制顺利</el-tag>
                     </div>
                     <div
                         class="display-none display-flex-below-450px flex-direction-column align-items-center"
                         v-if="alreadySignedPilot">
                         <el-tag effect="dark" class="margin-bottom-5" type="success">你已报名作为机组</el-tag>
                         <el-tag effect="dark" class="margin-bottom-5">呼号: {{ activitySignedCallsign }}</el-tag>
-                        <el-tag effect="dark"> 祝联飞顺利</el-tag>
+                        <el-tag effect="dark">祝联飞顺利</el-tag>
                     </div>
                     <div
                         class="display-none display-flex-below-450px flex-direction-column align-items-center"
                         v-else>
                         <el-tag effect="dark" class="margin-bottom-5" type="success">你已报名作为管制</el-tag>
                         <el-tag effect="dark" class="margin-bottom-5">席位: {{ activitySignedCallsign }}</el-tag>
-                        <el-tag effect="dark" class="margin-bottom-5"> 请及时参与管制协调会</el-tag>
-                        <el-tag effect="dark"> 祝管制顺利</el-tag>
+                        <el-tag effect="dark" class="margin-bottom-5">请及时参与管制协调会</el-tag>
+                        <el-tag effect="dark">祝管制顺利</el-tag>
                     </div>
                 </el-descriptions-item>
                 <el-descriptions-item>
@@ -195,7 +241,7 @@ const controllersNumber = computed(() => {
                         </el-button>
                     </div>
                     <div class="join-activity" v-else>
-                        <el-button type="danger">取消报名</el-button>
+                        <el-button type="danger" @click="_ => cancelSign()">取消报名</el-button>
                     </div>
                 </el-descriptions-item>
             </el-descriptions>
@@ -205,7 +251,7 @@ const controllersNumber = computed(() => {
                 <el-card class="card">
                     <div class="card-item">
                         <span class="card-item-title">飞行员报名数</span>
-                        <el-statistic class="card-item-content" :value="activity?.pilots?.length"></el-statistic>
+                        <el-statistic class="card-item-content" :value="activity.pilots?.length"></el-statistic>
                     </div>
                 </el-card>
             </el-col>
@@ -213,7 +259,7 @@ const controllersNumber = computed(() => {
                 <el-card class="card">
                     <div class="card-item">
                         <span class="card-item-title">管制员报名数</span>
-                        <el-statistic class="card-item-content" :value="controllersNumber"></el-statistic>
+                        <el-statistic class="card-item-content" :value="activity.controllers?.length"></el-statistic>
                     </div>
                 </el-card>
             </el-col>
@@ -250,7 +296,9 @@ const controllersNumber = computed(() => {
                 <el-row :gutter="15" v-if="activity && activity.facilities">
                     <el-col v-for="facility in activity?.facilities"
                             :xs="24" :sm="24" :md="12" :lg="8" :xl="6">
-                        <ActivityFacilityCard :facility="facility" :already-signed="alreadySigned"/>
+                        <ActivityFacilityCard :facility="facility" :already-signed="alreadySigned"
+                                              @controller-sign-event="submitControllerSign"
+                                              @controller-unsign-event="cancelSign"/>
                     </el-col>
                 </el-row>
             </el-tab-pane>

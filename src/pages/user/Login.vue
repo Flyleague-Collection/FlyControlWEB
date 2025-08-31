@@ -3,11 +3,11 @@ import {ref, reactive, computed, watch, onMounted} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import type {FormInstance, FormRules} from 'element-plus'
 import {User, Lock} from '@element-plus/icons-vue';
-import {useAuthStore} from "@/store/auth.js";
+import {useUserStore} from "@/store/user.js";
 import {showError, showInfo} from "@/utils/message.js";
 import config from "@/config/index.js";
 
-const authStore = useAuthStore()
+const userStore = useUserStore()
 const router = useRouter()
 const route = useRoute()
 const formRef = ref<FormInstance>()
@@ -59,7 +59,7 @@ const handleLoginFailure = () => {
 }
 
 const redirectPath = computed(() => {
-    return route.query.redirect ? route.query.redirect : '/'
+    return route.query.redirect ? route.query.redirect : '/home'
 })
 
 const handleLogin = async () => {
@@ -67,7 +67,7 @@ const handleLogin = async () => {
         await formRef.value?.validate()
         loading.value = true
 
-        const success = await authStore.login(loginForm)
+        const success = await userStore.login(loginForm)
         if (success) {
             showInfo(`欢迎登录, ${loginForm.username}, 祝连飞顺利`)
         }
@@ -79,7 +79,7 @@ const handleLogin = async () => {
 }
 
 onMounted(() => {
-    if (authStore.isLogin) {
+    if (userStore.isLogin) {
         router.push(redirectPath.value as string)
     }
 })

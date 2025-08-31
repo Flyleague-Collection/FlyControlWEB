@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 import config from "@/config/index.js";
 import {
     Calendar,
@@ -12,8 +11,11 @@ import {
 } from "@element-plus/icons-vue";
 import PersonCard from "@/components/card/PersonCard.vue";
 import {ref} from "vue";
+import {useUserStore} from "@/store/user.js";
 
 const menuExpend = ref(false);
+
+const userStore = useUserStore();
 
 const mql = window.matchMedia("(max-width: 1000px)");
 
@@ -35,7 +37,7 @@ mql.onchange = (e) => {
             style="color: var(--el-menu-text-color); user-select: none; padding-left: 6px"
             @click="menuExpend=!menuExpend">
             <div class="flex align-items-center">
-                <img class="padding-left-5 padding-right-5" :src="config.icon_path" alt="Icon"/>
+                <img class="margin-left-5 margin-right-5" :src="config.icon_path" alt="Icon"/>
                 <div class="title padding-left-5 padding-right-5" v-if="menuExpend">
                     {{ config.title }}
                 </div>
@@ -73,11 +75,11 @@ mql.onchange = (e) => {
                 <span>管制员中心</span>
             </template>
             <el-menu-item index="/controllers/application">管制员申请</el-menu-item>
-            <el-menu-item index="/controllers/activity">活动登记</el-menu-item>
-            <el-menu-item index="/controllers/booking">考核预约</el-menu-item>
-            <el-menu-item index="/controllers/profile">管制员档案</el-menu-item>
+            <el-menu-item index="/controllers/activity" v-if="userStore.userData.rating > 1">活动登记</el-menu-item>
+            <el-menu-item index="/controllers/booking" v-if="userStore.userData.rating > 1">考核预约</el-menu-item>
+            <el-menu-item index="/controllers/profile" v-if="userStore.userData.rating > 1">管制员档案</el-menu-item>
         </el-sub-menu>
-        <el-sub-menu index="/admin">
+        <el-sub-menu index="/admin" v-if="userStore.userData.permission & 1 == 1">
             <template #title>
                 <el-icon>
                     <Setting/>

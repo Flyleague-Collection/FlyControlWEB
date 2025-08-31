@@ -6,7 +6,7 @@ const model = defineModel()
 
 const emit = defineEmits<{
     (e: "dialogCancelEvent"): void,
-    (e: "dialogConfirmEvent", data: object): void,
+    (e: "dialogConfirmEvent", data: ActivityPilotSignForm): void,
 }>();
 
 const formRef = ref<FormInstance>()
@@ -16,36 +16,25 @@ const formData = reactive<ActivityPilotSignForm>({
 })
 
 const rules = reactive<FormRules<ActivityPilotSignForm>>({
-    callsign: [{
-        required: true,
-        message: "请输入执飞呼号",
-        trigger: "blur"
-    }],
-    aircraft: [{
-        required: true,
-        message: "请输入执飞机型",
-        trigger: "blur"
-    }]
+    callsign: [{required: true, message: "请输入执飞呼号", trigger: "blur"}],
+    aircraft_type: [{required: true, message: "请输入执飞机型", trigger: "blur"}]
 })
 
-const closeCallback = () => {
-    model.value = false
-}
-
 const cancelCallback = () => {
-    closeCallback()
+    model.value = false
     emit('dialogCancelEvent')
 }
 
 const handleCommit = async () => {
-    await formRef.value?.validate()
-    closeCallback()
-    emit('dialogConfirmEvent', formData)
+    if (await formRef.value?.validate()) {
+        model.value = false
+        emit('dialogConfirmEvent', formData)
+    }
 }
 </script>
 
 <template>
-    <el-dialog class="border-radius-20" v-model="model" :before-close="closeCallback" width="250px">
+    <el-dialog class="border-radius-20" v-model="model" :before-close="cancelCallback" width="250px">
         <template #header>
             <div>飞行员报名</div>
         </template>
@@ -56,10 +45,11 @@ const handleCommit = async () => {
             ref="formRef"
             @keyup.enter="handleCommit">
             <el-form-item class="flex flex-direction-column" prop="callsign" label-width="100px" label-position="left">
-                <template #label> 执飞呼号:</template>
+                <template #label>执飞呼号:</template>
                 <el-input v-model="formData.callsign" placeholder="请输入活动执飞呼号"/>
             </el-form-item>
-            <el-form-item class="flex flex-direction-column" prop="aircraft" label-width="100px" label-position="left">
+            <el-form-item class="flex flex-direction-column" prop="aircraft_type" label-width="100px"
+                          label-position="left">
                 <template #label>执飞机型:</template>
                 <el-input v-model="formData.aircraft_type" placeholder="请输入活动执飞机型"/>
             </el-form-item>

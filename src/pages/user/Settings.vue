@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {useAuthStore} from "@/store/auth.js";
+import {useUserStore} from "@/store/user.js";
 import config from "@/config/index.js";
 import {useServerConfigStore} from "@/store/server_config.js";
 import {computed, onMounted, Ref, ref} from "vue";
@@ -7,10 +7,10 @@ import {Plus} from "@element-plus/icons-vue";
 import request from "@/utils/request.js";
 import moment from "moment";
 
-const authStore = useAuthStore();
+const userStore = useUserStore();
 const serverConfigStore = useServerConfigStore();
 
-const userData = authStore.userData;
+const userData = userStore.userData;
 
 const pilotTime = computed(() => {
     return userData.total_pilot_time / 3600.0;
@@ -73,7 +73,7 @@ onMounted(async () => {
                                                round>修改密码
                                     </el-button>
                                     <el-button class="margin-0-below-350px" type="danger" round
-                                               @click="authStore.logout">退出登录
+                                               @click="userStore.logout">退出登录
                                     </el-button>
                                 </div>
                             </template>

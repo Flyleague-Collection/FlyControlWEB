@@ -4,13 +4,18 @@ import {BarChart} from "echarts/charts";
 import {GridComponent, DatasetComponent, TitleComponent, TooltipComponent} from "echarts/components";
 import {SVGRenderer} from 'echarts/renderers';
 import VChart from 'vue-echarts';
-import {ref} from 'vue';
+import {onMounted, ref} from 'vue';
 import ActivityCalendar from "@/components/ActivityCalendar.vue";
-import {useAuthStore} from "@/store/auth.js";
+import {useUserStore} from "@/store/user.js";
+import request from "@/utils/request.js";
 
 use([BarChart, TitleComponent, TooltipComponent, DatasetComponent, GridComponent, SVGRenderer]);
 
-const authStore = useAuthStore();
+const userStore = useUserStore();
+const totalUser = ref(0);
+const totalController = ref(0);
+const totalActivity = ref(0);
+const totalOnline = ref(0);
 
 const option = ref({
         title: {
@@ -24,7 +29,7 @@ const option = ref({
         },
         xAxis: {
             type: 'category',
-            data: ['2352', '5516', '0926', '5740', '1111', '1546', '1547', '6854', '5233', '6105', '5363', '4654', '6982', '8926', '5666'],
+            data: [],
             name: "联飞呼号"
         },
         yAxis: {
@@ -33,7 +38,7 @@ const option = ref({
         },
         series: [
             {
-                data: [120, 200, 150, 80, 70, 234, 435, 546, 756, 78, 897, 123, 45, 456, 45],
+                data: [],
                 type: 'bar',
                 name: "联飞时长/h",
                 realtimeSort: true,
@@ -47,17 +52,53 @@ const option = ref({
     }
 );
 
+const getServerInfo = async () => {
+    const response = (await request.get(`/server/info`)) as Axios.AxiosXHR<GetServerInfoResponse>
+    if (response.status == 200) {
+        totalUser.value = response.data.total_user
+        totalController.value = response.data.total_controller
+        totalActivity.value = response.data.total_activity
+    }
+}
+
+const getServerOnline = async () => {
+    const response = (await request.get(`/clients`)) as Axios.AxiosXHR<GetOnlineClientResponse>
+    if (response.status == 200) {
+        totalOnline.value = response.data.general.connected_clients
+    }
+}
+
+const getServerRating = async () => {
+    const response = (await request.get(`/server/rating`)) as Axios.AxiosXHR<GetServerRatingResponse>
+    if (response.status == 200) {
+        option.value.xAxis.data = []
+        option.value.series[0].data = []
+        response.data.pilots.forEach(client => {
+            option.value.xAxis.data.push(client.cid)
+            option.value.series[0].data.push((client.time / 3600.0).toFixed(2))
+        })
+    }
+
+}
+
+onMounted(async () => {
+    await getServerInfo()
+    await getServerOnline()
+    await getServerRating()
+})
+
+
 </script>
 
 <template>
     <div class="container">
-        <el-card class="welcome">欢迎, {{ authStore.userData.username }}, 今天想飞哪里？</el-card>
+        <el-card class="welcome">欢迎, {{ userStore.userData.username }}, 今天想飞哪里？</el-card>
         <el-row class="status-card" :gutter="20">
             <el-col :xs="24" :sm="12" :md="6" :lg="6" :xl="6">
                 <el-card class="card">
                     <div class="card-item">
                         <span class="card-item-title">注册用户总数</span>
-                        <span class="card-item-content">1111</span>
+                        <span class="card-item-content">{{ totalUser }}</span>
                     </div>
                 </el-card>
             </el-col>
@@ -65,7 +106,7 @@ const option = ref({
                 <el-card class="card">
                     <div class="card-item">
                         <span class="card-item-title">管制团队</span>
-                        <span class="card-item-content">111</span>
+                        <span class="card-item-content">{{ totalController }}</span>
                     </div>
                 </el-card>
             </el-col>
@@ -73,7 +114,7 @@ const option = ref({
                 <el-card class="card">
                     <div class="card-item">
                         <span class="card-item-title">举办活动数</span>
-                        <span class="card-item-content">11</span>
+                        <span class="card-item-content">{{ totalActivity }}</span>
                     </div>
                 </el-card>
             </el-col>
@@ -81,7 +122,7 @@ const option = ref({
                 <el-card class="card">
                     <div class="card-item">
                         <span class="card-item-title">当前在线用户数</span>
-                        <span class="card-item-content">1</span>
+                        <span class="card-item-content">{{ totalOnline }}</span>
                     </div>
                 </el-card>
             </el-col>
