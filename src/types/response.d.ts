@@ -27,6 +27,13 @@ type GetUsersPageResponse = {
     total: number;
 }
 
+type GetAuditLogsPageResponse = {
+    items: AuditLogModel[];
+    page: number;
+    page_size: number;
+    total: number;
+}
+
 type GetServerInfoResponse = {
     total_user: number;
     total_controller: number;

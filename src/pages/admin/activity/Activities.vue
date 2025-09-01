@@ -3,7 +3,7 @@ import {useActivityStore} from "@/store/activity.js";
 import {Delete, EditPen, Plus} from "@element-plus/icons-vue";
 import {useRouter} from "vue-router";
 import {onMounted, ref, Ref} from "vue";
-import {showError} from "@/utils/message.js";
+import {showError, showSuccess} from "@/utils/message.js";
 
 const activityStore = useActivityStore();
 const router = useRouter();
@@ -35,6 +35,14 @@ const pageSizeChange = async (value: number) => {
     await fetchPageData()
 }
 
+const deleteActivity = async (id: number) => {
+    const response = await activityStore.deleteActivity(id);
+    if (response) {
+        showSuccess("删除活动成功")
+    }
+    await fetchPageData()
+}
+
 onMounted(async () => {
     await fetchPageData()
 })
@@ -63,7 +71,8 @@ onMounted(async () => {
                                        @click="router.push(`/admin/activities/${scope.row.id}`)">
                                 编辑
                             </el-button>
-                            <el-button id="activity-option-delete-btn" :icon="Delete" type="danger">
+                            <el-button id="activity-option-delete-btn" :icon="Delete" type="danger"
+                                       @click="deleteActivity(scope.row.id)">
                                 删除
                             </el-button>
                         </div>

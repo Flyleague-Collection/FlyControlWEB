@@ -26,7 +26,7 @@ const activity: Ref<ActivityModel> = ref({
 });
 
 const createNewActivity = async () => {
-    if (await activityStore.createNewActivity(activity.value)) {
+    if (await activityStore.createActivity(activity.value)) {
         showSuccess("活动添加成功")
     }
     cancelBtn()

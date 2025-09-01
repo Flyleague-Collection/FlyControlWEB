@@ -184,7 +184,7 @@ const routes: RouteRecordRaw[] = [
             {
                 path: "/admin/audit",
                 name: "AdminAudit",
-                component: () => import("@/pages/admin/Permissions.vue"),
+                component: () => import("@/pages/admin/Audit.vue"),
                 meta: {
                     requireAuth: true,
                     title: "审计日志"

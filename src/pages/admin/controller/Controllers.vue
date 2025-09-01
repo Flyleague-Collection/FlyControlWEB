@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import {Delete, EditPen} from "@element-plus/icons-vue";
 import {useRouter} from "vue-router";
 import {useUserStore} from "@/store/user.js";
 import {onMounted, ref} from "vue";
@@ -24,8 +23,6 @@ const fetchPageData = async () => {
 
     users.value = data.items
     total.value = data.total
-
-    console.log(data.items)
 }
 
 const pageChange = async (value: number) => {
@@ -60,18 +57,6 @@ onMounted(async () => {
                 </template>
             </el-table-column>
             <el-table-column prop="permission" label="飞控权限"></el-table-column>
-            <el-table-column label="操作">
-                <template #default="scope">
-                    <div id="activity-option-container" class="flex">
-                        <el-button id="activity-option-edit-btn" :icon="EditPen" type="primary">
-                            编辑
-                        </el-button>
-                        <el-button id="activity-option-delete-btn" :icon="Delete" type="danger">
-                            删除
-                        </el-button>
-                    </div>
-                </template>
-            </el-table-column>
         </el-table>
         <template #footer>
             <el-pagination

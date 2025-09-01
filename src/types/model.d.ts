@@ -67,3 +67,17 @@ type FlightPlanModel = {
     route_time_hour: string;
     route_time_minute: string;
 }
+
+type AuditLogModel = {
+    id: number;
+    time: string;
+    event_type: string;
+    subject: number;
+    object: string;
+    ip: string;
+    user_agent: string;
+    change_details?: {
+        old_value: string;
+        new_value: string;
+    }
+}

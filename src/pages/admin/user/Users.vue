@@ -3,7 +3,7 @@ import {useRouter} from "vue-router";
 import {useUserStore} from "@/store/user.js";
 import {onMounted, ref} from "vue";
 import {showError} from "@/utils/message.js";
-import {Delete, EditPen} from "@element-plus/icons-vue";
+import {EditPen} from "@element-plus/icons-vue";
 import {useServerConfigStore} from "@/store/server_config.js";
 
 const router = useRouter();
@@ -24,8 +24,6 @@ const fetchPageData = async () => {
 
     users.value = data.items
     total.value = data.total
-
-    console.log(data.items)
 }
 
 const pageChange = async (value: number) => {
@@ -38,8 +36,17 @@ const pageSizeChange = async (value: number) => {
     await fetchPageData()
 }
 
+const userData = ref<UserModel>();
+const showUserEditDialog = ref(false);
+
+const showDialog = (id: number) => {
+    userData.value = users.value[id];
+    showUserEditDialog.value = true;
+}
+
 onMounted(async () => {
     await fetchPageData()
+    userData.value = users.value[0]
 })
 </script>
 
@@ -64,11 +71,8 @@ onMounted(async () => {
             <el-table-column label="操作">
                 <template #default="scope">
                     <div id="activity-option-container" class="flex">
-                        <el-button id="activity-option-edit-btn" :icon="EditPen" type="primary">
+                        <el-button id="activity-option-edit-btn" :icon="EditPen" type="primary" @click="showDialog">
                             编辑
-                        </el-button>
-                        <el-button id="activity-option-delete-btn" :icon="Delete" type="danger">
-                            删除
                         </el-button>
                     </div>
                 </template>
@@ -86,6 +90,9 @@ onMounted(async () => {
             />
         </template>
     </el-card>
+    <el-dialog v-model="showUserEditDialog">
+
+    </el-dialog>
 </template>
 
 <style scoped>
