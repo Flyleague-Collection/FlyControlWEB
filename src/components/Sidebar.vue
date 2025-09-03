@@ -13,11 +13,11 @@ import PersonCard from "@/components/card/PersonCard.vue";
 import {ref} from "vue";
 import {useUserStore} from "@/store/user.js";
 
-const menuExpend = ref(false);
-
 const userStore = useUserStore();
 
 const mql = window.matchMedia("(max-width: 1000px)");
+
+const menuExpend = ref(false);
 
 mql.onchange = (e) => {
     if (e.matches && menuExpend.value) {
@@ -89,6 +89,7 @@ mql.onchange = (e) => {
             <el-menu-item index="/admin/users">用户管理</el-menu-item>
             <el-menu-item index="/admin/controllers">管制员管理</el-menu-item>
             <el-menu-item index="/admin/activities">活动管理</el-menu-item>
+            <el-menu-item index="/admin/clients">在线管理</el-menu-item>
             <el-menu-item index="/admin/tickets">工单管理</el-menu-item>
             <el-menu-item index="/admin/permissions">权限管理</el-menu-item>
             <el-menu-item index="/admin/audit">审计日志</el-menu-item>

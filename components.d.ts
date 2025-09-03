@@ -62,6 +62,7 @@ declare module 'vue' {
     ElUpload: typeof import('element-plus/es')['ElUpload']
     Header: typeof import('./src/components/Header.vue')['default']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
+    OlMap: typeof import('./src/components/OlMap.vue')['default']
     PersonCard: typeof import('./src/components/card/PersonCard.vue')['default']
     PilotCard: typeof import('src/components/card/ActivityPilotCard.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']

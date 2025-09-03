@@ -1,4 +1,5 @@
 type UserModel = {
+    id: number;
     username: string;
     email: string;
     cid: number;

@@ -164,6 +164,15 @@ const routes: RouteRecordRaw[] = [
                 }
             },
             {
+                path: "/admin/clients",
+                name: "AdminClients",
+                component: () => import("@/pages/admin/Online.vue"),
+                meta: {
+                    requireAuth: true,
+                    title: "在线管理"
+                }
+            },
+            {
                 path: "/admin/tickets",
                 name: "AdminTickets",
                 component: () => import("@/pages/admin/Tickets.vue"),
