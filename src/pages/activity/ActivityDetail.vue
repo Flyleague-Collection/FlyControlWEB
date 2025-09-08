@@ -277,7 +277,7 @@ const cancelSign = async (facilityId: number = 0) => {
                     <div class="card-item">
                         <span class="card-item-title margin-bottom-10">活动状态</span>
                         <span class="card-item-content">
-                            {{ config.activity_status[activity?.status - 1].text }}
+                            {{ config.activity_status[activity?.status - 1].label }}
                         </span>
                     </div>
                 </el-card>
@@ -355,7 +355,7 @@ const cancelSign = async (facilityId: number = 0) => {
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 5px 0;
+        margin-top: 10px;
         border-radius: 20px;
     }
 

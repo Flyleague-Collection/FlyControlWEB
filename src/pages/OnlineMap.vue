@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, onMounted, onUnmounted} from 'vue';
+import {ref, onMounted, onUnmounted, watch} from 'vue';
 import OlMap from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
@@ -9,19 +9,66 @@ import VectorSource from 'ol/source/Vector';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
 import {fromLonLat} from 'ol/proj';
-import {Style, Icon, Stroke, Fill, Circle} from 'ol/style';
+import {Style, Icon, Stroke, Fill} from 'ol/style';
 import Overlay from 'ol/Overlay';
-import Select from 'ol/interaction/Select';
-import {click} from 'ol/events/condition';
 import 'ol/ol.css';
 import request from "@/utils/request.js";
 import AxiosXHR = Axios.AxiosXHR;
 import {Layer} from "ol/layer.js";
 import {showError} from "@/utils/message.js";
 import {LineString} from "ol/geom.js";
-import {GeoJSON} from "ol/format.js";
+import {GeoJSON, MVT} from "ol/format.js";
 import {join} from "lodash";
+import {get as getProjection} from 'ol/proj.js';
+import VectorTileLayer from "ol/layer/VectorTile.js";
+import VectorTileSource from 'ol/source/VectorTile.js';
+import {TileGrid} from "ol/tilegrid.js";
+import {applyStyle} from 'ol-mapbox-style';
+import config from "@/config/index.js";
 
+const resolutions = [];
+for (let i = 0; i <= 8; ++i) {
+    resolutions.push(156543.03392804097 / Math.pow(2, i * 2));
+}
+
+function tileUrlFunction(tileCoord) {
+    return (
+        'https://{a-d}.tiles.mapbox.com/v4/mapbox.mapbox-streets-v6/' +
+        '{z}/{x}/{y}.vector.pbf?access_token=' + config.mapbox_token
+    )
+        .replace('{z}', String(tileCoord[0] * 2 - 1))
+        .replace('{x}', String(tileCoord[1]))
+        .replace('{y}', String(tileCoord[2]))
+        .replace(
+            '{a-d}',
+            'abcd'.substr(((tileCoord[1] << tileCoord[0]) + tileCoord[2]) % 4, 1)
+        );
+}
+
+const layers = {
+    OSM: new TileLayer({
+        title: 'OSM',
+        visible: true,
+        source: new OSM()
+    }),
+    Mapbox: new VectorTileLayer({
+        title: 'Mapbox',
+        visible: false,
+        source: new VectorTileSource({
+            attributions:
+                '<a href="https://www.mapbox.com/about/maps">© Mapbox</a> ' +
+                '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap</a> ' +
+                '<a href="https://www.maxar.com/">© Maxar</a>',
+            format: new MVT(),
+            tileGrid: new TileGrid({
+                extent: getProjection('EPSG:3857')?.getExtent(),
+                resolutions: resolutions,
+                tileSize: 512
+            }),
+            tileUrlFunction: tileUrlFunction
+        })
+    })
+}
 
 // 地图引用
 const mapContainer = ref<HTMLElement>();
@@ -29,7 +76,17 @@ const map = ref<OlMap | null>(null);
 const selectedFeature = ref<Feature | null>(null);
 const popup = ref<Overlay>();
 const popupContent = ref<string>('');
+const selectedLayer = ref("OSM");
+const mapBoxAvailable = ref(false)
 
+watch(() => selectedLayer.value, (value: string, oldValue: string) => {
+    const oldLayers = layers[oldValue]
+    const newLayers = layers[value]
+    if (oldLayers && newLayers) {
+        oldLayers.setVisible(false)
+        newLayers.setVisible(true)
+    }
+})
 
 let onlineData: GetOnlineClientResponse;
 
@@ -51,20 +108,35 @@ let approachLayer: Layer;
 let lineFeature: Feature | null = null;
 let interval: number;
 
+const createStyle = (heading: number): Style => {
+    return new Style({
+        image: new Icon({
+            src: '/images/aircraft.png',
+            scale: 0.5,
+            anchor: [0.5, 0.5],
+            opacity: 0.9,
+            rotation: heading * Math.PI / 180.0
+        })
+    });
+}
+
 // 初始化地图
 onMounted(async () => {
     if (!mapContainer.value) return;
 
     await fetchWhazzupData();
+    mapBoxAvailable.value = config.mapbox_token != ""
+
+    if (mapBoxAvailable.value) {
+        await applyStyle(layers.Mapbox, 'mapbox://styles/mapbox/streets-v12', {accessToken: config.mapbox_token});
+    } else {
+        showError("未设置Mapbox Token, Mapbox 瓦片服务不可用")
+    }
 
     // 创建地图
     map.value = new OlMap({
         target: mapContainer.value,
-        layers: [
-            new TileLayer({
-                source: new OSM()
-            })
-        ],
+        layers: [layers.OSM, layers.Mapbox],
         view: new View({
             center: fromLonLat([120, 30]),
             zoom: 4
@@ -75,27 +147,15 @@ onMounted(async () => {
         source: new VectorSource(),
         style: new Style({
             stroke: new Stroke({
-                color: '#ff4081',
+                color: config.flight_path_color,
                 width: 3
             })
         })
     });
 
     aircraftLayer = new VectorLayer({
-        source: new VectorSource(),
-        style: (feature): Style => {
-            return new Style({
-                image: new Icon({
-                    src: '/images/aircraft.png',
-                    scale: 0.5,
-                    anchor: [0.5, 0.5],
-                    opacity: 0.9,
-                    rotation: feature.get("heading") as number * Math.PI / 180.0
-                })
-            });
-        }
+        source: new VectorSource()
     })
-
 
     const centerSourceFormat = new GeoJSON({
         dataProjection: 'EPSG:4326',
@@ -114,11 +174,11 @@ onMounted(async () => {
         source: new VectorSource(),
         style: new Style({
             stroke: new Stroke({
-                color: 'rgba(0, 0, 255, 0.7)',
+                color: config.atc_border,
                 width: 2
             }),
             fill: new Fill({
-                color: 'rgba(0, 0, 255, 0.1)'
+                color: config.atc_fill
             })
         })
     })
@@ -140,11 +200,11 @@ onMounted(async () => {
         source: new VectorSource(),
         style: new Style({
             stroke: new Stroke({
-                color: 'rgba(26,255,0,0.7)',
+                color: config.atc_border,
                 width: 2
             }),
             fill: new Fill({
-                color: 'rgba(0, 0, 255, 0.1)'
+                color: config.atc_fill
             })
         })
     })
@@ -155,19 +215,19 @@ onMounted(async () => {
     map.value.addLayer(aircraftLayer);
 
     // 添加标记
-    onlineData.pilots.forEach(location => {
+    onlineData.pilots.forEach(pilot => {
         const feature = new Feature({
-            geometry: new Point(fromLonLat([location.longitude, location.latitude])),
+            geometry: new Point(fromLonLat([pilot.longitude, pilot.latitude])),
             isPilot: true,
-            callsign: location.callsign,
-            flightPlan: location.flight_plan,
-            groundSpeed: location.ground_speed,
-            altitude: location.altitude
+            callsign: pilot.callsign,
+            flightPlan: pilot.flight_plan,
+            groundSpeed: pilot.ground_speed,
+            altitude: pilot.altitude
         });
 
+        feature.setStyle(createStyle(pilot.heading));
         aircraftLayer.getSource().addFeature(feature);
     });
-    console.log(approachFeatureMap)
     onlineData.controllers.forEach(controller => {
         if (controller.facility == 6) {
             // CTR
@@ -203,16 +263,17 @@ onMounted(async () => {
     interval = setInterval(async () => {
         await fetchWhazzupData();
         aircraftLayer.getSource().clear();
-        onlineData.pilots.forEach(location => {
+        onlineData.pilots.forEach(pilot => {
             const feature = new Feature({
-                geometry: new Point(fromLonLat([location.longitude, location.latitude])),
+                geometry: new Point(fromLonLat([pilot.longitude, pilot.latitude])),
                 isPilot: true,
-                callsign: location.callsign,
-                flightPlan: location.flight_plan,
-                groundSpeed: location.ground_speed,
-                altitude: location.altitude
-            });
+                callsign: pilot.callsign,
+                flightPlan: pilot.flight_plan,
+                groundSpeed: pilot.ground_speed,
+                altitude: pilot.altitude
+            })
 
+            feature.setStyle(createStyle(pilot.heading));
             aircraftLayer.getSource().addFeature(feature);
         });
 
@@ -386,14 +447,21 @@ onUnmounted(() => {
     }
     clearInterval(interval);
 });
+
 </script>
 
 <template>
     <div class="map-wrapper">
-        <div ref="mapContainer" class="map-container"></div>
+        <div ref="mapContainer" id="map" class="map-container"></div>
         <div id="popup" class="ol-popup">
             <a href="#" id="popup-closer" class="ol-popup-closer" @click="closePopup">&times;</a>
             <div id="popup-content" v-html="popupContent"></div>
+        </div>
+        <div class="ol-switch">
+            <el-radio-group v-model="selectedLayer">
+                <el-radio value="OSM" label="OSM"/>
+                <el-radio value="Mapbox" label="Mapbox" :disabled="!mapBoxAvailable"/>
+            </el-radio-group>
         </div>
     </div>
 </template>
@@ -408,6 +476,21 @@ onUnmounted(() => {
 .map-container {
     width: 100%;
     height: 100%;
+}
+
+.el-radio-group {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .el-radio {
+        margin: 0;
+    }
+}
+
+.ol-switch {
+    position: absolute;
+    top: .5em;
+    left: .5em;
 }
 
 .ol-popup {

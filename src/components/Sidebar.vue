@@ -4,14 +4,18 @@ import {
     Calendar,
     DocumentChecked,
     HomeFilled,
-    MapLocation,
+    MapLocation, Moon,
     Operation,
-    Setting,
+    Setting, Sunny,
     UserFilled
 } from "@element-plus/icons-vue";
 import PersonCard from "@/components/card/PersonCard.vue";
 import {ref} from "vue";
 import {useUserStore} from "@/store/user.js";
+import {useDark, useToggle} from "@vueuse/core";
+
+const isDark = useDark()
+const toggleDark = useToggle(isDark)
 
 const userStore = useUserStore();
 
@@ -102,6 +106,7 @@ mql.onchange = (e) => {
         </el-menu-item>
     </el-menu>
     <div class="person">
+        <el-switch v-model="isDark" @change="toggleDark" :inactive-action-icon="Sunny" :active-action-icon="Moon"/>
         <PersonCard :expend="menuExpend"/>
     </div>
 </template>

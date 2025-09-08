@@ -8,6 +8,7 @@ import {showError, showSuccess} from "@/utils/message.js";
 import config from "@/config/index.js";
 import {useServerConfigStore} from "@/store/server_config.js";
 import request from "@/utils/request.js";
+import AxiosXHR = Axios.AxiosXHR;
 
 const userStore = useUserStore()
 const router = useRouter()
@@ -23,22 +24,7 @@ const registerForm = reactive<RegisterForm>({
     email: ''
 } as RegisterForm)
 
-const checkCID = async (cid: number): Promise<boolean> => {
-    const response = await request.get(`/users/availability?cid=${cid}`);
-    return response.data;
-}
-
-const checkUsername = async (username: string): Promise<boolean> => {
-    const response = await request.get(`/users/availability?username=${username}`);
-    return response.data;
-}
-
-const checkEmail = async (email: string): Promise<boolean> => {
-    const response = await request.get(`/users/availability?email=${email}`);
-    return response.data;
-}
-
-const rules = reactive<FormRules<RegisterForm>>({
+const rules = reactive<FormRules>({
     cid: [
         {required: true, message: '请输入CID', trigger: 'blur'},
         {
@@ -60,7 +46,7 @@ const rules = reactive<FormRules<RegisterForm>>({
                     callback(new Error(`CID不能大于${serverConfig.limits.cid_max}`))
                     return
                 }
-                if (await checkCID(cid)) {
+                if (await userStore.checkCID(cid)) {
                     callback()
                     return
                 }
@@ -78,7 +64,7 @@ const rules = reactive<FormRules<RegisterForm>>({
         },
         {
             validator: async (rule, value, callback) => {
-                if (await checkUsername(value)) {
+                if (await userStore.checkUsername(value)) {
                     callback()
                     return
                 }
@@ -92,7 +78,7 @@ const rules = reactive<FormRules<RegisterForm>>({
         {type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur'},
         {
             validator: async (rule, value, callback) => {
-                if (await checkEmail(value)) {
+                if (await userStore.checkEmail(value)) {
                     callback()
                     return
                 }
@@ -103,7 +89,12 @@ const rules = reactive<FormRules<RegisterForm>>({
     ],
     password: [
         {required: true, message: '请输入密码', trigger: 'blur'},
-        {min: 6, max: 20, message: '长度在6到20个字符', trigger: 'blur'}
+        {
+            min: serverConfig.config.limits.password_length_min,
+            max: serverConfig.config.limits.password_length_max,
+            message: `长度在${serverConfig.config.limits.password_length_min}到${serverConfig.config.limits.password_length_max}个字符`,
+            trigger: 'blur'
+        }
     ],
     confirmPassword: [
         {required: true, message: '请确认密码', trigger: 'blur'},
@@ -144,7 +135,7 @@ const randomCid = async () => {
     let cid = 0
     do {
         cid = getRandomInt(serverConfig.limits.cid_max);
-    } while (!(await checkCID(cid)))
+    } while (!(await userStore.checkCID(cid)))
     registerForm.cid = cid
 }
 
@@ -174,7 +165,7 @@ const sendEmailCode = async () => {
     const response = await request.post(`/codes`, {
         email: registerForm.email,
         cid: registerForm.cid
-    })
+    }) as AxiosXHR<any>
     if (response.status == 200) {
         showSuccess("验证码发送成功, 请查看邮箱")
     }

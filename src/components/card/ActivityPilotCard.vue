@@ -21,7 +21,7 @@ defineProps<{ pilot: ActivityPilotModel }>()
                         }}
                     </el-tag>
                     <el-tag class="pilot-status margin-left-10 border-none" round effect="dark">
-                        {{ config.pilot_status[pilot.status].text }}
+                        {{ config.pilot_status[pilot.status].label }}
                     </el-tag>
                 </div>
             </div>

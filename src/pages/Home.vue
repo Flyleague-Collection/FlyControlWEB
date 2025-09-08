@@ -149,7 +149,6 @@ onMounted(async () => {
 .el-col,
 .chart-card {
     border-radius: 20px;
-    margin-bottom: 15px;
 }
 
 .card {

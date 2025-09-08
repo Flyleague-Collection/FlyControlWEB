@@ -1,5 +1,6 @@
 import {defineStore} from "pinia";
-import {Ref, ref} from "vue";
+import {computed, ComputedRef, Ref, ref} from "vue";
+import {FormItemRule} from "element-plus";
 
 export const useServerConfigStore = defineStore("server-config-store", () => {
     const config: Ref<ServerConfig> = ref({
@@ -131,5 +132,30 @@ export const useServerConfigStore = defineStore("server-config-store", () => {
         }
     )
 
-    return {config, ratings: config.value.ratings, facilities: config.value.facilities, limits: config.value.limits}
+    const usernameLimit: ComputedRef = computed<FormItemRule>(() => {
+        return {
+            min: config.value.limits.username_length_min,
+            max: config.value.limits.username_length_max,
+            message: `长度在${config.value.limits.username_length_min}到${config.value.limits.username_length_max}个字符`,
+            trigger: 'blur'
+        }
+    })
+
+    const passwordLimit: ComputedRef = computed<FormItemRule>(() => {
+        return {
+            min: config.value.limits.username_length_min,
+            max: config.value.limits.username_length_max,
+            message: `长度在${config.value.limits.username_length_min}到${config.value.limits.username_length_max}个字符`,
+            trigger: 'blur'
+        }
+    })
+
+    return {
+        config,
+        ratings: config.value.ratings,
+        facilities: config.value.facilities,
+        limits: config.value.limits,
+        usernameLimit,
+        passwordLimit
+    }
 })

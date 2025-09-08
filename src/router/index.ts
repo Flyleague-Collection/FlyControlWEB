@@ -217,7 +217,6 @@ const router = createRouter({
     routes
 })
 
-
 router.beforeEach((to, _, next) => {
     if (to.meta.title != null) {
         document.title = to.meta.title;

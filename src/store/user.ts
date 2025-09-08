@@ -143,6 +143,30 @@ export const useUserStore = defineStore("UserStore", () => {
         return null;
     }
 
+    const checkCID = async (cid: number): Promise<boolean> => {
+        if (cid <= 0) {
+            return true;
+        }
+        const response = await request.get(`/users/availability?cid=${cid}`);
+        return response.data;
+    }
+
+    const checkUsername = async (username: string): Promise<boolean> => {
+        if (username == "") {
+            return true;
+        }
+        const response = await request.get(`/users/availability?username=${username}`);
+        return response.data;
+    }
+
+    const checkEmail = async (email: string): Promise<boolean> => {
+        if (email == "") {
+            return true;
+        }
+        const response = await request.get(`/users/availability?email=${email}`);
+        return response.data;
+    }
+
     return {
         isLogin,
         userData,
@@ -154,6 +178,9 @@ export const useUserStore = defineStore("UserStore", () => {
         sendEmailCode,
         logout,
         getUserPage,
-        getControllerPage
+        getControllerPage,
+        checkCID,
+        checkUsername,
+        checkEmail
     }
 })

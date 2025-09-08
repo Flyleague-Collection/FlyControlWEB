@@ -23,7 +23,7 @@ request.interceptors.request.use(
 
 request.interceptors.response.use(
     response => {
-        if (response.data.data) {
+        if (response.data.data != null) {
             response.data = response.data.data
         }
         return response;

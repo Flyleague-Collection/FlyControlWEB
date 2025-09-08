@@ -2,6 +2,10 @@
     "title": "FlyControlSystem",
     "icon_path": "/images/half.jpg",
     "backend_url": "/api",
+    "mapbox_token": "",
+    "flight_path_color": "#ff4081",
+    "atc_border": "rgba(26, 255, 0, 0.7)",
+    "atc_fill": "rgba(222, 201, 93, 0.5)",
     "rating_color": [
         "#cccccc",
         "#abb7cc",

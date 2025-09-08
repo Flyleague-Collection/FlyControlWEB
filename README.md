@@ -11,10 +11,10 @@
 
 ## 数据来源
 
-地图瓦片: [https://www.openstreetmap.org/](https://www.openstreetmap.org/)  
+地图瓦片OSM: [https://www.openstreetmap.org/](https://www.openstreetmap.org/)  
+地图瓦片Mapbox: [https://mapbox.com](https://mapbox.com)  
 FIR boundaries: [https://github.com/vatsimnetwork/vatspy-data-project](https://github.com/vatsimnetwork/vatspy-data-project)  
-Approach boundaries: [https://github.com/vatsimnetwork/simaware-tracon-project](https://github.com/vatsimnetwork/simaware-tracon-project)  
-
+Approach boundaries: [https://github.com/vatsimnetwork/simaware-tracon-project](https://github.com/vatsimnetwork/simaware-tracon-project)
 
 ## 开源协议
 
