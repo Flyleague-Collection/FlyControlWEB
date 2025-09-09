@@ -4,15 +4,18 @@ import {
     Calendar,
     DocumentChecked,
     HomeFilled,
-    MapLocation, Moon,
+    MapLocation,
+    Moon,
     Operation,
-    Setting, Sunny,
+    Setting,
+    Sunny,
     UserFilled
 } from "@element-plus/icons-vue";
 import PersonCard from "@/components/card/PersonCard.vue";
 import {ref} from "vue";
 import {useUserStore} from "@/store/user.js";
 import {useDark, useToggle} from "@vueuse/core";
+import {PermissionNode} from "@/utils/permission.js";
 
 const isDark = useDark()
 const toggleDark = useToggle(isDark)
@@ -83,20 +86,40 @@ mql.onchange = (e) => {
             <el-menu-item index="/controllers/booking" v-if="userStore.userData.rating > 1">考核预约</el-menu-item>
             <el-menu-item index="/controllers/profile" v-if="userStore.userData.rating > 1">管制员档案</el-menu-item>
         </el-sub-menu>
-        <el-sub-menu index="/admin" v-if="userStore.userData.permission & 1 == 1">
+        <el-sub-menu index="/admin" v-if="userStore.permission?.hasPermission(PermissionNode.AdminEntry)">
             <template #title>
                 <el-icon>
                     <Setting/>
                 </el-icon>
                 <span>管理员中心</span>
             </template>
-            <el-menu-item index="/admin/users">用户管理</el-menu-item>
-            <el-menu-item index="/admin/controllers">管制员管理</el-menu-item>
-            <el-menu-item index="/admin/activities">活动管理</el-menu-item>
-            <el-menu-item index="/admin/clients">在线管理</el-menu-item>
-            <el-menu-item index="/admin/tickets">工单管理</el-menu-item>
-            <el-menu-item index="/admin/permissions">权限管理</el-menu-item>
-            <el-menu-item index="/admin/audit">审计日志</el-menu-item>
+            <el-menu-item index="/admin/users"
+                          v-if="userStore.permission?.hasPermission(PermissionNode.UserShowList)">
+                用户管理
+            </el-menu-item>
+            <el-menu-item index="/admin/controllers"
+                          v-if="userStore.permission?.hasPermission(PermissionNode.UserShowList)">
+                管制员管理
+            </el-menu-item>
+            <el-menu-item index="/admin/activities"
+                          v-if="userStore.permission?.hasPermission(PermissionNode.ActivityShowList)">
+                活动管理
+            </el-menu-item>
+            <el-menu-item index="/admin/clients"
+                          v-if="userStore.permission?.hasPermissions(PermissionNode.ClientKill, PermissionNode.ClientSendMessage)">
+                在线管理
+            </el-menu-item>
+            <el-menu-item index="/admin/tickets">
+                工单管理
+            </el-menu-item>
+            <el-menu-item index="/admin/permissions"
+                          v-if="userStore.permission?.hasPermissions(PermissionNode.UserShowList, PermissionNode.UserEditPermission)">
+                权限管理
+            </el-menu-item>
+            <el-menu-item index="/admin/audit"
+                          v-if="userStore.permission?.hasPermission(PermissionNode.AuditLogShow)">
+                审计日志
+            </el-menu-item>
         </el-sub-menu>
         <el-menu-item index="/profile">
             <el-icon>

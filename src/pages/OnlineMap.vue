@@ -25,6 +25,7 @@ import VectorTileSource from 'ol/source/VectorTile.js';
 import {TileGrid} from "ol/tilegrid.js";
 import {applyStyle} from 'ol-mapbox-style';
 import config from "@/config/index.js";
+import {XYZ} from "ol/source.js";
 
 const resolutions = [];
 for (let i = 0; i <= 8; ++i) {
@@ -33,8 +34,8 @@ for (let i = 0; i <= 8; ++i) {
 
 function tileUrlFunction(tileCoord) {
     return (
-        'https://{a-d}.tiles.mapbox.com/v4/mapbox.mapbox-streets-v6/' +
-        '{z}/{x}/{y}.vector.pbf?access_token=' + config.mapbox_token
+        'https://{a-d}.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8/' +
+        '{z}/{x}/{y}.vector.pbf?language=zh-Hans&access_token=' + config.mapbox_token
     )
         .replace('{z}', String(tileCoord[0] * 2 - 1))
         .replace('{x}', String(tileCoord[1]))
@@ -66,6 +67,38 @@ const layers = {
                 tileSize: 512
             }),
             tileUrlFunction: tileUrlFunction
+        })
+    }),
+    MapboxTile: new TileLayer({
+        visible: false,
+        source: new XYZ({
+            url: "https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.webp?access_token=" + config.mapbox_token,
+            crossOrigin: 'anonymous',
+            wrapX: true
+        })
+    }),
+    GaoDe: new TileLayer({
+        visible: false,
+        source: new XYZ({
+            url: "https://webst01.is.autonavi.com/appmaptile?style=7&x={x}&y={y}&z={z}",
+            crossOrigin: 'anonymous',
+            wrapX: true
+        })
+    }),
+    GaoDeSatellite: new TileLayer({
+        visible: false,
+        source: new XYZ({
+            url: "https://webst01.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}",
+            crossOrigin: 'anonymous',
+            wrapX: true
+        })
+    }),
+    ArcGis: new TileLayer({
+        visible: false,
+        source: new XYZ({
+            url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+            crossOrigin: 'anonymous',
+            wrapX: true
         })
     })
 }
@@ -136,7 +169,7 @@ onMounted(async () => {
     // 创建地图
     map.value = new OlMap({
         target: mapContainer.value,
-        layers: [layers.OSM, layers.Mapbox],
+        layers: [layers.OSM, layers.Mapbox, layers.MapboxTile, layers.GaoDeSatellite, layers.GaoDe, layers.ArcGis],
         view: new View({
             center: fromLonLat([120, 30]),
             zoom: 4
@@ -401,7 +434,11 @@ const setupClickHandler = () => {
 const showPopup = (feature: Feature, coordinate: number[]) => {
     if (!popup.value) return;
 
-    const isPilot = feature.get("isPilot") as boolean;
+    const isPilot = feature.get("isPilot");
+    if (isPilot == undefined) {
+        return;
+    }
+
     if (isPilot) {
         const callsign = feature.get('callsign') as string;
         const flightPlan = feature.get('flightPlan') as FlightPlanModel;
@@ -458,9 +495,13 @@ onUnmounted(() => {
             <div id="popup-content" v-html="popupContent"></div>
         </div>
         <div class="ol-switch">
-            <el-radio-group v-model="selectedLayer">
-                <el-radio value="OSM" label="OSM"/>
-                <el-radio value="Mapbox" label="Mapbox" :disabled="!mapBoxAvailable"/>
+            <el-radio-group v-model="selectedLayer" class="map-selector">
+                <el-radio value="OSM" label="OSM地图"/>
+                <el-radio value="Mapbox" label="Mapbox向量图" :disabled="!mapBoxAvailable"/>
+                <el-radio value="MapboxTile" label="Mapbox卫星图" :disabled="!mapBoxAvailable"/>
+                <el-radio value="GaoDe" label="高德地图"/>
+                <el-radio value="GaoDeSatellite" label="高德卫星图"/>
+                <el-radio value="ArcGis" label="ArcGis卫星图"/>
             </el-radio-group>
         </div>
     </div>
@@ -476,6 +517,20 @@ onUnmounted(() => {
 .map-container {
     width: 100%;
     height: 100%;
+}
+
+.map-selector {
+    border-radius: 20px;
+    padding: 10px;
+}
+
+.map-selector:hover {
+    backdrop-filter: blur(10px);
+    background-image: linear-gradient(45deg, rgba(66, 60, 90, 0.15), rgba(66, 60, 90, 0.15));
+
+    .el-radio {
+        color: white;
+    }
 }
 
 .el-radio-group {

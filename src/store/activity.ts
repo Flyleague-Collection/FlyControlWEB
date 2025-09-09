@@ -1,10 +1,11 @@
-import {defineStore} from "pinia";
 import moment from "moment";
+import {defineStore} from "pinia";
+import {ref} from "vue";
+
+import config, {airports} from "@/config/index.js";
 import {useUserStore} from "@/store/user.js";
 import {showError} from "@/utils/message.js";
 import request from "@/utils/request.js";
-import {ref} from "vue";
-import config, {airports} from "@/config/index.js";
 
 export const useActivityStore = defineStore("activity", () => {
     const userStore = useUserStore();
@@ -52,6 +53,9 @@ export const useActivityStore = defineStore("activity", () => {
     const getActivityById = async (activityId: number): Promise<ActivityModel | null> => {
         const response = await request.get(`/activities/${activityId}`)
         if (response.status === 200) {
+            if (!response.data.image_url.startsWith("http") && response.data.image_url != "") {
+                response.data.image_url = `${config.backend_url}/${response.data.image_url}`
+            }
             return response.data;
         }
         return null;

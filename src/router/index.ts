@@ -1,5 +1,8 @@
 import {createRouter, createWebHistory, RouteRecordRaw} from "vue-router";
 import {useUserStore} from "@/store/user.js";
+import {PermissionNode} from "@/utils/permission.js";
+import {showError} from "@/utils/message.js";
+import request from "@/utils/request.js";
 
 const routes: RouteRecordRaw[] = [
     {
@@ -8,7 +11,8 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/pages/Portal.vue"),
         meta: {
             requireAuth: false,
-            title: "门户网页"
+            title: "门户网页",
+            requirePermissions: []
         }
     },
     {
@@ -17,7 +21,8 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/pages/user/Login.vue"),
         meta: {
             requireAuth: false,
-            title: "登录页"
+            title: "登录页",
+            requirePermissions: []
         }
     },
     {
@@ -26,7 +31,8 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/pages/user/Register.vue"),
         meta: {
             requireAuth: false,
-            title: "注册页"
+            title: "注册页",
+            requirePermissions: []
         }
     },
     {
@@ -34,7 +40,8 @@ const routes: RouteRecordRaw[] = [
         name: "Main",
         component: () => import("@/layout/SidebarLayout.vue"),
         meta: {
-            requireAuth: true
+            requireAuth: true,
+            requirePermissions: []
         },
         children: [
             {
@@ -43,7 +50,8 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("@/pages/Home.vue"),
                 meta: {
                     requireAuth: true,
-                    title: "主页"
+                    title: "主页",
+                    requirePermissions: []
                 }
             },
             {
@@ -52,7 +60,8 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("@/pages/activity/Activity.vue"),
                 meta: {
                     requireAuth: true,
-                    title: "活动页"
+                    title: "活动页",
+                    requirePermissions: []
                 }
             },
             {
@@ -61,7 +70,8 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("@/pages/activity/ActivityDetail.vue"),
                 meta: {
                     requireAuth: true,
-                    title: "活动详情页"
+                    title: "活动详情页",
+                    requirePermissions: []
                 }
             },
             {
@@ -70,7 +80,8 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("@/pages/OnlineMap.vue"),
                 meta: {
                     requireAuth: true,
-                    title: "在线地图"
+                    title: "在线地图",
+                    requirePermissions: []
                 }
             },
             {
@@ -79,7 +90,8 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("@/pages/controller/Application.vue"),
                 meta: {
                     requireAuth: true,
-                    title: "管制员申请"
+                    title: "管制员申请",
+                    requirePermissions: []
                 }
             },
             {
@@ -88,7 +100,8 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("@/pages/controller/Activity.vue"),
                 meta: {
                     requireAuth: true,
-                    title: "活动登记"
+                    title: "活动登记",
+                    requirePermissions: []
                 }
             },
             {
@@ -97,7 +110,8 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("@/pages/controller/Booking.vue"),
                 meta: {
                     requireAuth: true,
-                    title: "考核预约"
+                    title: "考核预约",
+                    requirePermissions: []
                 }
             },
             {
@@ -106,7 +120,8 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("@/pages/controller/Profile.vue"),
                 meta: {
                     requireAuth: true,
-                    title: "管制员档案"
+                    title: "管制员档案",
+                    requirePermissions: []
                 }
             },
             {
@@ -115,7 +130,8 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("@/pages/Ticket.vue"),
                 meta: {
                     requireAuth: true,
-                    title: "投诉与反馈中心"
+                    title: "投诉与反馈中心",
+                    requirePermissions: []
                 }
             },
             {
@@ -124,7 +140,8 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("@/pages/admin/user/Users.vue"),
                 meta: {
                     requireAuth: true,
-                    title: "用户管理"
+                    title: "用户管理",
+                    requirePermissions: [PermissionNode.UserShowList]
                 }
             },
             {
@@ -133,7 +150,8 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("@/pages/admin/controller/Controllers.vue"),
                 meta: {
                     requireAuth: true,
-                    title: "管制员管理"
+                    title: "管制员管理",
+                    requirePermissions: [PermissionNode.UserShowList]
                 }
             },
             {
@@ -142,7 +160,8 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("@/pages/admin/activity/Activities.vue"),
                 meta: {
                     requireAuth: true,
-                    title: "活动管理"
+                    title: "活动管理",
+                    requirePermissions: [PermissionNode.ActivityShowList]
                 }
             },
             {
@@ -151,7 +170,8 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("@/pages/admin/activity/ActivityEdit.vue"),
                 meta: {
                     requireAuth: true,
-                    title: "编辑活动"
+                    title: "编辑活动",
+                    requirePermissions: [PermissionNode.ActivityShowList, PermissionNode.ActivityEdit]
                 }
             },
             {
@@ -160,7 +180,8 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("@/pages/admin/activity/ActivityCreate.vue"),
                 meta: {
                     requireAuth: true,
-                    title: "新建活动"
+                    title: "新建活动",
+                    requirePermissions: [PermissionNode.ActivityShowList, PermissionNode.ActivityPublish]
                 }
             },
             {
@@ -169,7 +190,8 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("@/pages/admin/Online.vue"),
                 meta: {
                     requireAuth: true,
-                    title: "在线管理"
+                    title: "在线管理",
+                    requirePermissions: [PermissionNode.ClientManagerEntry]
                 }
             },
             {
@@ -178,16 +200,28 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("@/pages/admin/Tickets.vue"),
                 meta: {
                     requireAuth: true,
-                    title: "工单管理"
+                    title: "工单管理",
+                    requirePermissions: []
                 }
             },
             {
                 path: "/admin/permissions",
                 name: "AdminPermissions",
-                component: () => import("@/pages/admin/Permissions.vue"),
+                component: () => import("@/pages/admin/permission/Permissions.vue"),
                 meta: {
                     requireAuth: true,
-                    title: "权限管理"
+                    title: "权限管理",
+                    requirePermissions: [PermissionNode.UserShowList, PermissionNode.UserEditPermission]
+                }
+            },
+            {
+                path: "/admin/permissions/:id",
+                name: "AdminEditPermission",
+                component: () => import("@/pages/admin/permission/EditPermission.vue"),
+                meta: {
+                    requireAuth: true,
+                    title: "编辑用户权限",
+                    requirePermissions: [PermissionNode.UserShowList, PermissionNode.UserEditPermission]
                 }
             },
             {
@@ -196,7 +230,8 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("@/pages/admin/Audit.vue"),
                 meta: {
                     requireAuth: true,
-                    title: "审计日志"
+                    title: "审计日志",
+                    requirePermissions: [PermissionNode.AuditLogShow]
                 }
             },
             {
@@ -205,7 +240,8 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("@/pages/user/Settings.vue"),
                 meta: {
                     requireAuth: true,
-                    title: "个人中心"
+                    title: "个人中心",
+                    requirePermissions: []
                 }
             }
         ]
@@ -224,7 +260,15 @@ router.beforeEach((to, _, next) => {
     const userStore = useUserStore();
     if (to.meta.requireAuth) {
         if (userStore.isLogin) {
-            next()
+            if (userStore.permission.hasPermissions(...to.meta.requirePermissions)) {
+                next()
+            } else {
+                request.post("/audits/unlawful_overreach",
+                    {access_path: to.fullPath},
+                    {headers: {"Authorization": `Bearer ${userStore.token}`}})
+                    .then(_ => showError("非法的越权访问, 日志已记录"))
+                userStore.logout()
+            }
         } else {
             next({
                 path: '/login',

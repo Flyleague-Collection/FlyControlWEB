@@ -1,6 +1,7 @@
 import axios from 'axios'
-import {useUserStore} from "@/store/user.js";
+
 import config from "@/config/index.js";
+import {useUserStore} from "@/store/user.js";
 import {showApiErrorMsg} from "@/utils/message.js";
 
 const request = axios.create({

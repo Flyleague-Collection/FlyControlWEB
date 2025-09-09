@@ -42,9 +42,10 @@ const nearByActivity = computed(() => activities.value?.filter(activity => {
                 </el-icon>
                 <span>近期活动</span>
             </div>
-            <div class="nearby-activity-card">
+            <div class="nearby-activity-card" v-if="nearByActivity && nearByActivity.length != 0">
                 <ActivityCard class="activity-card-item" v-for="activity in nearByActivity" :activity="activity"/>
             </div>
+            <el-empty v-else description="看起来近期并没有活动"/>
         </el-card>
         <ActivityCalendar class="activity-calendar"/>
     </div>

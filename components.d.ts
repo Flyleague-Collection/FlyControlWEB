@@ -55,10 +55,12 @@ declare module 'vue' {
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     ElUpload: typeof import('element-plus/es')['ElUpload']
     FormDialog: typeof import('./src/components/dialog/FormDialog.vue')['default']
+    PageList: typeof import('./src/components/PageList.vue')['default']
+    PageListCard: typeof import('./src/components/card/PageListCard.vue')['default']
     PersonCard: typeof import('./src/components/card/PersonCard.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Sidebar: typeof import('./src/components/Sidebar.vue')['default']
-    UserEditPasswordDialog: typeof import('src/components/dialog/FormDialog.vue')['default']
+    UserlistCard: typeof import('./src/components/card/UserlistCard.vue')['default']
   }
 }

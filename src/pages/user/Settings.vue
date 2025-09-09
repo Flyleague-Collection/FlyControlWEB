@@ -2,8 +2,8 @@
 import {useUserStore} from "@/store/user.js";
 import config from "@/config/index.js";
 import {useServerConfigStore} from "@/store/server_config.js";
-import {computed, getCurrentInstance, onMounted, reactive, Ref, ref} from "vue";
-import {Edit, Plus} from "@element-plus/icons-vue";
+import {computed, onMounted, reactive, Ref, ref} from "vue";
+import {Plus} from "@element-plus/icons-vue";
 import request from "@/utils/request.js";
 import moment from "moment";
 import AxiosXHR = Axios.AxiosXHR;
@@ -19,6 +19,7 @@ import {
 } from "element-plus";
 import {showError, showSuccess, showWarning} from "@/utils/message.js";
 import {useActivityStore} from "@/store/activity.js";
+import {sizeToString} from "@/utils/utils.js";
 
 const serverConfig = useServerConfigStore();
 const userStore = useUserStore();
@@ -137,43 +138,27 @@ const updateUserInfoForm = reactive<UpdateUserInfoForm>({
     email: ''
 })
 const updateUserInfoRules = reactive<FormRules>({
-    username: [
-        serverConfig.usernameLimit,
-        {
-            pattern: /^[a-zA-Z_][a-zA-Z0-9_]+$/,
-            message: '用户名只能包含字母、数字和下划线且首位不能为数字',
-            trigger: 'blur'
-        },
-        {
-            validator: async (rule, value, callback) => {
-                if (await userStore.checkUsername(value)) {
-                    callback()
-                    return
-                }
-                callback(new Error(`该用户名已被注册`))
-            },
-            trigger: 'blur'
-        }
-    ],
-    email: [
-        {type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur'},
-        {
-            validator: async (rule, value, callback) => {
-                if (await userStore.checkEmail(value)) {
-                    callback()
-                    return
-                }
-                callback(new Error(`该邮箱已被注册`))
-            },
-            trigger: 'blur'
-        }
-    ]
+    username: serverConfig.usernameLimit,
+    email: serverConfig.emailLimit
 })
 
 const uploadRef = ref<UploadInstance>()
 const selectedImage = ref<UploadUserFile | null>(null)
 const fileList = ref<UploadUserFile[]>([])
 const handleChanged = (uploadFile: UploadFile, _) => {
+    selectedImage.value = null;
+    // 5MB
+    if (uploadFile.size > serverConfig.config.image_limit.max_allow_size) {
+        showError(`不能上传大于${sizeToString(serverConfig.config.image_limit.max_allow_size)}的文件`);
+        uploadRef.value!.clearFiles()
+        return;
+    }
+    const ext = `.${uploadFile.name.split('.').pop()?.toLowerCase()}`;
+    if (serverConfig.config.image_limit.allowed_ext.findIndex(x => x === ext) === -1) {
+        showError(`不支持的图片类型`);
+        uploadRef.value!.clearFiles()
+        return;
+    }
     selectedImage.value = uploadFile;
 }
 
@@ -310,6 +295,9 @@ const submitUpdateUserInfoForm = async () => {
                                 </el-descriptions-item>
                                 <el-descriptions-item label="管制时长">
                                     {{ userData.total_atc_time }}秒
+                                </el-descriptions-item>
+                                <el-descriptions-item label="飞控版本">
+                                    0.5.1
                                 </el-descriptions-item>
                             </el-descriptions>
                         </el-card>

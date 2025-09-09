@@ -15,8 +15,11 @@ import {
     UploadUserFile
 } from "element-plus";
 import {showError, showSuccess} from "@/utils/message.js";
+import {sizeToString} from "@/utils/utils.js";
+import {useServerConfigStore} from "@/store/server_config.js";
 
 const router = useRouter();
+const serverConfig = useServerConfigStore();
 const activityStore = useActivityStore();
 // 弹出框标识
 const resetConfirmDialog = ref(false)
@@ -190,6 +193,19 @@ const deleteFacility = (id: number) => {
 }
 
 const handleChanged = (uploadFile: UploadFile, _) => {
+    selectedImage.value = null;
+    // 5MB
+    if (uploadFile.size > serverConfig.config.image_limit.max_allow_size) {
+        showError(`不能上传大于${sizeToString(serverConfig.config.image_limit.max_allow_size)}的文件`);
+        uploadRef.value!.clearFiles()
+        return;
+    }
+    const ext = `.${uploadFile.name.split('.').pop()?.toLowerCase()}`;
+    if (serverConfig.config.image_limit.allowed_ext.findIndex(x => x === ext) === -1) {
+        showError(`不支持的图片类型`);
+        uploadRef.value!.clearFiles()
+        return;
+    }
     selectedImage.value = uploadFile;
 }
 

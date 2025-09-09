@@ -1,148 +1,154 @@
 <script setup lang="ts">
-import {useRouter} from "vue-router";
-import {useUserStore} from "@/store/user.js";
-import {onMounted, reactive, ref} from "vue";
-import {showError, showSuccess} from "@/utils/message.js";
-import {Check, Close, EditPen} from "@element-plus/icons-vue";
-import {useServerConfigStore} from "@/store/server_config.js";
 import {cloneDeep} from "lodash";
 import {FormInstance, FormRules} from "element-plus";
-import request from "@/utils/request.js";
+import {Check, Close, EditPen} from "@element-plus/icons-vue";
+import {reactive, Ref, ref} from "vue";
 
-const router = useRouter();
+import PageListCard from "@/components/card/PageListCard.vue";
+import type {PageListCardInstance, PageListResponse} from "@/components/card/PageListCard.js";
+import ConfirmDialog from "@/components/dialog/ConfirmDialog.vue";
+import type {ConfirmDialogInstance} from "@/components/dialog/ConfirmDialog.js";
+import {useUserStore} from "@/store/user.js";
+import {useServerConfigStore} from "@/store/server_config.js";
+import {showError, showSuccess, showWarning} from "@/utils/message.js";
+import config from "@/config/index.js";
+
 const userStore = useUserStore();
-const users = ref<UserModel[]>([]);
 const serverConfig = useServerConfigStore();
 
-const pageSize = ref(20);
-const page = ref(1);
-const total = ref(0);
-
-const fetchPageData = async () => {
-    const data = await userStore.getUserPage(page.value, pageSize.value)
+const fetchUsers = async (page: number, pageSize: number): Promise<PageListResponse<UserModel>> => {
+    const result: PageListResponse<UserModel> = {data: [], total: 0}
+    const data = await userStore.getUserPage(page, pageSize)
     if (data == null) {
         showError("用户数据加载失败")
-        return
+    } else {
+        result.data = data.items
+        result.total = data.total
     }
-
-    users.value = data.items
-    total.value = data.total
+    return result;
 }
 
-const pageChange = async (value: number) => {
-    page.value = value;
-    await fetchPageData()
-}
-
-const pageSizeChange = async (value: number) => {
-    pageSize.value = value;
-    await fetchPageData()
-}
-
-const userData = ref<UserModel>({} as UserModel);
-let userId = 0;
-const showUserEditDialog = ref(false);
-const userEditFormRef = ref<FormInstance>()
+let oldUserData: UserModel | null = null;
+const userData: Ref<UserModel & { password: string }> = ref({} as UserModel & { password: string });
+const showUserEditDialog: Ref<boolean> = ref(false);
 
 const rules = reactive<FormRules>({
-    username: [{required: true, message: "用户名不能为空", trigger: "blur"}],
+    username: [
+        {required: true, message: "用户名不能为空", trigger: "blur"},
+        ...serverConfig.usernameLimit
+    ],
     email: [
         {required: true, message: "邮箱不能为空", trigger: "blur"},
-        {type: "email", message: "邮箱格式错误", trigger: "blur"}
+        ...serverConfig.emailLimit
+    ],
+    password: [
+        ...serverConfig.passwordLimit
     ]
 })
 
-const showDialog = (id: number) => {
-    userId = id;
-    userEditFormRef.value?.clearValidate()
-    userData.value = cloneDeep(users.value[id]);
-    userData.value["password"] = ""
-    showUserEditDialog.value = true;
+const showEditUserProfileDialog = async (id: number) => {
+    const user = await userStore.getUserByUid(id)
+    if (user == null) {
+        return
+    }
+    oldUserData = cloneDeep(user);
+    userData.value = user as UserModel & { password: string }
+    userData.value.password = ""
+    showUserEditDialog.value = true
 }
 
-const saveUserProfile = async () => {
-    try {
-        await userEditFormRef.value?.validate()
-    } catch {
-        showError("表单验证失败")
+const pageListCardRef: Ref<PageListCardInstance> = ref(null)
+const userEditFormRef = ref<FormInstance>()
+
+const updateUserProfile = async () => {
+    if (oldUserData == null) {
+        showError("原始用户数据出错")
         return
     }
-    const oldValue = users.value[userId];
-    const data: Record<string, string | number> = {};
-    if (oldValue.username != userData.value.username) {
-        data['username'] = userData.value.username;
+    userEditFormRef.value?.clearValidate()
+    const data: RequestUpdateUserProfile = {};
+    if (userData.value.username != "" && oldUserData.username != userData.value.username) {
+        try {
+            await userEditFormRef.value?.validateField("username")
+        } catch {
+            showError("表单验证失败")
+            return
+        }
+        data.username = userData.value.username;
     }
-    if (oldValue.email != userData.value.email) {
-        data['email'] = userData.value.email;
+    if (userData.value.email != "" && oldUserData.email != userData.value.email) {
+        try {
+            await userEditFormRef.value?.validateField("email")
+        } catch {
+            showError("表单验证失败")
+            return
+        }
+        data.email = userData.value.email;
     }
-    if (oldValue.qq != userData.value.qq) {
-        data["qq"] = userData.value.qq
+    if (userData.value.qq != 0 && oldUserData.qq != userData.value.qq) {
+        data.qq = userData.value.qq
     }
-    if (userData.value["password"] != "") {
-        data['new_password'] = userData.value["password"];
+    if (userData.value.password != "") {
+        data.new_password = userData.value.password;
     }
     if (Object.keys(data).length == 0) {
-        showError("没有需要修改的内容")
+        showWarning("没有需要修改的内容")
         return
     }
-    const response = await request.patch(`/users/${oldValue.id}/profile`, data)
-    if (response.status == 200) {
+    const response = await userStore.updateUserInformation(oldUserData.id, data)
+    if (response != null) {
         showSuccess("编辑用户信息成功")
-        await fetchPageData()
+        await pageListCardRef.value?.flushData()
         showUserEditDialog.value = false;
     }
 }
 
-onMounted(async () => {
-    await fetchPageData()
-    userData.value = users.value[0]
-    userData.value["password"] = ""
-})
+const confirmDialogRef: Ref<ConfirmDialogInstance> = ref(null)
+
+const confirmExit = () => {
+    confirmDialogRef.value?.show()
+}
+
+const exit = () => {
+    showUserEditDialog.value = false
+}
 </script>
 
-
 <template>
-    <el-card footer-class="flex justify-content-center">
-        <template #header>
-            <div class="flex align-items-center">
-                <span>用户总览</span>
-            </div>
-        </template>
-        <el-table :data="users">
-            <el-table-column prop="cid" label="CID"></el-table-column>
-            <el-table-column prop="username" label="用户名"></el-table-column>
-            <el-table-column prop="email" label="邮箱"></el-table-column>
-            <el-table-column label="管制权限">
-                <template #default="scope">
-                    {{ serverConfig.ratings[scope.row.rating + 1].short_name }}
-                </template>
-            </el-table-column>
-            <el-table-column prop="permission" label="飞控权限"></el-table-column>
-            <el-table-column label="操作">
-                <template #default="scope">
-                    <div id="activity-option-container" class="flex">
-                        <el-button id="activity-option-edit-btn" :icon="EditPen" type="primary"
-                                   @click="showDialog(scope.$index)">
-                            编辑
-                        </el-button>
-                    </div>
-                </template>
-            </el-table-column>
-        </el-table>
-        <template #footer>
-            <el-pagination
-                :page-size="pageSize"
-                :current-page="page"
-                :total="total"
-                :page-sizes="[10, 20, 30, 40, 50]"
-                layout="total, sizes, prev, pager, next, jumper"
-                @update:current-page="pageChange"
-                @update:page-size="pageSizeChange"
-            />
-        </template>
-    </el-card>
-    <el-dialog v-model="showUserEditDialog" :close-on-click-modal="false" :show-close="false"
-               :close-on-press-escape="false">
+    <PageListCard ref="pageListCardRef"
+                  :fetch-data="fetchUsers"
+                  card-title="用户总览"
+                  :double-click-row="row => showEditUserProfileDialog(row.id)">
+        <el-table-column prop="cid" label="CID"></el-table-column>
+        <el-table-column prop="username" label="用户名"></el-table-column>
+        <el-table-column prop="email" label="邮箱"></el-table-column>
+        <el-table-column label="管制权限">
+            <template #default="scope">
+                <el-tag class="level text-color-white border-none" round
+                        :color="config.rating_color[scope.row.rating]">
+                    {{ serverConfig.getRatingShortName(scope.row.rating as number) }}
+                </el-tag>
+            </template>
+        </el-table-column>
+        <el-table-column prop="permission" label="飞控权限"></el-table-column>
+        <el-table-column label="操作">
+            <template #default="scope">
+                <div id="user-option-container" class="flex">
+                    <el-button id="user-option-edit-btn"
+                               :icon="EditPen"
+                               type="primary"
+                               @click="showEditUserProfileDialog(scope.row.id)">
+                        编辑
+                    </el-button>
+                </div>
+            </template>
+        </el-table-column>
+    </PageListCard>
+    <el-dialog v-model="showUserEditDialog"
+               :close-on-click-modal="false"
+               :show-close="false"
+               :close-on-press-escape="false"
+               :align-center="true">
         <template #header>
             编辑用户信息
         </template>
@@ -159,17 +165,21 @@ onMounted(async () => {
             <el-form-item label="QQ">
                 <el-input v-model.number="userData.qq"/>
             </el-form-item>
-            <el-form-item label="密码">
+            <el-form-item label="密码" prop="password">
                 <el-input v-model="userData.password" type="password"/>
             </el-form-item>
         </el-form>
         <template #footer>
             <div class="flex justify-content-flex-end">
-                <el-button type="success" dark :icon="Check" @click="saveUserProfile">保存</el-button>
-                <el-button type="danger" dark :icon="Close" @click="showUserEditDialog = false">取消</el-button>
+                <el-button type="success" dark :icon="Check" @click="updateUserProfile()">保存</el-button>
+                <el-button type="danger" dark :icon="Close" @click="confirmExit()">取消</el-button>
             </div>
         </template>
     </el-dialog>
+    <ConfirmDialog ref="confirmDialogRef"
+                   header-content="确认退出"
+                   body-content="未保存的操作会丢失, 确认退出吗？"
+                   @confirm-event="exit()"/>
 </template>
 
 <style scoped>
@@ -178,16 +188,12 @@ onMounted(async () => {
 }
 
 @media (max-width: 1105px) {
-    #activity-option-container {
+    #user-option-container {
         flex-direction: column;
     }
 
-    #activity-option-edit-btn {
+    #user-option-edit-btn {
         margin-bottom: 10px;
-    }
-
-    #activity-option-delete-btn {
-        margin: 0;
     }
 }
 </style>

@@ -63,9 +63,6 @@ const getActivityInfo = async () => {
 
 onMounted(async () => {
     await getActivityInfo();
-    if (!activity.value.image_url.startsWith("http") && activity.value.image_url != "") {
-        activity.value.image_url = `${config.backend_url}/${activity.value.image_url}`
-    }
 })
 
 const selectedValue = ref("pilot")
