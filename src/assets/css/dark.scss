@@ -1,4 +1,18 @@
-html.dark .el-table {
-  --el-table-header-bg-color: var(--el-card-bg-color);
-  --el-table-tr-bg-color: var(--el-card-bg-color);
+html.dark {
+  --el-bg-color: #1a1a1a;
+  --el-bg-color-overlay: #242424;
+  --el-text-color-primary: #ffffff;
+  --el-text-color-secondary: #a8abb2;
+  --el-border-color: #4c4d4f;
+  --el-fill-color-light: #242424;
+  --el-fill-color-darker: #1a1a1a;
+  --secondary-bg-color: rgba(0, 0, 0, 0.3);
+  --primary-color: #4285f4;
+  --secondary-color: #2d2d2d;
+  --accent-color: #ffb74d;
+
+  .el-table {
+    --el-table-header-bg-color: var(--el-card-bg-color);
+    --el-table-tr-bg-color: var(--el-card-bg-color);
+  }
 }

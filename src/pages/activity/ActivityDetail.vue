@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import {useActivityStore} from "@/store/activity.js";
-import {useRoute} from "vue-router";
-import {computed, onMounted, onUnmounted, Ref, ref} from "vue";
+import {useRoute, useRouter} from "vue-router";
+import {computed, onMounted, Ref, ref} from "vue";
 import moment from "moment";
 import type {Moment} from "moment";
-import {Document} from "@element-plus/icons-vue";
+import {ArrowLeft, Document} from "@element-plus/icons-vue";
 import config from "@/config/index.js";
 import ActivityPilotCard from "@/components/card/ActivityPilotCard.vue";
 import ActivityFacilityCard from "@/components/card/ActivityFacilityCard.vue";
@@ -12,8 +12,10 @@ import type {TabBarInstance, TabsPaneContext} from "element-plus";
 import ActivityPilotSignDialog from "@/components/dialog/ActivityPilotSignDialog.vue";
 import {useUserStore} from "@/store/user.js";
 import {showError, showSuccess} from "@/utils/message.js";
+import {padStart} from "lodash-es";
 
 const route = useRoute();
+const router = useRouter();
 const activityStore = useActivityStore();
 const userStore = useUserStore();
 const activity: Ref<ActivityModel> = ref({
@@ -93,7 +95,7 @@ const activitySignedCallsign = ref("")
 
 const alreadySignedPilot = computed(() => {
     // @ts-ignore
-    const pilot = activity.value?.pilots?.find((element: ActivityPilotModel) => element.cid == userStore.userData.cid) as ActivityPilotModel
+    const pilot = activity.value?.pilots?.find((element: ActivityPilotModel) => element.uid == userStore.userData.id) as ActivityPilotModel
     if (pilot) {
         activitySignedCallsign.value = pilot.callsign;
         return true;
@@ -103,7 +105,7 @@ const alreadySignedPilot = computed(() => {
 
 const alreadySignedController = computed(() => {
     // @ts-ignore
-    const facility = activity.value?.facilities?.find((element: ActivityFacilityModel) => element.controller?.cid == userStore.userData.cid) as ActivityFacilityModel
+    const facility = activity.value?.facilities?.find((element: ActivityFacilityModel) => element.controller?.uid == userStore.userData.id) as ActivityFacilityModel
     if (facility) {
         activitySignedCallsign.value = facility.callsign;
         return true;
@@ -124,7 +126,7 @@ const cancelSign = async (facilityId: number = 0) => {
     }
     if (alreadySignedController.value) {
         if (facilityId == 0) {
-            const facility = activity.value.facilities?.find((element: ActivityFacilityModel) => element.controller?.cid == userStore.userData.cid) as ActivityFacilityModel
+            const facility = activity.value.facilities?.find((element: ActivityFacilityModel) => element.controller?.uid == userStore.userData.id) as ActivityFacilityModel
             facilityId = facility.id
         }
         if (await activityStore.controllerUnsign(activity.value.id, facilityId)) {
@@ -138,117 +140,131 @@ const cancelSign = async (facilityId: number = 0) => {
 <template>
     <ActivityPilotSignDialog v-model="showPilotSignDialog" @dialog-confirm-event="submitPilotSign"/>
     <div class="outside-layout">
-        <span class="activity-title">{{ activity?.title }}</span>
-        <div class="activity-content">
-            <img :src="activity?.image_url" alt="活动图片" class="activity-img"/>
-            <el-descriptions :column="1" border class="activity-descriptions">
-                <template #title>
-                    <div style="display: flex;align-items: center">
-                        <el-icon>
-                            <Document/>
-                        </el-icon>
-                        <span>活动简报</span>
-                    </div>
-                </template>
-                <el-descriptions-item>
-                    <template #label>
-                        活动时间
-                    </template>
-                    {{ moment(activity?.active_time).format("YYYY-MM-DD HH:mm:ss") }}
-                </el-descriptions-item>
-                <el-descriptions-item>
-                    <template #label>
-                        起飞机场
-                    </template>
-                    {{ activity?.departure_airport }}
-                </el-descriptions-item>
-                <el-descriptions-item>
-                    <template #label>
-                        到达机场
-                    </template>
-                    {{ activity?.arrival_airport }}
-                </el-descriptions-item>
-                <el-descriptions-item>
-                    <template #label>
-                        发布人
-                    </template>
-                    {{ activity?.publisher }}
-                </el-descriptions-item>
-                <el-descriptions-item>
-                    <template #label>
-                        航路
-                    </template>
-                    {{ activity?.route }}
-                </el-descriptions-item>
-                <el-descriptions-item>
-                    <template #label>
-                        飞行距离
-                    </template>
-                    {{ activity?.distance }}
-                </el-descriptions-item>
-                <el-descriptions-item>
-                    <template #label>
-                        NOTAMS
-                    </template>
-                    {{ activity?.NOTAMS }}
-                </el-descriptions-item>
-                <el-descriptions-item v-if="alreadySigned">
-                    <template #label>
-                        报名信息
-                    </template>
-                    <div class="flex flex-direction-column align-items-center display-over-450px"
-                         v-if="alreadySignedPilot">
-                        <el-tag effect="dark" class="margin-bottom-5" type="success">你已报名作为机组, 呼号:
-                            {{ activitySignedCallsign }}
-                        </el-tag>
-                        <el-tag effect="dark">祝联飞顺利</el-tag>
-                    </div>
-                    <div class="flex flex-direction-column align-items-center display-over-450px" v-else>
-                        <el-tag effect="dark" class="margin-bottom-5" type="success">你已报名作为管制, 席位:
-                            {{ activitySignedCallsign }}
-                        </el-tag>
-                        <el-tag effect="dark">请及时参与管制协调会, 祝管制顺利</el-tag>
-                    </div>
-                    <div
-                        class="display-none display-flex-below-450px flex-direction-column align-items-center"
-                        v-if="alreadySignedPilot">
-                        <el-tag effect="dark" class="margin-bottom-5" type="success">你已报名作为机组</el-tag>
-                        <el-tag effect="dark" class="margin-bottom-5">呼号: {{ activitySignedCallsign }}</el-tag>
-                        <el-tag effect="dark">祝联飞顺利</el-tag>
-                    </div>
-                    <div
-                        class="display-none display-flex-below-450px flex-direction-column align-items-center"
-                        v-else>
-                        <el-tag effect="dark" class="margin-bottom-5" type="success">你已报名作为管制</el-tag>
-                        <el-tag effect="dark" class="margin-bottom-5">席位: {{ activitySignedCallsign }}</el-tag>
-                        <el-tag effect="dark" class="margin-bottom-5">请及时参与管制协调会</el-tag>
-                        <el-tag effect="dark">祝管制顺利</el-tag>
-                    </div>
-                </el-descriptions-item>
-                <el-descriptions-item>
-                    <template #label>
-                        立刻报名
-                    </template>
-                    <div class="join-activity" v-if="!alreadySigned">
-                        <el-button type="primary" @click="showPilotSignDialog = true" :disabled="alreadySigned">
-                            飞行员报名
-                        </el-button>
-                        <el-button type="primary" @click="controllerSignButton" :disabled="alreadySigned">
-                            管制员报名
-                        </el-button>
-                    </div>
-                    <div class="join-activity" v-else>
-                        <el-button type="danger" @click="_ => cancelSign()">取消报名</el-button>
-                    </div>
-                </el-descriptions-item>
-            </el-descriptions>
+        <div class="flex align-items-center">
+            <el-button :icon="ArrowLeft" text @click="router.push('/activities')"/>
+            <span class="activity-title">{{ activity?.title }}</span>
         </div>
-        <el-row :gutter="10" class="activity-status">
+        <div class="activity-content">
+            <el-splitter>
+                <el-splitter-panel size="60%">
+                    <img :src="activity?.image_url" alt="活动图片" class="activity-img"/>
+                </el-splitter-panel>
+                <el-splitter-panel>
+                    <el-descriptions :column="1" border class="activity-descriptions">
+                        <template #title>
+                            <div style="display: flex;align-items: center">
+                                <el-icon>
+                                    <Document/>
+                                </el-icon>
+                                <span>活动简报</span>
+                            </div>
+                        </template>
+                        <el-descriptions-item>
+                            <template #label>
+                                活动时间
+                            </template>
+                            {{ moment(activity?.active_time).format("YYYY-MM-DD HH:mm:ss") }}
+                        </el-descriptions-item>
+                        <el-descriptions-item>
+                            <template #label>
+                                起飞机场
+                            </template>
+                            {{ activity?.departure_airport }}
+                        </el-descriptions-item>
+                        <el-descriptions-item>
+                            <template #label>
+                                到达机场
+                            </template>
+                            {{ activity?.arrival_airport }}
+                        </el-descriptions-item>
+                        <el-descriptions-item>
+                            <template #label>
+                                发布人
+                            </template>
+                            {{ padStart(activity?.publisher, 4, '0') }}
+                        </el-descriptions-item>
+                        <el-descriptions-item>
+                            <template #label>
+                                航路
+                            </template>
+                            {{ activity?.route }}
+                        </el-descriptions-item>
+                        <el-descriptions-item>
+                            <template #label>
+                                飞行距离
+                            </template>
+                            {{ activity?.distance }}
+                        </el-descriptions-item>
+                        <el-descriptions-item>
+                            <template #label>
+                                NOTAMS
+                            </template>
+                            {{ activity?.NOTAMS }}
+                        </el-descriptions-item>
+                        <el-descriptions-item v-if="!signTimeout && alreadySigned">
+                            <template #label>
+                                报名信息
+                            </template>
+                            <el-space wrap
+                                      class="flex flex-direction-column align-items-center display-over-450px"
+                                      v-if="alreadySignedPilot">
+                                <el-tag effect="dark" class="margin-bottom-5" type="success">你已报名作为机组, 呼号:
+                                    {{ activitySignedCallsign }}
+                                </el-tag>
+                                <el-tag effect="dark">祝联飞顺利</el-tag>
+                            </el-space>
+                            <el-space class="flex flex-direction-column align-items-center display-over-450px" v-else>
+                                <el-tag effect="dark" class="margin-bottom-5" type="success">你已报名作为管制, 席位:
+                                    {{ activitySignedCallsign }}
+                                </el-tag>
+                                <el-tag effect="dark">请及时参与管制协调会, 祝管制顺利</el-tag>
+                            </el-space>
+                            <el-space
+                                class="display-none display-flex-below-450px flex-direction-column align-items-center"
+                                v-if="alreadySignedPilot">
+                                <el-tag effect="dark" class="margin-bottom-5" type="success">你已报名作为机组</el-tag>
+                                <el-tag effect="dark" class="margin-bottom-5">
+                                    呼号: {{ activitySignedCallsign }}
+                                </el-tag>
+                                <el-tag effect="dark">祝联飞顺利</el-tag>
+                            </el-space>
+                            <el-space
+                                class="display-none display-flex-below-450px flex-direction-column align-items-center"
+                                v-else>
+                                <el-tag effect="dark" class="margin-bottom-5" type="success">你已报名作为管制</el-tag>
+                                <el-tag effect="dark" class="margin-bottom-5">
+                                    席位: {{ activitySignedCallsign }}
+                                </el-tag>
+                                <el-tag effect="dark" class="margin-bottom-5">请及时参与管制协调会</el-tag>
+                                <el-tag effect="dark">祝管制顺利</el-tag>
+                            </el-space>
+                        </el-descriptions-item>
+                        <el-descriptions-item v-if="!signTimeout">
+                            <template #label>
+                                立刻报名
+                            </template>
+                            <el-space wrap v-if="!alreadySigned">
+                                <el-button type="primary" @click="showPilotSignDialog = true" :disabled="alreadySigned">
+                                    飞行员报名
+                                </el-button>
+                                <el-button type="primary" @click="controllerSignButton" :disabled="alreadySigned">
+                                    管制员报名
+                                </el-button>
+                            </el-space>
+                            <div class="join-activity" v-else>
+                                <el-button type="danger" @click="_ => cancelSign()">取消报名</el-button>
+                            </div>
+                        </el-descriptions-item>
+                    </el-descriptions>
+                </el-splitter-panel>
+            </el-splitter>
+        </div>
+        <el-row :gutter="10">
             <el-col :xs="24" :sm="12" :md="6" :lg="6" :xl="6">
                 <el-card class="card">
                     <div class="card-item">
                         <span class="card-item-title">飞行员报名数</span>
-                        <el-statistic class="card-item-content" :value="activity.pilots?.length"></el-statistic>
+                        <el-statistic class="card-item-content" :value="activity.pilots?.length"/>
                     </div>
                 </el-card>
             </el-col>
@@ -256,7 +272,7 @@ const cancelSign = async (facilityId: number = 0) => {
                 <el-card class="card">
                     <div class="card-item">
                         <span class="card-item-title">管制员报名数</span>
-                        <el-statistic class="card-item-content" :value="activity.controllers?.length"></el-statistic>
+                        <el-statistic class="card-item-content" :value="activity.controllers?.length"/>
                     </div>
                 </el-card>
             </el-col>
@@ -270,11 +286,11 @@ const cancelSign = async (facilityId: number = 0) => {
                 </el-card>
             </el-col>
             <el-col :xs="24" :sm="12" :md="6" :lg="6" :xl="6">
-                <el-card class="card" :class="config.activity_status[activity?.status - 1].class">
+                <el-card class="card" :class="config.activity_status[activity?.status].class">
                     <div class="card-item">
                         <span class="card-item-title margin-bottom-10">活动状态</span>
                         <span class="card-item-content">
-                            {{ config.activity_status[activity?.status - 1].label }}
+                            {{ config.activity_status[activity?.status].label }}
                         </span>
                     </div>
                 </el-card>
@@ -285,7 +301,7 @@ const cancelSign = async (facilityId: number = 0) => {
             <el-tab-pane label="飞行员" name="pilot">
                 <el-row :gutter="15">
                     <el-col v-for="pilot in activity?.pilots" :xs="24" :sm="12" :md="8" :lg="6" :xl="4">
-                        <ActivityPilotCard :pilot="pilot"/>
+                        <ActivityPilotCard :data="pilot"/>
                     </el-col>
                 </el-row>
             </el-tab-pane>
@@ -293,7 +309,8 @@ const cancelSign = async (facilityId: number = 0) => {
                 <el-row :gutter="15" v-if="activity && activity.facilities">
                     <el-col v-for="facility in activity?.facilities"
                             :xs="24" :sm="24" :md="12" :lg="8" :xl="6">
-                        <ActivityFacilityCard :facility="facility" :already-signed="alreadySigned"
+                        <ActivityFacilityCard :data="facility" :already-signed="alreadySigned"
+                                              :sign-time-out="signTimeout"
                                               @controller-sign-event="submitControllerSign"
                                               @controller-unsign-event="cancelSign"/>
                     </el-col>
@@ -338,8 +355,8 @@ const cancelSign = async (facilityId: number = 0) => {
         margin: 5px 0;
 
         .activity-img {
-            margin: 0 5px;
-            width: 70%;
+            padding: 5px;
+            width: 100%;
             border-radius: 20px;
         }
 

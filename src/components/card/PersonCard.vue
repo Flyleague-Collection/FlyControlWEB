@@ -2,6 +2,7 @@
 import config from "@/config/index.js";
 import {useUserStore} from "@/store/user.js";
 import {useServerConfigStore} from "@/store/server_config.js";
+import {padStart} from "lodash-es";
 
 defineProps({
     expend: {
@@ -18,47 +19,34 @@ const userData = userStore.userData;
 </script>
 
 <template>
-    <div class="person-card">
+    <el-space class="person-card">
         <el-avatar v-if="userData.avatar_url != ''" :src="userData.avatar_url"></el-avatar>
-        <el-avatar v-else>{{ userData.cid }}</el-avatar>
+        <el-avatar v-else>{{ padStart(userData.cid, 4, '0') }}</el-avatar>
         <Transition>
-            <div class="user-info" v-if="expend">
+            <el-space direction="vertical" v-if="expend">
                 <span class="username">{{ userData.username }}</span>
-                <el-tag class="level text-color-white border-none" size="large" round
-                        :color="config.rating_color[userData.rating]">
-                    {{ serverConfigStore.ratings[userData.rating + 1].short_name }}
-                </el-tag>
-            </div>
+                <el-space>
+                    <el-tag class="border-none" effect="dark"
+                            :color="config.ratings[userData.rating + 1].color">
+                        {{ serverConfigStore.ratings[userData.rating + 1].short_name }}
+                    </el-tag>
+                    <el-tag v-if="userData.tier2" type="success" effect="dark">Tier2</el-tag>
+                    <el-tag v-else type="danger" effect="dark">Tier2</el-tag>
+                </el-space>
+            </el-space>
         </Transition>
-    </div>
+    </el-space>
 </template>
 
 <style scoped>
 .username {
-    font-size: 20px;
+    font-size: 1.1rem;
     font-weight: bold;
-}
-
-.level {
-    font-size: 15px;
-    padding: 0 10px;
 }
 
 .person-card {
     display: flex;
     overflow: hidden;
-    height: 50px;
-}
-
-.person-card > * {
-    margin: 5px 0;
-}
-
-.user-info {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    padding-left: 10px;
 }
 
 .v-enter-active,

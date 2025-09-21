@@ -2,11 +2,11 @@ import axios from 'axios'
 
 import config from "@/config/index.js";
 import {useUserStore} from "@/store/user.js";
-import {showApiErrorMsg} from "@/utils/message.js";
+import {showApiErrorMsg, showError} from "@/utils/message.js";
 
 const request = axios.create({
     baseURL: config.backend_url,
-    timeout: 5000
+    timeout: 10000
 })
 
 request.interceptors.request.use(
@@ -32,6 +32,8 @@ request.interceptors.response.use(
     error => {
         if (error.response) {
             showApiErrorMsg(error.response.data.message, error.response.data.status)
+        } else if (error.request) {
+            showError("连接超时, 请检查网络设置")
         }
         return Promise.reject(error)
     }

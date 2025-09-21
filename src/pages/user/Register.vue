@@ -9,13 +9,26 @@ import config from "@/config/index.js";
 import {useServerConfigStore} from "@/store/server_config.js";
 import request from "@/utils/request.js";
 import AxiosXHR = Axios.AxiosXHR;
+import {useCountdown} from "@vueuse/core";
 
+const serverConfig = useServerConfigStore();
 const userStore = useUserStore()
 const router = useRouter()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
+const locked = ref(false)
+const btnText = ref("发送验证码")
 
-const serverConfig = useServerConfigStore()
+const {remaining, start, reset} = useCountdown(serverConfig.config.email_send_interval, {
+    onComplete() {
+        locked.value = false
+        btnText.value = "发送验证码"
+        reset()
+    },
+    onTick() {
+        btnText.value = `${remaining.value}s`
+    }
+})
 
 const registerForm = reactive<RegisterForm>({
     username: '',
@@ -27,81 +40,31 @@ const registerForm = reactive<RegisterForm>({
 const rules = reactive<FormRules>({
     cid: [
         {required: true, message: '请输入CID', trigger: 'blur'},
-        {
-            validator: async (rule, value, callback) => {
-                const cid = Number.parseInt(value)
-                if (isNaN(cid)) {
-                    callback(new Error("CID必须由纯数字组成"))
-                    return
-                }
-                if (cid < 0) {
-                    callback(new Error(`CID不能小于0`))
-                    return
-                }
-                if (cid < serverConfig.limits.cid_min) {
-                    callback(new Error(`CID不能小于${serverConfig.limits.cid_min}`))
-                    return
-                }
-                if (cid > serverConfig.limits.cid_max) {
-                    callback(new Error(`CID不能大于${serverConfig.limits.cid_max}`))
-                    return
-                }
-                if (await userStore.checkCID(cid)) {
-                    callback()
-                    return
-                }
-                callback(new Error(`该CID已被占用`))
-            },
-            trigger: 'blur'
-        }
+        ...serverConfig.cidLimit
     ],
     username: [
         {required: true, message: '请输入用户名', trigger: 'blur'},
-        {min: 4, max: 16, message: '长度在4到16个字符', trigger: 'blur'},
-        {
-            pattern: /^[a-zA-Z_][a-zA-Z0-9_]+$/,
-            message: '用户名只能包含字母、数字和下划线且首位不能为数字', trigger: 'blur'
-        },
-        {
-            validator: async (rule, value, callback) => {
-                if (await userStore.checkUsername(value)) {
-                    callback()
-                    return
-                }
-                callback(new Error(`该用户名已被注册`))
-            },
-            trigger: 'blur'
-        }
+        ...serverConfig.usernameLimit
     ],
     email: [
         {required: true, message: '请输入邮箱', trigger: 'blur'},
-        {type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur'},
-        {
-            validator: async (rule, value, callback) => {
-                if (await userStore.checkEmail(value)) {
-                    callback()
-                    return
-                }
-                callback(new Error(`该邮箱已被注册`))
-            },
-            trigger: 'blur'
-        }
+        ...serverConfig.emailLimit
+    ],
+    email_code: [
+        {required: true, message: '请输入邮箱验证码', trigger: 'blur'},
+        {min: 6, max: 6, message: '邮箱验证码必须为6位', trigger: 'blur'},
+        {pattern: /^[0-9]+$/, message: '验证码必须为纯数字', trigger: 'blur'}
     ],
     password: [
         {required: true, message: '请输入密码', trigger: 'blur'},
-        {
-            min: serverConfig.config.limits.password_length_min,
-            max: serverConfig.config.limits.password_length_max,
-            message: `长度在${serverConfig.config.limits.password_length_min}到${serverConfig.config.limits.password_length_max}个字符`,
-            trigger: 'blur'
-        }
+        ...serverConfig.passwordLimit
     ],
     confirmPassword: [
         {required: true, message: '请确认密码', trigger: 'blur'},
         {
             validator: (rule, value, callback) => {
                 if (value !== registerForm.password) {
-                    callback(new Error('两次输入的密码不一致'))
+                    callback('两次输入的密码不一致')
                 } else {
                     callback()
                 }
@@ -117,14 +80,10 @@ const handleRegister = async () => {
         loading.value = true
         await userStore.register(registerForm)
         showSuccess('注册成功，请登录')
-        new Promise(_ => setTimeout(goToLogin, 1000))
+        new Promise(_ => setTimeout(() => router.push('/login'), 1000))
     } finally {
         loading.value = false
     }
-}
-
-const goToLogin = () => {
-    router.push('/login')
 }
 
 const getRandomInt = (max: number) => {
@@ -140,6 +99,10 @@ const randomCid = async () => {
 }
 
 const sendEmailCode = async () => {
+    if (locked.value) {
+        showError(`请在${remaining}后再次发送`)
+        return
+    }
     if (registerForm.email == '') {
         showError("邮箱验证失败")
         return
@@ -168,6 +131,8 @@ const sendEmailCode = async () => {
     }) as AxiosXHR<any>
     if (response.status == 200) {
         showSuccess("验证码发送成功, 请查看邮箱")
+        locked.value = true
+        start()
     }
 }
 </script>
@@ -179,8 +144,8 @@ const sendEmailCode = async () => {
         </div>
         <el-card class="register-box">
             <div class="flex align-items-center justify-content-center margin-bottom-10">
-                <img class="h-50p w-50p" :src="config.icon_path" alt="Icon"/>
-                <div class="margin-left-10">
+                <img class="register-logo" :src="config.icon_path" alt="Icon"/>
+                <div class="register-title margin-left-10">
                     {{ config.title }}
                 </div>
             </div>
@@ -199,7 +164,8 @@ const sendEmailCode = async () => {
                             :prefix-icon="Edit"
                             class="custom-input">
                         </el-input>
-                        <el-button round type="primary" size="large" class="margin-left-10" @click="randomCid">随机CID
+                        <el-button round type="primary" size="large" class="margin-left-10" @click="randomCid">
+                            随机CID
                         </el-button>
                     </div>
                 </el-form-item>
@@ -224,12 +190,15 @@ const sendEmailCode = async () => {
                 <el-form-item prop="email_code">
                     <div class="flex align-items-center w-full">
                         <el-input
-                            v-model.number="registerForm.email_code"
+                            v-model="registerForm.email_code"
                             placeholder="请输入邮箱验证码"
                             :prefix-icon="Message"
                             class="custom-input"
                         />
-                        <el-button round type="primary" size="large" @click="sendEmailCode">发送验证码</el-button>
+                        <el-button round type="primary" size="large" @click="sendEmailCode" class="margin-left-10"
+                                   :disabled="locked" :loading="locked">
+                            {{ btnText }}
+                        </el-button>
                     </div>
                 </el-form-item>
 
@@ -268,20 +237,27 @@ const sendEmailCode = async () => {
             </el-form>
 
             <div class="register-footer">
-                <a @click="goToLogin" class="login-link">已有账号？立即登录</a>
+                <a @click="router.push('/login')" class="login-link">已有账号？立即登录</a>
             </div>
         </el-card>
     </div>
 </template>
 
 <style scoped>
+.el-card {
+    transform: none !important;
+}
+
 .register-container {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
     width: 100vw;
-    background-color: var(--secondary-color);
+    background-image: url("/images/background.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
     position: fixed;
     top: 0;
     left: 0;
@@ -294,7 +270,6 @@ const sendEmailCode = async () => {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
     opacity: 0.1;
     z-index: 0;
 }
@@ -304,7 +279,8 @@ const sendEmailCode = async () => {
     padding: 40px;
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    background-color: var(--el-bg-color);
+    background: var(--secondary-bg-color);
+    backdrop-filter: blur(10px);
     position: relative;
     z-index: 1;
     border: none;
@@ -318,9 +294,8 @@ const sendEmailCode = async () => {
 }
 
 .register-logo {
-    width: 80px;
-    height: 80px;
-    margin-bottom: 16px;
+    width: 50px;
+    height: 50px;
 }
 
 .register-title {
@@ -328,8 +303,8 @@ const sendEmailCode = async () => {
     font-weight: 600;
     margin: 0;
     background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
 }
 
 .register-form {
@@ -363,7 +338,7 @@ const sendEmailCode = async () => {
     height: 48px;
     font-size: 16px;
     border-radius: 8px;
-    background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+    background-image: linear-gradient(45deg, var(--primary-color), var(--accent-color));
     border: none;
     transition: all 0.3s ease;
 }
@@ -371,6 +346,9 @@ const sendEmailCode = async () => {
 .register-button:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background-image: linear-gradient(45deg, var(--primary-color), var(--accent-color), var(--primary-color));
+    background-size: 200%;
+    animation: gradient-animation 3s ease infinite;
 }
 
 .register-footer {

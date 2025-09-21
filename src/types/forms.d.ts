@@ -6,7 +6,7 @@ type LoginForm = {
 type RegisterForm = {
     cid: number;
     email: string;
-    email_code: number;
+    email_code: string;
     password: string;
     confirmPassword: string;
     username: string;

@@ -20,6 +20,8 @@ import {
 import {showError, showSuccess, showWarning} from "@/utils/message.js";
 import {useActivityStore} from "@/store/activity.js";
 import {sizeToString} from "@/utils/utils.js";
+import {Global} from "@/global.js";
+import {padStart} from "lodash-es";
 
 const serverConfig = useServerConfigStore();
 const userStore = useUserStore();
@@ -48,7 +50,7 @@ const historyData: Ref<GetUserHistoryResponse> = ref({
 });
 
 onMounted(async () => {
-    const response = await request.get(`/history`) as AxiosXHR<GetUserHistoryResponse>
+    const response = await request.get(`/users/histories/self`) as AxiosXHR<GetUserHistoryResponse>
     historyData.value = response.data
     for (const pilot of historyData.value.pilots) {
         pilot.start_time = moment(pilot.start_time).format('YYYY-MM-DD HH:mm:ss');
@@ -121,7 +123,7 @@ const submitChangePasswordForm = async () => {
     } catch (error) {
         return;
     }
-    const response = await request.patch(`/profile`, changePasswordForm) as AxiosXHR<UserModel>
+    const response = await request.patch(`/users/profiles/self`, changePasswordForm) as AxiosXHR<UserModel>
     if (response.status == 200) {
         showSuccess("修改密码成功，请重新登陆")
         editPasswordDialog.value = false
@@ -219,7 +221,7 @@ const submitUpdateUserInfoForm = async () => {
         showWarning("没有需要修改的内容")
         return
     }
-    const response = await request.patch(`/profile`, data) as AxiosXHR<UserModel>
+    const response = await request.patch(`/users/profiles/self`, data) as AxiosXHR<UserModel>
     if (response.status == 200) {
         showSuccess("修改个人信息成功")
         document.location.reload()
@@ -236,36 +238,47 @@ const submitUpdateUserInfoForm = async () => {
                 <el-row :gutter="10">
                     <el-col :span="24">
                         <el-card>
-                            <div class="flex flex-direction-column align-items-center">
+                            <el-space direction="vertical" class="w-full">
                                 <el-avatar v-if="userData.avatar_url != ''" :src="userData.avatar_url"
                                            :size="100"></el-avatar>
-                                <el-avatar v-else :size="100">{{ userData.cid }}</el-avatar>
-                                <div class="flex flex-direction-column margin-left-10 align-items-center">
+                                <el-avatar v-else :size="100">{{ padStart(userData.cid, 4, '0') }}</el-avatar>
+                                <el-space direction="vertical">
                                     <span class="font-size-15rem">{{ userData.username }}</span>
-                                    <span class="font-size-12rem">CID: {{ userData.cid }}</span>
-                                    <el-tag class="text-color-white border-none margin-bottom-5"
-                                            :color="config.rating_color[userData.rating]">
-                                        {{ ratings }}
+                                    <span class="font-size-12rem">CID: {{ padStart(userData.cid, 4, '0') }}</span>
+                                    <el-space wrap class="justify-content-center">
+                                        <el-tag class="border-none" effect="dark"
+                                                :color="config.ratings[userData.rating + 1].color">
+                                            {{ ratings }}
+                                        </el-tag>
+                                        <el-tag v-if="userData.tier2" type="success" effect="dark">Tier2</el-tag>
+                                        <el-tag v-else type="danger" effect="dark">Tier2</el-tag>
+                                    </el-space>
+                                    <el-tag v-if="userData.under_solo" type="primary" effect="dark">
+                                        Solo直至{{ moment(userData.solo_until).format("YYYY-MM-DD HH:mm:ss") }}
                                     </el-tag>
-                                    <el-tag class="border-none margin-bottom-5">飞控权限: {{
-                                            userData.permission
-                                        }}
-                                    </el-tag>
-                                </div>
-                            </div>
+                                    <el-space wrap class="justify-content-center">
+                                        <el-tag v-if="userData.guest" type="info" effect="dark">客座管制</el-tag>
+                                        <el-tag v-if="userData.under_monitor" type="warning" effect="dark">
+                                            实习管制
+                                        </el-tag>
+                                    </el-space>
+                                    <el-tag>飞控权限: {{ userData.permission }}</el-tag>
+                                </el-space>
+                            </el-space>
                             <template #footer>
-                                <div class="flex justify-content-center margin-bottom-10">
-                                    <el-button type="success" @click="editInformationDialog = true" round>编辑个人信息
+                                <el-space direction="vertical" class="w-full">
+                                    <el-button type="success" @click="editInformationDialog = true" round>
+                                        编辑个人信息
                                     </el-button>
-                                </div>
-                                <div class="flex justify-content-center flex-direction-column-below-350px">
-                                    <el-button class="margin-0-below-350px margin-bottom-10-below-350px" type="primary"
-                                               @click="editPasswordDialog = true" round>修改密码
-                                    </el-button>
-                                    <el-button class="margin-0-below-350px" type="danger" round
-                                               @click="userStore.logout">退出登录
-                                    </el-button>
-                                </div>
+                                    <el-space wrap class="justify-content-center">
+                                        <el-button type="primary" @click="editPasswordDialog = true" round>
+                                            修改密码
+                                        </el-button>
+                                        <el-button type="danger" @click="userStore.logout" round>
+                                            退出登录
+                                        </el-button>
+                                    </el-space>
+                                </el-space>
                             </template>
                         </el-card>
                     </el-col>
@@ -279,7 +292,7 @@ const submitUpdateUserInfoForm = async () => {
                                     {{ userData.id }}
                                 </el-descriptions-item>
                                 <el-descriptions-item label="CID">
-                                    {{ userData.cid }}
+                                    {{ padStart(userData.cid, 4, '0') }}
                                 </el-descriptions-item>
                                 <el-descriptions-item label="用户名">
                                     {{ userData.username }}
@@ -297,7 +310,7 @@ const submitUpdateUserInfoForm = async () => {
                                     {{ userData.total_atc_time }}秒
                                 </el-descriptions-item>
                                 <el-descriptions-item label="飞控版本">
-                                    0.5.1
+                                    {{ Global.version }}
                                 </el-descriptions-item>
                             </el-descriptions>
                         </el-card>

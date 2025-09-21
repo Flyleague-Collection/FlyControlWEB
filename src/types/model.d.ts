@@ -3,10 +3,15 @@ type UserModel = {
     username: string;
     email: string;
     cid: number;
-    permission: number;
-    qq: number;
     avatar_url: string;
+    qq: number;
     rating: number;
+    guest: boolean;
+    under_monitor: boolean;
+    under_solo: boolean;
+    tier2: boolean;
+    solo_until: string;
+    permission: number;
     total_atc_time: number;
     total_pilot_time: number;
 }
@@ -26,6 +31,8 @@ type OnlineControllerModel = {
     frequency: number;
     latitude: number;
     logon_time: string;
+    offline_time: string;
+    is_break: boolean;
     longitude: number;
     rating: number;
     real_name: string;
@@ -41,11 +48,6 @@ type OnlinePilotModel = {
     latitude: number;
     logon_time: string;
     longitude: number;
-    paths: {
-        latitude: number;
-        longitude: number;
-        altitude: number;
-    }[];
     real_name: string;
     transponder: string;
 }
@@ -99,6 +101,7 @@ type ServerConfigModel = {
         max_allow_size: number;
         allowed_ext: string[];
     };
+    email_send_interval: number;
     facilities: {
         id: number;
         long_name: string;
@@ -109,4 +112,35 @@ type ServerConfigModel = {
         long_name: string;
         short_name: string;
     }[];
+}
+
+type ControllerRating = {
+    avatar_url: string;
+    cid: number;
+    is_guest: boolean;
+    rating: number;
+    solo_until: Date;
+    under_monitor: boolean;
+    under_solo: boolean;
+}
+
+type ControllerRecordModel = {
+    id: number;
+    type: number;
+    uid: number;
+    operator_cid: number;
+    content: string;
+    time: Date;
+}
+
+type TicketModel = {
+    id: number;
+    creator: number;
+    type: number;
+    title: string;
+    content: string;
+    reply: number;
+    closer: number;
+    open_at: Date;
+    close_at: Date;
 }

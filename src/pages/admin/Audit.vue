@@ -5,6 +5,7 @@ import moment from "moment";
 import PageListCard from "@/components/card/PageListCard.vue";
 import {PageListResponse} from "@/components/card/PageListCard.js";
 import request from "@/utils/request.js";
+import {padStart} from "lodash-es";
 
 const fetchAuditLogs = async (page: number, pageSize: number): Promise<PageListResponse<AuditLogModel>> => {
     const data: PageListResponse<AuditLogModel> = {data: [], total: 0};
@@ -32,7 +33,7 @@ const fetchAuditLogs = async (page: number, pageSize: number): Promise<PageListR
                         {{ props.row.event_type }}
                     </el-descriptions-item>
                     <el-descriptions-item label="操作人">
-                        {{ props.row.subject }}
+                        {{ padStart(props.row.subject, 4, '0') }}
                     </el-descriptions-item>
                     <el-descriptions-item label="操作对象">
                         {{ props.row.object }}

@@ -2,7 +2,7 @@
 import {cloneDeep} from "lodash";
 import {FormInstance, FormRules} from "element-plus";
 import {Check, Close, EditPen} from "@element-plus/icons-vue";
-import {reactive, Ref, ref} from "vue";
+import {computed, reactive, Ref, ref} from "vue";
 
 import PageListCard from "@/components/card/PageListCard.vue";
 import type {PageListCardInstance, PageListResponse} from "@/components/card/PageListCard.js";
@@ -12,6 +12,9 @@ import {useUserStore} from "@/store/user.js";
 import {useServerConfigStore} from "@/store/server_config.js";
 import {showError, showSuccess, showWarning} from "@/utils/message.js";
 import config from "@/config/index.js";
+import {handleImageUrl} from "@/utils/utils.js";
+import {padStart} from "lodash-es";
+import {PermissionNode} from "@/utils/permission.js";
 
 const userStore = useUserStore();
 const serverConfig = useServerConfigStore();
@@ -59,36 +62,45 @@ const showEditUserProfileDialog = async (id: number) => {
 
 const pageListCardRef: Ref<PageListCardInstance> = ref(null)
 const userEditFormRef = ref<FormInstance>()
+const hasAnyEditPermission = computed(() => {
+    return userStore.permission.hasAnyPermissions(PermissionNode.UserEditBaseInfo, PermissionNode.UserSetPassword)
+})
 
 const updateUserProfile = async () => {
+    if (!hasAnyEditPermission.value) {
+        showError("你无权这么做")
+        return
+    }
     if (oldUserData == null) {
         showError("原始用户数据出错")
         return
     }
     userEditFormRef.value?.clearValidate()
     const data: RequestUpdateUserProfile = {};
-    if (userData.value.username != "" && oldUserData.username != userData.value.username) {
-        try {
-            await userEditFormRef.value?.validateField("username")
-        } catch {
-            showError("表单验证失败")
-            return
+    if (userStore.permission.hasPermission(PermissionNode.UserEditBaseInfo)) {
+        if (userData.value.username != "" && oldUserData.username != userData.value.username) {
+            try {
+                await userEditFormRef.value?.validateField("username")
+            } catch {
+                showError("表单验证失败")
+                return
+            }
+            data.username = userData.value.username;
         }
-        data.username = userData.value.username;
-    }
-    if (userData.value.email != "" && oldUserData.email != userData.value.email) {
-        try {
-            await userEditFormRef.value?.validateField("email")
-        } catch {
-            showError("表单验证失败")
-            return
+        if (userData.value.email != "" && oldUserData.email != userData.value.email) {
+            try {
+                await userEditFormRef.value?.validateField("email")
+            } catch {
+                showError("表单验证失败")
+                return
+            }
+            data.email = userData.value.email;
         }
-        data.email = userData.value.email;
+        if (userData.value.qq != 0 && oldUserData.qq != userData.value.qq) {
+            data.qq = userData.value.qq
+        }
     }
-    if (userData.value.qq != 0 && oldUserData.qq != userData.value.qq) {
-        data.qq = userData.value.qq
-    }
-    if (userData.value.password != "") {
+    if (userStore.permission.hasPermission(PermissionNode.UserSetPassword) && userData.value.password != "") {
         data.new_password = userData.value.password;
     }
     if (Object.keys(data).length == 0) {
@@ -119,13 +131,23 @@ const exit = () => {
                   :fetch-data="fetchUsers"
                   card-title="用户总览"
                   :double-click-row="row => showEditUserProfileDialog(row.id)">
-        <el-table-column prop="cid" label="CID"></el-table-column>
-        <el-table-column prop="username" label="用户名"></el-table-column>
-        <el-table-column prop="email" label="邮箱"></el-table-column>
+        <el-table-column label="CID">
+            <template #default="scope">
+                <div class="flex align-items-center">
+                    <el-avatar v-if="scope.row.avatar_url == ''">{{ padStart(scope.row.cid, 4, '0') }}</el-avatar>
+                    <el-avatar v-else :src="handleImageUrl(scope.row.avatar_url)"></el-avatar>
+                    <span class="margin-left-5">{{ padStart(scope.row.cid, 4, '0') }}</span>
+                </div>
+            </template>
+        </el-table-column>
+        <el-table-column prop="username" label="用户名"/>
+        <el-table-column prop="email" label="邮箱"/>
         <el-table-column label="管制权限">
             <template #default="scope">
-                <el-tag class="level text-color-white border-none" round
-                        :color="config.rating_color[scope.row.rating]">
+                <el-tag v-if="scope.row.tier2" type="success" round effect="dark">Tier2</el-tag>
+                <el-tag v-else type="danger" round effect="dark">Tier2</el-tag>
+                <el-tag class="level text-color-white border-none margin-left-5" round
+                        :color="config.ratings[scope.row.rating + 1].color">
                     {{ serverConfig.getRatingShortName(scope.row.rating as number) }}
                 </el-tag>
             </template>
@@ -137,7 +159,8 @@ const exit = () => {
                     <el-button id="user-option-edit-btn"
                                :icon="EditPen"
                                type="primary"
-                               @click="showEditUserProfileDialog(scope.row.id)">
+                               @click="showEditUserProfileDialog(scope.row.id)"
+                               :disabled="!hasAnyEditPermission">
                         编辑
                     </el-button>
                 </div>
@@ -166,7 +189,8 @@ const exit = () => {
                 <el-input v-model.number="userData.qq"/>
             </el-form-item>
             <el-form-item label="密码" prop="password">
-                <el-input v-model="userData.password" type="password"/>
+                <el-input v-model="userData.password" type="password"
+                          :disable="userStore.permission.hasPermission(PermissionNode.UserSetPassword)"/>
             </el-form-item>
         </el-form>
         <template #footer>
@@ -183,17 +207,5 @@ const exit = () => {
 </template>
 
 <style scoped>
-.el-card {
-    transform: none;
-}
 
-@media (max-width: 1105px) {
-    #user-option-container {
-        flex-direction: column;
-    }
-
-    #user-option-edit-btn {
-        margin-bottom: 10px;
-    }
-}
 </style>

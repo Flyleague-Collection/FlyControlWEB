@@ -6,6 +6,7 @@ import config, {airports} from "@/config/index.js";
 import {useUserStore} from "@/store/user.js";
 import {showError} from "@/utils/message.js";
 import request from "@/utils/request.js";
+import {handleImageUrl} from "@/utils/utils.js";
 
 export const useActivityStore = defineStore("activity", () => {
     const userStore = useUserStore();
@@ -26,9 +27,7 @@ export const useActivityStore = defineStore("activity", () => {
         activities.forEach((activity: ActivityModel) => {
             const activityDate = moment(activity.active_time)
             activity.start_time = activityDate.format('HH:mm:ss')
-            if (!activity.image_url.startsWith("http") && activity.image_url != "") {
-                activity.image_url = `${config.backend_url}/${activity.image_url}`
-            }
+            activity.image_url = handleImageUrl(activity.image_url)
             activitiesRecord[activityDate.format("YYYY-MM-DD")] = activity
         })
         return activitiesRecord;
@@ -37,13 +36,13 @@ export const useActivityStore = defineStore("activity", () => {
     const getActivities = async (time: string): Promise<ActivityModel[] | null> => {
         const response = await request.get(`/activities?time=${time}`);
         if (response.status === 200) {
-            return response.data.items
+            return response.data
         }
         return null
     }
 
     const getActivitiesPage = async (page: number, pageSize: number): Promise<GetActivitiesPageResponse | null> => {
-        const response = await request.get(`/activities/list?page_number=${page}&page_size=${pageSize}`);
+        const response = await request.get(`/activities/pages?page_number=${page}&page_size=${pageSize}`);
         if (response.status === 200) {
             return response.data as GetActivitiesPageResponse;
         }

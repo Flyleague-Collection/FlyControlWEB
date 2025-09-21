@@ -40,15 +40,15 @@ type GetServerInfoResponse = {
     total_activity: number;
 }
 
+type ServerRatingModel = {
+    cid: number;
+    avatar_url: string;
+    time: number;
+}
+
 type GetServerRatingResponse = {
-    pilots: {
-        cid: number;
-        time: number;
-    }[];
-    controllers: {
-        cid: number;
-        time: number;
-    }[]
+    pilots: ServerRatingModel[];
+    controllers: ServerRatingModel[];
 }
 
 type GetOnlineClientResponse = {
@@ -61,4 +61,11 @@ type GetOnlineClientResponse = {
     };
     controllers: OnlineControllerModel[];
     pilots: OnlinePilotModel[];
+}
+
+type PageDataResponse<T> = {
+    items: T[];
+    total: number;
+    page: number;
+    page_size: number;
 }

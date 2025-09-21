@@ -4,8 +4,8 @@ import {defineStore} from "pinia";
 import moment from "moment";
 
 import {Permission} from "@/utils/permission.js";
-import config from "@/config/index.js";
 import request from "@/utils/request.js";
+import {handleImageUrl} from "@/utils/utils.js";
 
 export const useUserStore = defineStore("UserStore", () => {
     const isLogin: Ref<boolean> = ref(false);
@@ -20,9 +20,7 @@ export const useUserStore = defineStore("UserStore", () => {
     const decodeResponse = (response: LoginResponse) => {
         isLogin.value = true;
         userData.value = response.user as UserModel;
-        if (!userData.value.avatar_url.startsWith("http") && userData.value.avatar_url != "") {
-            userData.value.avatar_url = `${config.backend_url}/${userData.value.avatar_url}`;
-        }
+        userData.value.avatar_url = handleImageUrl(userData.value.avatar_url);
         permission.value = new Permission(userData.value.permission)
         token.value = response.token as string;
         flushToken.value = response.flush_token as string;
@@ -35,7 +33,7 @@ export const useUserStore = defineStore("UserStore", () => {
         const storeFlushToken = localStorage.getItem('flush_token');
         if (storeFlushToken) {
             if (storeToken && verifyTokenExpired(storeToken)) {
-                const response = await request.get("/profile", {
+                const response = await request.get("/users/profiles/self", {
                     headers: {
                         Authorization: `Bearer ${storeToken}`
                     }
@@ -45,9 +43,7 @@ export const useUserStore = defineStore("UserStore", () => {
                     token.value = storeToken;
                     flushToken.value = storeFlushToken;
                     userData.value = response.data as UserModel;
-                    if (!userData.value.avatar_url.startsWith("http") && userData.value.avatar_url != "") {
-                        userData.value.avatar_url = `${config.backend_url}/${userData.value.avatar_url}`;
-                    }
+                    userData.value.avatar_url = handleImageUrl(userData.value.avatar_url);
                     permission.value = new Permission(userData.value.permission);
                     localStorage.setItem("token", token.value);
                     localStorage.setItem("flush_token", flushToken.value);
@@ -56,7 +52,7 @@ export const useUserStore = defineStore("UserStore", () => {
                 }
             } else if (verifyTokenExpired(storeFlushToken)) {
                 flushToken.value = storeFlushToken;
-                if (await flushAccessToken()) {
+                if (await flushAccessToken(true)) {
                     isLogin.value = true;
                 } else {
                     logout();
@@ -70,22 +66,22 @@ export const useUserStore = defineStore("UserStore", () => {
         if (isLogin.value && timer == null) {
             const data = JSON.parse(atob(token.value.split(".")[1]));
             const time = moment((data.exp - 60) * 1000).diff(moment());
-            timer = setTimeout(flushAccessToken, time);
+            timer = setTimeout(async () => {
+                await flushAccessToken(false)
+            }, time);
         }
     }
 
-    const flushAccessToken = async () => {
+    const flushAccessToken = async (first: boolean) => {
         isLogin.value = false;
-        const response = await request.get<LoginResponse>("/sessions", {
+        const response = await request.get<LoginResponse>(`/users/sessions?first=${first}`, {
             headers: {
                 Authorization: `Bearer ${flushToken.value}`
             }
         })
         if (response.status == 200) {
             userData.value = response.data.user;
-            if (!userData.value.avatar_url.startsWith("http") && userData.value.avatar_url != "") {
-                userData.value.avatar_url = `${config.backend_url}/${userData.value.avatar_url}`;
-            }
+            userData.value.avatar_url = handleImageUrl(userData.value.avatar_url);
             permission.value = new Permission(userData.value.permission);
             token.value = response.data.token;
             if (response.data.flush_token != "") {
@@ -107,7 +103,7 @@ export const useUserStore = defineStore("UserStore", () => {
     }
 
     const login = async (data: LoginForm): Promise<boolean> => {
-        const response = await request.post<LoginResponse>("/sessions", data);
+        const response = await request.post<LoginResponse>("/users/sessions", data);
         if (response.status == 200) {
             decodeResponse(response.data);
             timer = null;
@@ -141,11 +137,11 @@ export const useUserStore = defineStore("UserStore", () => {
         if (timer != null) {
             clearTimeout(timer);
         }
-        router.push("/login");
+        router.push("/");
     }
 
     const getUserByUid = async (uid: number): Promise<UserModel | null> => {
-        const response = await request.get<UserModel>(`/users/${uid}/profile`);
+        const response = await request.get<UserModel>(`/users/profiles/${uid}`);
         if (response.status == 200) {
             return response.data;
         }
@@ -161,7 +157,7 @@ export const useUserStore = defineStore("UserStore", () => {
     }
 
     const getControllerPage = async (page: number, pageSize: number): Promise<GetUsersPageResponse | null> => {
-        const response = await request.get<GetUsersPageResponse>(`/users/controllers?page_number=${page}&page_size=${pageSize}`);
+        const response = await request.get<GetUsersPageResponse>(`/controllers?page_number=${page}&page_size=${pageSize}`);
         if (response.status === 200) {
             return response.data;
         }
@@ -193,7 +189,7 @@ export const useUserStore = defineStore("UserStore", () => {
     }
 
     const updateUserInformation = async (uid: number, data: RequestUpdateUserProfile): Promise<UserModel | null> => {
-        const response = await request.patch<UserModel>(`/users/${uid}/profile`, data);
+        const response = await request.patch<UserModel>(`/users/profiles/${uid}`, data);
         if (response.status == 200) {
             return response.data;
         }

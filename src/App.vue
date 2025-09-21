@@ -1,10 +1,15 @@
 <script setup lang="ts">
+import {ref} from 'vue'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
 
+const currentLocale = ref(zhCn)
 </script>
 
 <template>
     <div class="container">
-        <router-view></router-view>
+        <el-config-provider :locale="currentLocale">
+            <router-view></router-view>
+        </el-config-provider>
     </div>
 </template>
 

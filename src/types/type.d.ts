@@ -20,12 +20,14 @@ type ActivityControllerModel = {
     id: number;
     activity_id: number;
     facility_id: number;
-    cid: number;
+    uid: number;
+    user: UserModel;
 }
 
 type ActivityFacilityModel = {
     id: number;
     activity_id: number;
+    tier2_tower: boolean;
     min_rating: number;
     callsign: string;
     frequency: string;
@@ -35,7 +37,8 @@ type ActivityFacilityModel = {
 type ActivityPilotModel = {
     id: number;
     activity_id: number;
-    cid: number;
+    uid: number;
+    user: UserModel;
     callsign: string;
     aircraft_type: string;
     status: number;

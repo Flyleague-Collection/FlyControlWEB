@@ -2,6 +2,7 @@
 import {ArrowRight, Clock, Location, Position} from "@element-plus/icons-vue";
 import moment from "moment";
 import {useRouter} from "vue-router";
+import {padStart} from "lodash-es";
 
 defineProps<{
     activity: ActivityModel
@@ -35,7 +36,7 @@ const router = useRouter();
                     <el-icon>
                         <Position/>
                     </el-icon>
-                    {{ activity.publisher }}
+                    {{ padStart(activity.publisher, 4, '0') }}
                 </span>
                 <el-button type="primary" @click="router.push(`/activities/${activity.id}`)">
                     立刻报名

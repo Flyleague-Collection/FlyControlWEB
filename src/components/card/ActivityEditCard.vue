@@ -299,6 +299,9 @@ const handleExceed = (files: File[], _) => {
                                 <template #label>最小权限</template>
                                 <el-select v-model="item.min_rating" :options="config.ratings.slice(3)"/>
                             </el-form-item>
+                            <el-form-item label="程序塔台">
+                                <el-switch v-model="item.tier2_tower"></el-switch>
+                            </el-form-item>
                         </el-form>
                     </el-card>
                 </el-col>

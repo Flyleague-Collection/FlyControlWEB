@@ -7,7 +7,7 @@ import ActivityEditCard from "@/components/card/ActivityEditCard.vue";
 
 const activityStore = useActivityStore();
 const router = useRouter();
-// 上传标识
+
 const activity: Ref<ActivityModel> = ref({
     id: 0,
     publisher: 0,

@@ -12,15 +12,16 @@ import {
     UserFilled
 } from "@element-plus/icons-vue";
 import PersonCard from "@/components/card/PersonCard.vue";
-import {ref} from "vue";
+import {onMounted, ref} from "vue";
 import {useUserStore} from "@/store/user.js";
-import {useDark, useToggle} from "@vueuse/core";
 import {PermissionNode} from "@/utils/permission.js";
-
-const isDark = useDark()
-const toggleDark = useToggle(isDark)
+import {useStateStore} from "@/store/state.js";
+import {useRouter} from "vue-router";
+import {Ratings} from "@/global.js";
 
 const userStore = useUserStore();
+const stateStore = useStateStore();
+const router = useRouter();
 
 const mql = window.matchMedia("(max-width: 1000px)");
 
@@ -31,9 +32,38 @@ mql.onchange = (e) => {
         menuExpend.value = false;
     }
 }
+
+const open = ref(false);
+const expendRef = ref()
+const switchRef = ref()
+const backRef = ref()
+
+const closeCallback = () => {
+    localStorage.setItem('tutorial', true)
+}
+
+onMounted(() => {
+    if (localStorage.getItem("tutorial") == null) {
+        open.value = true;
+    }
+})
 </script>
 
 <template>
+    <el-tour v-model="open" type="primary" @close="closeCallback()">
+        <el-tour-step title="飞控介绍">
+            <div>欢迎新用户, 接下来我为将为你简单介绍</div>
+        </el-tour-step>
+        <el-tour-step :target="expendRef?.$el" title="飞控介绍" placement="right">
+            <div>点击这里切换侧边栏的展开和收回</div>
+        </el-tour-step>
+        <el-tour-step :target="switchRef?.$el" title="飞控介绍" placement="right">
+            <div>点击这里切换日夜模式</div>
+        </el-tour-step>
+        <el-tour-step :target="backRef?.$el" title="飞控介绍" placement="right">
+            <div>点击这里返回到门户网页(请不要现在点击)</div>
+        </el-tour-step>
+    </el-tour>
     <el-menu default-active="2"
              class="menu"
              :collapse="!menuExpend"
@@ -41,6 +71,7 @@ mql.onchange = (e) => {
              :unique-opened="true"
              :router="true">
         <el-menu-item
+            ref="expendRef"
             style="color: var(--el-menu-text-color); user-select: none; padding-left: 6px"
             @click="menuExpend=!menuExpend">
             <div class="flex align-items-center">
@@ -81,10 +112,18 @@ mql.onchange = (e) => {
                 </el-icon>
                 <span>管制员中心</span>
             </template>
-            <el-menu-item index="/controllers/application">管制员申请</el-menu-item>
-            <el-menu-item index="/controllers/activity" v-if="userStore.userData.rating > 1">活动登记</el-menu-item>
-            <el-menu-item index="/controllers/booking" v-if="userStore.userData.rating > 1">考核预约</el-menu-item>
-            <el-menu-item index="/controllers/profile" v-if="userStore.userData.rating > 1">管制员档案</el-menu-item>
+            <el-menu-item index="/controllers/application">
+                管制员申请
+            </el-menu-item>
+            <el-menu-item index="/controllers/activity" v-if="userStore.userData.rating >= Ratings.Observer">
+                活动登记
+            </el-menu-item>
+            <el-menu-item index="/controllers/booking" v-if="userStore.userData.rating >= Ratings.Observer">
+                考核预约
+            </el-menu-item>
+            <el-menu-item index="/controllers/profile" v-if="userStore.userData.rating >= Ratings.Observer">
+                管制员档案
+            </el-menu-item>
         </el-sub-menu>
         <el-sub-menu index="/admin" v-if="userStore.permission?.hasPermission(PermissionNode.AdminEntry)">
             <template #title>
@@ -98,7 +137,7 @@ mql.onchange = (e) => {
                 用户管理
             </el-menu-item>
             <el-menu-item index="/admin/controllers"
-                          v-if="userStore.permission?.hasPermission(PermissionNode.UserShowList)">
+                          v-if="userStore.permission?.hasPermission(PermissionNode.ControllerShowList)">
                 管制员管理
             </el-menu-item>
             <el-menu-item index="/admin/activities"
@@ -106,14 +145,15 @@ mql.onchange = (e) => {
                 活动管理
             </el-menu-item>
             <el-menu-item index="/admin/clients"
-                          v-if="userStore.permission?.hasPermissions(PermissionNode.ClientKill, PermissionNode.ClientSendMessage)">
+                          v-if="userStore.permission?.hasPermissions(PermissionNode.ClientManagerEntry)">
                 在线管理
             </el-menu-item>
-            <el-menu-item index="/admin/tickets">
+            <el-menu-item index="/admin/tickets"
+                          v-if="userStore.permission?.hasPermission(PermissionNode.TicketShowList)">
                 工单管理
             </el-menu-item>
             <el-menu-item index="/admin/permissions"
-                          v-if="userStore.permission?.hasPermissions(PermissionNode.UserShowList, PermissionNode.UserEditPermission)">
+                          v-if="userStore.permission?.hasPermissions(PermissionNode.UserShowList)">
                 权限管理
             </el-menu-item>
             <el-menu-item index="/admin/audit"
@@ -129,8 +169,9 @@ mql.onchange = (e) => {
         </el-menu-item>
     </el-menu>
     <div class="person">
-        <el-switch v-model="isDark" @change="toggleDark" :inactive-action-icon="Sunny" :active-action-icon="Moon"/>
-        <PersonCard :expend="menuExpend"/>
+        <el-switch v-model="stateStore.isDark" @change="stateStore.toggleDark" :inactive-action-icon="Sunny"
+                   :active-action-icon="Moon" ref="switchRef"/>
+        <PersonCard :expend="menuExpend" style="cursor: pointer;" @click="router.push('/')" ref="backRef"/>
     </div>
 </template>
 

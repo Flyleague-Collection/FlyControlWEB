@@ -3,36 +3,143 @@ import {useUserStore} from "@/store/user.js";
 import {PermissionNode} from "@/utils/permission.js";
 import {showError} from "@/utils/message.js";
 import request from "@/utils/request.js";
+import Portal from "@/pages/home/Portal.vue";
+import Login from "@/pages/user/Login.vue";
+import Register from "@/pages/user/Register.vue";
+import ActivityStatus from "@/pages/controller/ActivityStatus.vue";
+import Activity from "@/pages/activity/Activity.vue";
+import ActivityDetail from "@/pages/activity/ActivityDetail.vue";
+import Booking from "@/pages/controller/Booking.vue";
+import Profile from "@/pages/controller/Profile.vue";
+import Ticket from "@/pages/Ticket.vue";
+import Users from "@/pages/admin/user/Users.vue";
+import Controllers from "@/pages/admin/controller/Controllers.vue";
+import Activities from "@/pages/admin/activity/Activities.vue";
+import ActivityEdit from "@/pages/admin/activity/ActivityEdit.vue";
+import ActivityCreate from "@/pages/admin/activity/ActivityCreate.vue";
+import Online from "@/pages/admin/Online.vue";
+import Tickets from "@/pages/admin/Tickets.vue";
+import Permissions from "@/pages/admin/permission/Permissions.vue";
+import EditPermission from "@/pages/admin/permission/EditPermission.vue";
+import Audit from "@/pages/admin/Audit.vue";
+import Settings from "@/pages/user/Settings.vue";
+import Home from "@/pages/Home.vue";
+import Application from "@/pages/controller/Application.vue";
+import {homeConfig} from "@/config/index.js";
+import SocialMedia from "@/pages/home/SocialMedia.vue";
+import Meetings from "@/pages/home/Meetings.vue";
+import Staff from "@/pages/home/Staff.vue";
+import Metar from "@/pages/home/Metar.vue";
+import Software from "@/pages/home/Software.vue";
+import BecomeController from "@/pages/home/BecomeController.vue";
+import Ratings from "@/pages/home/Ratings.vue";
+import ControllerRecord from "@/pages/admin/controller/ControllerRecord.vue";
+import {Ratings as ratings} from "@/global.js";
+
+const isController = (userData: UserModel): boolean => {
+    return userData.rating >= ratings.Observer;
+}
 
 const routes: RouteRecordRaw[] = [
     {
         path: "/",
         name: "Root",
-        component: () => import("@/pages/Portal.vue"),
+        component: () => import("@/layout/HeaderLayout.vue"),
         meta: {
             requireAuth: false,
-            title: "门户网页",
-            requirePermissions: []
-        }
+            title: "门户网页"
+        },
+        children: [
+            {
+                path: "/",
+                name: "RootPortal",
+                component: Portal,
+                meta: {
+                    requireAuth: false,
+                    title: homeConfig.title
+                }
+            },
+            {
+                path: "/social",
+                name: "SocialMedia",
+                component: SocialMedia,
+                meta: {
+                    requireAuth: false,
+                    title: "官方社媒"
+                }
+            },
+            {
+                path: "/meeting",
+                name: "Meeting",
+                component: Meetings,
+                meta: {
+                    requireAuth: false,
+                    title: "会议记录"
+                }
+            },
+            {
+                path: "/staff",
+                name: "Staff",
+                component: Staff,
+                meta: {
+                    requireAuth: false,
+                    title: "职员"
+                }
+            },
+            {
+                path: "/metar",
+                name: "Metar",
+                component: Metar,
+                meta: {
+                    requireAuth: false,
+                    title: "气象报文查询"
+                }
+            },
+            {
+                path: "/software",
+                name: "Software",
+                component: Software,
+                meta: {
+                    requireAuth: false,
+                    title: "软件下载"
+                }
+            },
+            {
+                path: "/application",
+                name: "BecomeController",
+                component: BecomeController,
+                meta: {
+                    requireAuth: false,
+                    title: "成为管制员"
+                }
+            },
+            {
+                path: "/ratings",
+                name: "Ratings",
+                component: Ratings,
+                meta: {
+                    requireAuth: false,
+                    title: "管制员权限公示"
+                }
+            }
+        ]
     },
     {
         path: "/login",
         name: "Login",
-        component: () => import("@/pages/user/Login.vue"),
+        component: Login,
         meta: {
             requireAuth: false,
-            title: "登录页",
-            requirePermissions: []
+            title: "登录页"
         }
     },
     {
         path: "/register",
         name: "Register",
-        component: () => import("@/pages/user/Register.vue"),
+        component: Register,
         meta: {
             requireAuth: false,
-            title: "注册页",
-            requirePermissions: []
+            title: "注册页"
         }
     },
     {
@@ -40,38 +147,34 @@ const routes: RouteRecordRaw[] = [
         name: "Main",
         component: () => import("@/layout/SidebarLayout.vue"),
         meta: {
-            requireAuth: true,
-            requirePermissions: []
+            requireAuth: true
         },
         children: [
             {
                 path: "/home",
                 name: "Home",
-                component: () => import("@/pages/Home.vue"),
+                component: Home,
                 meta: {
                     requireAuth: true,
-                    title: "主页",
-                    requirePermissions: []
+                    title: "主页"
                 }
             },
             {
                 path: "/activities",
                 name: "Activity",
-                component: () => import("@/pages/activity/Activity.vue"),
+                component: Activity,
                 meta: {
                     requireAuth: true,
-                    title: "活动页",
-                    requirePermissions: []
+                    title: "活动页"
                 }
             },
             {
                 path: "/activities/:id",
                 name: "ActivityDetail",
-                component: () => import("@/pages/activity/ActivityDetail.vue"),
+                component: ActivityDetail,
                 meta: {
                     requireAuth: true,
-                    title: "活动详情页",
-                    requirePermissions: []
+                    title: "活动详情页"
                 }
             },
             {
@@ -80,168 +183,174 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("@/pages/OnlineMap.vue"),
                 meta: {
                     requireAuth: true,
-                    title: "在线地图",
-                    requirePermissions: []
+                    title: "在线地图"
                 }
             },
             {
                 path: "/controllers/application",
                 name: "Application",
-                component: () => import("@/pages/controller/Application.vue"),
+                component: Application,
                 meta: {
                     requireAuth: true,
-                    title: "管制员申请",
-                    requirePermissions: []
+                    title: "管制员申请"
                 }
             },
             {
                 path: "/controllers/activity",
                 name: "ControllerActivity",
-                component: () => import("@/pages/controller/Activity.vue"),
+                component: ActivityStatus,
                 meta: {
                     requireAuth: true,
                     title: "活动登记",
-                    requirePermissions: []
+                    authFunction: isController
                 }
             },
             {
                 path: "/controllers/booking",
                 name: "Booking",
-                component: () => import("@/pages/controller/Booking.vue"),
+                component: Booking,
                 meta: {
                     requireAuth: true,
                     title: "考核预约",
-                    requirePermissions: []
+                    authFunction: isController
                 }
             },
             {
                 path: "/controllers/profile",
                 name: "ControllerProfile",
-                component: () => import("@/pages/controller/Profile.vue"),
+                component: Profile,
                 meta: {
                     requireAuth: true,
                     title: "管制员档案",
-                    requirePermissions: []
+                    authFunction: isController
                 }
             },
             {
                 path: "/ticket",
                 name: "Ticket",
-                component: () => import("@/pages/Ticket.vue"),
+                component: Ticket,
                 meta: {
                     requireAuth: true,
-                    title: "投诉与反馈中心",
-                    requirePermissions: []
+                    title: "投诉与反馈中心"
                 }
             },
             {
                 path: "/admin/users",
                 name: "AdminUsers",
-                component: () => import("@/pages/admin/user/Users.vue"),
+                component: Users,
                 meta: {
                     requireAuth: true,
                     title: "用户管理",
-                    requirePermissions: [PermissionNode.UserShowList]
+                    requirePermissions: [PermissionNode.AdminEntry, PermissionNode.UserShowList]
                 }
             },
             {
                 path: "/admin/controllers",
                 name: "AdminControllers",
-                component: () => import("@/pages/admin/controller/Controllers.vue"),
+                component: Controllers,
                 meta: {
                     requireAuth: true,
                     title: "管制员管理",
-                    requirePermissions: [PermissionNode.UserShowList]
+                    requirePermissions: [PermissionNode.AdminEntry, PermissionNode.UserShowList, PermissionNode.ControllerShowList]
+                }
+            },
+            {
+                path: "/admin/controllers/:id",
+                name: "AdminControllerRecord",
+                component: ControllerRecord,
+                meta: {
+                    requireAuth: true,
+                    title: "管制员履历管理",
+                    requirePermissions: [PermissionNode.AdminEntry, PermissionNode.ControllerShowList, PermissionNode.ControllerShowRecord]
                 }
             },
             {
                 path: "/admin/activities",
                 name: "AdminActivities",
-                component: () => import("@/pages/admin/activity/Activities.vue"),
+                component: Activities,
                 meta: {
                     requireAuth: true,
                     title: "活动管理",
-                    requirePermissions: [PermissionNode.ActivityShowList]
+                    requirePermissions: [PermissionNode.AdminEntry, PermissionNode.ActivityShowList]
                 }
             },
             {
                 path: "/admin/activities/:id",
                 name: "AdminActivityEdit",
-                component: () => import("@/pages/admin/activity/ActivityEdit.vue"),
+                component: ActivityEdit,
                 meta: {
                     requireAuth: true,
                     title: "编辑活动",
-                    requirePermissions: [PermissionNode.ActivityShowList, PermissionNode.ActivityEdit]
+                    requirePermissions: [PermissionNode.AdminEntry, PermissionNode.ActivityShowList, PermissionNode.ActivityEdit]
                 }
             },
             {
                 path: "/admin/activities/new",
                 name: "AdminActivityCreate",
-                component: () => import("@/pages/admin/activity/ActivityCreate.vue"),
+                component: ActivityCreate,
                 meta: {
                     requireAuth: true,
                     title: "新建活动",
-                    requirePermissions: [PermissionNode.ActivityShowList, PermissionNode.ActivityPublish]
+                    requirePermissions: [PermissionNode.AdminEntry, PermissionNode.ActivityShowList, PermissionNode.ActivityPublish]
                 }
             },
             {
                 path: "/admin/clients",
                 name: "AdminClients",
-                component: () => import("@/pages/admin/Online.vue"),
+                component: Online,
                 meta: {
                     requireAuth: true,
                     title: "在线管理",
-                    requirePermissions: [PermissionNode.ClientManagerEntry]
+                    requirePermissions: [PermissionNode.AdminEntry, PermissionNode.ClientManagerEntry]
                 }
             },
             {
                 path: "/admin/tickets",
                 name: "AdminTickets",
-                component: () => import("@/pages/admin/Tickets.vue"),
+                component: Tickets,
                 meta: {
                     requireAuth: true,
                     title: "工单管理",
-                    requirePermissions: []
+                    requirePermissions: [PermissionNode.AdminEntry, PermissionNode.TicketShowList]
                 }
             },
             {
                 path: "/admin/permissions",
                 name: "AdminPermissions",
-                component: () => import("@/pages/admin/permission/Permissions.vue"),
+                component: Permissions,
                 meta: {
                     requireAuth: true,
                     title: "权限管理",
-                    requirePermissions: [PermissionNode.UserShowList, PermissionNode.UserEditPermission]
+                    requirePermissions: [PermissionNode.AdminEntry, PermissionNode.UserShowList]
                 }
             },
             {
                 path: "/admin/permissions/:id",
                 name: "AdminEditPermission",
-                component: () => import("@/pages/admin/permission/EditPermission.vue"),
+                component: EditPermission,
                 meta: {
                     requireAuth: true,
                     title: "编辑用户权限",
-                    requirePermissions: [PermissionNode.UserShowList, PermissionNode.UserEditPermission]
+                    requirePermissions: [PermissionNode.AdminEntry, PermissionNode.UserShowList, PermissionNode.UserEditPermission]
                 }
             },
             {
                 path: "/admin/audit",
                 name: "AdminAudit",
-                component: () => import("@/pages/admin/Audit.vue"),
+                component: Audit,
                 meta: {
                     requireAuth: true,
                     title: "审计日志",
-                    requirePermissions: [PermissionNode.AuditLogShow]
+                    requirePermissions: [PermissionNode.AdminEntry, PermissionNode.AuditLogShow]
                 }
             },
             {
                 path: "/profile",
                 name: "Profile",
-                component: () => import("@/pages/user/Settings.vue"),
+                component: Settings,
                 meta: {
                     requireAuth: true,
-                    title: "个人中心",
-                    requirePermissions: []
+                    title: "个人中心"
                 }
             }
         ]
@@ -260,7 +369,8 @@ router.beforeEach((to, _, next) => {
     const userStore = useUserStore();
     if (to.meta.requireAuth) {
         if (userStore.isLogin) {
-            if (userStore.permission.hasPermissions(...to.meta.requirePermissions)) {
+            if ((to.meta.requirePermissions == undefined || userStore.permission.hasPermissions(...to.meta.requirePermissions)) &&
+                (to.meta.authFunction == undefined || to.meta.authFunction(userStore.userData))) {
                 next()
             } else {
                 request.post("/audits/unlawful_overreach",

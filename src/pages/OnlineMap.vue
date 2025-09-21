@@ -242,9 +242,9 @@ onMounted(async () => {
         })
     })
 
-    map.value.addLayer(lineLayer);
-    map.value.addLayer(approachLayer);
     map.value.addLayer(centerLayer);
+    map.value.addLayer(approachLayer);
+    map.value.addLayer(lineLayer);
     map.value.addLayer(aircraftLayer);
 
     // 添加标记
@@ -281,6 +281,8 @@ onMounted(async () => {
             feature?.set("isPilot", false)
             feature?.set("callsign", controller.callsign)
             feature?.set("frequency", controller.frequency)
+            feature?.set("offline_time", controller.offline_time)
+            feature?.set("is_break", controller.is_break)
             feature?.set("atis", controller.atc_info)
             feature?.set("cid", controller.cid)
             approachLayer.getSource().addFeature(feature);
@@ -321,6 +323,8 @@ onMounted(async () => {
                 feature?.set("isPilot", false)
                 feature?.set("callsign", controller.callsign)
                 feature?.set("frequency", controller.frequency)
+                feature?.set("offline_time", controller.offline_time)
+                feature?.set("is_break", controller.is_break)
                 feature?.set("atis", controller.atc_info)
                 feature?.set("cid", controller.cid)
                 centerLayer.getSource().addFeature(feature);
@@ -332,6 +336,8 @@ onMounted(async () => {
                 feature?.set("isPilot", false)
                 feature?.set("callsign", controller.callsign)
                 feature?.set("frequency", controller.frequency)
+                feature?.set("offline_time", controller.offline_time)
+                feature?.set("is_break", controller.is_break)
                 feature?.set("atis", controller.atc_info)
                 feature?.set("cid", controller.cid)
                 approachLayer.getSource().addFeature(feature);
@@ -455,11 +461,15 @@ const showPopup = (feature: Feature, coordinate: number[]) => {
         const frequency = (Number(feature.get('frequency')) / 1000).toFixed(3);
         const cid = feature.get('cid') as number;
         const atcInfo = join(feature.get('atis') as string[], '<br/>');
+        const offline_time = feature.get("offline_time") as string;
+        const is_break = feature.get("is_break") as boolean;
 
         popupContent.value = `
         <h3>${callsign}</h3>
         <p>频率: ${frequency}</p>
         <p>CID: ${cid}</p>
+        <p>关扇时间: ${offline_time ? offline_time + 'Z' : '未提供'}</p>
+        <p>暂时离开: ${is_break ? '是' : '否'}</p>
         <p>ATC-INFO: </p>
         <p>${atcInfo}</p>
         `

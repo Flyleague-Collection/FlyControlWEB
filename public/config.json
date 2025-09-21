@@ -6,22 +6,7 @@
     "flight_path_color": "#ff4081",
     "atc_border": "rgba(26, 255, 0, 0.7)",
     "atc_fill": "rgba(222, 201, 93, 0.5)",
-    "rating_color": [
-        "#cccccc",
-        "#abb7cc",
-        "#abc1cc",
-        "#a9c2b5",
-        "#ccbdaf",
-        "#ccc4a3",
-        "#c9afcc",
-        "#ccafbb",
-        "#b0b2b6",
-        "#8aa2cc",
-        "#8ab6cc",
-        "#8ab59e",
-        "#cc918f"
-    ],
-    "facility_color": [
+    "facilities": [
         "#a9c2b5",
         "#ccb0af",
         "#ccbdaf",
@@ -35,97 +20,111 @@
         {
             "label": "报名中",
             "class": "activity-status-sign",
-            "value": 1
+            "value": 0
         },
         {
             "label": "活动中",
             "class": "activity-status-under",
-            "value": 2
+            "value": 1
         },
         {
             "label": "已结束",
             "class": "activity-status-end",
-            "value": 3
+            "value": 2
         }
     ],
     "pilot_status": [
         {
             "label": "已报名",
             "class": "pilot-status-sign",
-            "value": 1
+            "value": 0
         },
         {
             "label": "已放行",
             "class": "pilot-status-clearance",
-            "value": 2
+            "value": 1
         },
         {
             "label": "已起飞",
             "class": "pilot-status-takeoff",
-            "value": 3
+            "value": 2
         },
         {
             "label": "已落地",
             "class": "pilot-status-land",
-            "value": 4
+            "value": 3
         }
     ],
     "ratings": [
         {
             "value": -1,
-            "label": "Ban/已封禁"
+            "label": "Ban/已封禁",
+            "color": "#000000"
         },
         {
             "value": 0,
-            "label": "Pilot/飞行员"
+            "label": "Pilot/飞行员",
+            "color": "#cccccc"
         },
         {
             "value": 1,
-            "label": "OBS/观察员"
+            "label": "OBS/观察员",
+            "color": "#abb7cc"
         },
         {
             "value": 2,
-            "label": "S1/放行/地面"
+            "label": "S1/放行/地面",
+            "color": "#abc1cc"
         },
         {
             "value": 3,
-            "label": "S2/塔台"
+            "label": "S2/塔台",
+            "color": "#a9c2b5"
         },
         {
             "value": 4,
-            "label": "S3/进近"
+            "label": "S3/进近",
+            "color": "#ccbdaf"
         },
         {
             "value": 5,
-            "label": "C1/区域"
+            "label": "C1/区域",
+            "color": "#ccc4a3"
         },
         {
             "value": 6,
-            "label": "C2/区域"
+            "label": "C2/区域",
+            "color": "#c9afcc"
         },
         {
             "value": 7,
-            "label": "C3/区域"
+            "label": "C3/区域",
+            "color": "#ccafbb"
         },
         {
             "value": 8,
-            "label": "I1/教员"
+            "label": "I1/教员",
+            "color": "#b0b2b6"
         },
         {
             "value": 9,
-            "label": "I2/教员"
+            "label": "I2/教员",
+            "color": "#8aa2cc"
         },
         {
             "value": 10,
-            "label": "I3/教员"
+            "label": "I3/教员",
+            "color": "#8ab6cc"
         },
         {
             "value": 11,
-            "label": "SUP/监察员"
+            "label": "SUP/监察员",
+            "color": "#8ab59e"
         },
         {
             "value": 12,
-            "label": "ADM/管理员"
+            "label": "ADM/管理员",
+            "color": "#cc918f"
         }
     ]
 }

@@ -1,0 +1,147 @@
+{
+    "title": "APOC 天启模拟飞行连飞平台",
+    "contact_email": "support@apocfly.com",
+    "content": {
+        "github": "https://github.com/Flyleague-Collection/FlyControlWEB",
+        "qq_group_name": "APOC 连飞群",
+        "qq_group": 644614465,
+        "qq_join_link": "https://qm.qq.com/q/tXdOAdPBJe",
+        "icp": "苏ICP备114514191980号-1",
+        "icp_police_url": "https://beian.mps.gov.cn/#/query/webSearch?code=114514191980",
+        "icp_police": "苏公网安备114514191980号",
+        "copyright": "APOC Development Team",
+        "bilibili_name": "APOC天启连飞平台",
+        "bilibili_uid": 3494374067407653,
+        "teamspeak_server": "ts.apocfly.com",
+        "teamspeak_server_password": ""
+    },
+    "partner": [
+        {
+            "image": "/images/partner/ShutterWingPhotos.png",
+            "url": "https://shutterwingphotos.cn"
+        },
+        {
+            "image": "/images/partner/Master-Gui-Studio.png",
+            "url": "https://github.com/Master-Gui-Studio"
+        },
+        {
+            "image": "/images/partner/DianyiCloud.jpg",
+            "url": "https://dianyi.cloud"
+        }
+    ],
+    "meetings": [
+        {
+            "name": "APOC-MT-202501-R0-SC",
+            "file_url": "/data/files/APOC-MT-202501-R0-SC.html",
+            "file_display_name": "APOC 2025 第一次职员临时会议·会议记录"
+        }
+    ],
+    "software": [
+        {
+            "name": "Swift",
+            "platform": {
+                "windows": true,
+                "linux": false,
+                "macos": false
+            },
+            "description": "虚拟空中交通模拟网络的客户端，支持众多模拟器和操作系统",
+            "version": "0.15.26",
+            "file_url": "",
+            "official_uri": "/asdasd"
+        }
+    ],
+    "staff": {
+        "staffers": {
+            "255674717": {
+                "nickname": "QuanQuan(1234)",
+                "qq": "255674717",
+                "email": "quanquan@apocfly.com",
+                "description": "Born to fly"
+            },
+            "3038458075": {
+                "nickname": "Hank Cai(0926)",
+                "qq": "3038458075",
+                "email": "hankcai@apocfly.com",
+                "description": "Clear for Take Off"
+            },
+            "1436001938": {
+                "nickname": "Yiheng Master Gui(5516)",
+                "qq": "1436001938",
+                "email": "yiheng@apocfly.com",
+                "description": "Better call saul"
+            },
+            "1483073537": {
+                "nickname": "Half_nothing(2352)",
+                "qq": "1483073537",
+                "email": "half_nothing@apocfly.com",
+                "description": "Let's debug the sky"
+            },
+            "3162273852": {
+                "nickname": "Yang(1038)",
+                "qq": "3162273852",
+                "email": "xiao@apocfly.com",
+                "description": "人心是最难猜的"
+            }
+        },
+        "officer": [
+            {
+                "office": "行政主管",
+                "qq": "255674717"
+            },
+            {
+                "office": "行政主管",
+                "qq": "3038458075"
+            },
+            {
+                "office": "空管中心主管",
+                "qq": "1436001938"
+            },
+            {
+                "office": "技术组主管",
+                "qq": "1483073537"
+            }
+        ],
+        "technical_department": [
+            {
+                "office": "FSD,飞控开发",
+                "qq": "1483073537"
+            },
+            {
+                "office": "服务器提供,测试部署",
+                "qq": "255674717"
+            }
+        ],
+        "train_department": {
+            "train": [
+                {
+                    "office": "教员(I3)",
+                    "qq": "1436001938"
+                },
+                {
+                    "office": "教员(I3)",
+                    "qq": "3162273852"
+                },
+                {
+                    "office": "塔台教师",
+                    "qq": "3038458075"
+                }
+            ],
+            "sector": [
+                {
+                    "office": "扇区组",
+                    "qq": "1436001938"
+                },
+                {
+                    "office": "扇区组",
+                    "qq": "3162273852"
+                }
+            ]
+        },
+        "activity_department": [
+            {
+                "office": "空缺",
+                "qq": "空缺"
+            }
+        ]
+    }
+}

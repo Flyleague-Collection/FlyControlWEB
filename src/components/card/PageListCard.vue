@@ -4,21 +4,27 @@ import {TableColumnCtx} from "element-plus";
 import type {PageListResponse} from "@/components/card/PageListCard.js";
 
 const props = defineProps<{
-    fetchData: (page: number, pageSize: number) => Promise<PageListResponse<T>>
+    fetchData?: (page: number, pageSize: number) => Promise<PageListResponse<T>>
     doubleClickRow?: (row: T, column: TableColumnCtx<T>, cell: HTMLTableCellElement, event: Event) => void;
-    cardTitle: string;
+    cardTitle?: string;
 }>()
 
-const storedData: Ref<T[]> = ref([])
+const storedData = defineModel({default: []})
 
 const pageSize = ref(20);
 const page = ref(1);
 const total = ref(0);
+const loading = ref(false);
 
 const flushData = async () => {
+    if (props.fetchData == undefined) {
+        return;
+    }
+    loading.value = true
     const response = await props.fetchData(page.value, pageSize.value)
     storedData.value = response.data
     total.value = response.total
+    loading.value = false
 }
 
 const pageChange = async (value: number) => {
@@ -31,7 +37,11 @@ const pageSizeChange = async (value: number) => {
     await flushData()
 }
 
-defineExpose({flushData})
+const getDataByIndex = (index: number): T => {
+    return storedData.value[index];
+}
+
+defineExpose({flushData, getDataByIndex})
 
 onMounted(async () => {
     await flushData()
@@ -39,15 +49,19 @@ onMounted(async () => {
 </script>
 
 <template>
-    <el-card footer-class="flex justify-content-center">
+    <el-card class="no-transform" footer-class="flex justify-content-center">
         <template #header>
-            <div class="flex align-items-center">
-                {{ cardTitle }}
-            </div>
+            <slot name="header">
+                <div class="flex align-items-center">
+                    {{ cardTitle }}
+                </div>
+            </slot>
         </template>
-        <el-table :data="storedData" @row-dblclick="doubleClickRow">
+        <el-skeleton :rows="5" animated v-if="loading" :throttle="{ leading: 1000, trailing: 1000}"/>
+        <el-table :data="storedData" @row-dblclick="doubleClickRow" v-else-if="storedData.length != 0">
             <slot/>
         </el-table>
+        <el-empty v-else/>
         <template #footer>
             <el-pagination
                 :page-size="pageSize"
@@ -63,5 +77,4 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-
 </style>

@@ -1,37 +1,35 @@
 <script setup lang="ts">
-import {useRoute, useRouter} from "vue-router";
-import {useUserStore} from "@/store/user.js";
 import {onMounted, ref} from "vue";
+import {useRoute, useRouter} from "vue-router";
+import {ArrowLeft, Check, Close} from "@element-plus/icons-vue";
+
+import ConfirmDialog from "@/components/dialog/ConfirmDialog.vue";
+import {useUserStore} from "@/store/user.js";
+import {showSuccess, showWarning} from "@/utils/message.js";
+import {Permission} from "@/utils/permission.js";
 import request from "@/utils/request.js";
 import AxiosXHR = Axios.AxiosXHR;
-import {Permission} from "@/utils/permission.js";
-import {
-    ArrowLeft,
-    Check,
-    CircleCheck,
-    CircleCheckFilled,
-    CircleClose,
-    CircleCloseFilled,
-    Close
-} from "@element-plus/icons-vue";
-import ConfirmDialog from "@/components/dialog/ConfirmDialog.vue";
-import {showError, showSuccess, showWarning} from "@/utils/message.js";
+import {padStart} from "lodash-es";
 
-const router = useRouter();
 const route = useRoute();
+const router = useRouter();
 const userStore = useUserStore();
+
+const loading = ref(false);
 const userModel = ref({} as UserModel);
 const permission = ref(new Permission(0));
-const changeMap: Record<string, boolean> = {}
 
 const fetchUserData = async () => {
-    const response = await request.get(`/users/${route.params.id}/profile`) as AxiosXHR<UserModel>;
-    if (response.status != 200) {
-        return
+    loading.value = true;
+    const data = await userStore.getUserByUid(route.params.id)
+    if (data != null) {
+        userModel.value = data
+        permission.value = new Permission(userModel.value.permission)
     }
-    userModel.value = response.data
-    permission.value = new Permission(userModel.value.permission)
+    loading.value = false;
 }
+
+const changeMap: Record<string, boolean> = {}
 
 const permissionChange = (permission: string, value: boolean) => {
     if (changeMap.hasOwnProperty(permission)) {
@@ -48,12 +46,14 @@ const changePermission = async () => {
         showWarning("没有需要修改的权限")
         return
     }
-    const response = await request.patch(`/users/${route.params.id}/permission`, {permissions: changeMap}) as AxiosXHR<UserModel>;
+    loading.value = true;
+    const response = await request.patch(`/users/profiles/${route.params.id}/permission`, {permissions: changeMap}) as AxiosXHR<UserModel>;
     if (response.status == 200) {
         showSuccess("权限编辑成功")
-        userModel.value = response.data
-        permission.value = new Permission(userModel.value.permission)
+        loading.value = false;
+        exit()
     }
+    loading.value = false;
 }
 
 const confirmExitDialog = ref(false);
@@ -76,10 +76,10 @@ onMounted(async () => {
 </script>
 
 <template>
-    <el-card footer-class="flex justify-content-flex-end">
+    <el-card class="no-transform" footer-class="flex justify-content-flex-end">
         <template #header>
             <el-button :icon="ArrowLeft" text @click="confirmExit()"/>
-            <span>编辑{{ userModel.cid }}的权限</span>
+            <span>编辑{{ padStart(userModel.cid, 4, '0') }}的权限</span>
         </template>
         <el-table :data="Object.values(permission.getPermissionsRecord())">
             <el-table-column prop="name" label="权限节点名"/>
@@ -88,19 +88,19 @@ onMounted(async () => {
                 <template #default="scope">
                     <el-switch v-model="scope.row.hasPermission"
                                inline-prompt
+                               :loading="loading"
                                :active-icon="Check"
                                :inactive-icon="Close"
                                @change="val => permissionChange(scope.row.name, val)"
                                v-if="userStore.permission.hasPermissionString(scope.row.name)"
-
                     />
                     <el-tag v-else effect="dark" type="danger">你没有该权限</el-tag>
                 </template>
             </el-table-column>
         </el-table>
         <template #footer>
-            <el-button type="success" :icon="Check" dark @click="changePermission">保存</el-button>
-            <el-button type="danger" :icon="Close" dark @click="confirmExit">取消</el-button>
+            <el-button type="success" :icon="Check" :loading="loading" dark @click="changePermission()">保存</el-button>
+            <el-button type="danger" :icon="Close" :loading="loading" dark @click="confirmExit()">取消</el-button>
         </template>
     </el-card>
     <ConfirmDialog v-model="confirmExitDialog"
@@ -111,7 +111,5 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.el-card {
-    transform: none;
-}
+
 </style>

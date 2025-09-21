@@ -2,114 +2,99 @@
 import {useActivityStore} from "@/store/activity.js";
 import {Delete, EditPen, Plus} from "@element-plus/icons-vue";
 import {useRouter} from "vue-router";
-import {onMounted, ref, Ref} from "vue";
+import {ref, Ref} from "vue";
 import {showError, showSuccess} from "@/utils/message.js";
+import {useUserStore} from "@/store/user.js";
+import {PermissionNode} from "@/utils/permission.js";
+import ConfirmDialog from "@/components/dialog/ConfirmDialog.vue";
+import {ConfirmDialogInstance} from "@/components/dialog/ConfirmDialog.js";
+import PageListCard from "@/components/card/PageListCard.vue";
+import {PageListCardInstance, PageListResponse} from "@/components/card/PageListCard.js";
 
 const activityStore = useActivityStore();
+const userStore = useUserStore();
 const router = useRouter();
 
-const activities: Ref<ActivityModel[]> = ref([])
+const getActivityData = async (page: number, pageSize: number): PageListResponse<ActivityModel> => {
+    const res: PageListResponse<ActivityModel> = {
+        data: [],
+        total: 0
+    }
+    const data = await activityStore.getActivitiesPage(page, pageSize)
+    if (data != null) {
+        res.data = data.items
+        res.total = data.total
+    }
+    return res;
+}
 
-const pageSize = ref(20);
-const page = ref(1);
-const total = ref(0);
+const confirmDeleteActivityRef: Ref<ConfirmDialogInstance> = ref()
+const activityId = ref(0)
 
-const fetchPageData = async () => {
-    const data = await activityStore.getActivitiesPage(page.value, pageSize.value)
-    if (data == null) {
-        showError("活动数据加载失败")
+const confirmDeleteActivity = (id: number) => {
+    if (!userStore.permission.hasPermission(PermissionNode.ActivityDelete)) {
+        showError("你无权这么做")
         return
     }
-
-    activities.value = data.items
-    total.value = data.total
+    activityId.value = id;
+    confirmDeleteActivityRef.value?.show();
 }
 
-const pageChange = async (value: number) => {
-    page.value = value;
-    await fetchPageData()
-}
+const activityDataListRef: Ref<PageListCardInstance> = ref()
 
-const pageSizeChange = async (value: number) => {
-    pageSize.value = value;
-    await fetchPageData()
-}
-
-const deleteActivity = async (id: number) => {
-    const response = await activityStore.deleteActivity(id);
+const deleteActivity = async () => {
+    if (activityId.value == 0) {
+        showError("活动ID错误")
+        return
+    }
+    const response = await activityStore.deleteActivity(activityId.value);
     if (response) {
         showSuccess("删除活动成功")
+        activityId.value = 0
     }
-    await fetchPageData()
+    activityDataListRef.value?.flushData()
 }
-
-onMounted(async () => {
-    await fetchPageData()
-})
 </script>
 
 <template>
-    <div class="container">
-        <el-card footer-class="flex justify-content-center">
-            <template #header>
-                <div class="flex align-items-center">
-                    <span>活动总览</span>
-                    <el-button class="margin-left-10" :icon="Plus" type="success"
-                               @click="router.push(`/admin/activities/new`)">发布活动
+    <PageListCard ref="activityDataListRef" :fetch-data="getActivityData">
+        <template #header>
+            <el-space wrap>
+                <span>活动总览</span>
+                <el-button class="margin-left-10" :icon="Plus" type="success"
+                           @click="router.push(`/admin/activities/new`)"
+                           :disabled="!userStore.permission.hasPermission(PermissionNode.ActivityPublish)">
+                    发布活动
+                </el-button>
+            </el-space>
+        </template>
+        <el-table-column prop="id" label="活动ID"/>
+        <el-table-column prop="publisher" label="发布者"/>
+        <el-table-column prop="title" label="活动标题"/>
+        <el-table-column prop="active_time" label="活动时间"/>
+        <el-table-column label="操作">
+            <template #default="scope">
+                <el-space wrap>
+                    <el-button id="activity-option-edit-btn" :icon="EditPen" type="primary"
+                               @click="router.push(`/admin/activities/${scope.row.id}`)"
+                               :disabled="!userStore.permission.hasPermission(PermissionNode.ActivityEdit)">
+                        编辑
                     </el-button>
-                </div>
+                    <el-button id="activity-option-delete-btn" :icon="Delete" type="danger"
+                               @click="confirmDeleteActivity(scope.row.id)"
+                               :disabled="!userStore.permission.hasPermission(PermissionNode.ActivityDelete)">
+                        删除
+                    </el-button>
+                </el-space>
             </template>
-            <el-table :data="activities">
-                <el-table-column prop="id" label="活动ID"></el-table-column>
-                <el-table-column prop="publisher" label="发布者"></el-table-column>
-                <el-table-column prop="title" label="活动标题"></el-table-column>
-                <el-table-column prop="active_time" label="活动时间"></el-table-column>
-                <el-table-column label="操作">
-                    <template #default="scope">
-                        <div id="activity-option-container" class="flex">
-                            <el-button id="activity-option-edit-btn" :icon="EditPen" type="primary"
-                                       @click="router.push(`/admin/activities/${scope.row.id}`)">
-                                编辑
-                            </el-button>
-                            <el-button id="activity-option-delete-btn" :icon="Delete" type="danger"
-                                       @click="deleteActivity(scope.row.id)">
-                                删除
-                            </el-button>
-                        </div>
-                    </template>
-                </el-table-column>
-            </el-table>
-            <template #footer>
-                <el-pagination
-                    :page-size="pageSize"
-                    :current-page="page"
-                    :total="total"
-                    :page-sizes="[10, 20, 30, 40, 50]"
-                    layout="total, sizes, prev, pager, next, jumper"
-                    @update:current-page="pageChange"
-                    @update:page-size="pageSizeChange"
-                />
-            </template>
-        </el-card>
-    </div>
+        </el-table-column>
+    </PageListCard>
+    <ConfirmDialog ref="confirmDeleteActivityRef"
+                   body-content="确认要删除该活动吗?"
+                   header-content="删除活动"
+                   @confirm-event="deleteActivity()"/>
 </template>
 
 <style scoped>
-.el-card {
-    transform: none;
-}
 
-@media (max-width: 1105px) {
-    #activity-option-container {
-        flex-direction: column;
-    }
-
-    #activity-option-edit-btn {
-        margin-bottom: 10px;
-    }
-
-    #activity-option-delete-btn {
-        margin: 0;
-    }
-}
 </style>

@@ -54,7 +54,7 @@
 
 // margin
 .margin-left-10 {
-  margin-left: 10px;
+  margin-left: 10px !important;
 }
 
 .margin-bottom-5 {
@@ -136,4 +136,8 @@
 
 .h-full {
   height: 100% !important;
+}
+
+.no-transform {
+  transform: none !important;
 }

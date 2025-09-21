@@ -4,7 +4,7 @@ import {useRoute, useRouter} from 'vue-router'
 import type {FormInstance, FormRules} from 'element-plus'
 import {User, Lock} from '@element-plus/icons-vue';
 import {useUserStore} from "@/store/user.js";
-import {showError, showInfo} from "@/utils/message.js";
+import {showInfo} from "@/utils/message.js";
 import config from "@/config/index.js";
 
 const userStore = useUserStore()
@@ -12,8 +12,6 @@ const router = useRouter()
 const route = useRoute()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
-const loginAttempts = ref(0)
-const lockoutTime = ref(0)
 
 const loginForm = reactive<LoginForm>({
     username: '',
@@ -23,40 +21,13 @@ const loginForm = reactive<LoginForm>({
 // 增强的表单验证规则
 const rules = reactive<FormRules<LoginForm>>({
     username: [
-        {required: true, message: '请输入用户名', trigger: 'blur'},
-        {min: 4, max: 16, message: '长度在4到16个字符', trigger: 'blur'},
-        {
-            pattern: /^[a-zA-Z0-9_]+$/,
-            message: '用户名只能包含字母、数字和下划线', trigger: 'blur'
-        }
+        {required: true, message: '请输入用户名', trigger: 'blur'}
     ],
     password: [
         {required: true, message: '请输入密码', trigger: 'blur'},
         {min: 6, max: 20, message: '长度在6到20个字符', trigger: 'blur'}
     ]
 })
-
-// 检查是否处于锁定状态
-const isLocked = computed(() => {
-    return lockoutTime.value > Date.now()
-})
-
-// 获取剩余锁定时间
-const remainingLockTime = computed(() => {
-    if (!isLocked.value) return 0
-    return Math.ceil((lockoutTime.value - Date.now()) / 1000)
-})
-
-// 处理登录失败
-const handleLoginFailure = () => {
-    loginAttempts.value++
-    if (loginAttempts.value >= 5) {
-        lockoutTime.value = Date.now() + 30 * 60 * 1000
-        showError('登录失败次数过多，请30分钟后再试')
-    } else {
-        showError(`登录失败，还剩${5 - loginAttempts.value}次机会`)
-    }
-}
 
 const redirectPath = computed(() => {
     return route.query.redirect ? route.query.redirect : '/home'
@@ -66,13 +37,11 @@ const handleLogin = async () => {
     try {
         await formRef.value?.validate()
         loading.value = true
-
         const success = await userStore.login(loginForm)
         if (success) {
             showInfo(`欢迎登录, ${loginForm.username}, 祝连飞顺利`)
+            new Promise(_ => setTimeout(() => router.push(redirectPath.value as string), 1000))
         }
-
-        new Promise(_ => setTimeout(() => router.push(redirectPath.value as string), 1000))
     } finally {
         loading.value = false
     }
@@ -92,8 +61,8 @@ onMounted(() => {
         </div>
         <el-card class="login-box">
             <div class="flex align-items-center justify-content-center margin-bottom-10">
-                <img class="h-50p w-50p" :src="config.icon_path" alt="Icon"/>
-                <div class="margin-left-10">
+                <img class="login-logo" :src="config.icon_path" alt="Icon"/>
+                <div class="login-title margin-left-10">
                     {{ config.title }}
                 </div>
             </div>
@@ -109,7 +78,6 @@ onMounted(() => {
                         v-model="loginForm.username"
                         placeholder="请输入用户名"
                         :prefix-icon="User"
-                        :disabled="isLocked"
                         class="custom-input"
                     />
                 </el-form-item>
@@ -121,7 +89,6 @@ onMounted(() => {
                         placeholder="请输入密码"
                         :prefix-icon="Lock"
                         show-password
-                        :disabled="isLocked"
                         class="custom-input"
                     />
                 </el-form-item>
@@ -131,10 +98,9 @@ onMounted(() => {
                         type="primary"
                         @click="handleLogin"
                         :loading="loading"
-                        :disabled="isLocked"
                         class="login-button"
                     >
-                        {{ isLocked ? `账号已锁定，请${remainingLockTime}秒后再试` : '登录' }}
+                        登录
                     </el-button>
                 </el-form-item>
 
@@ -147,14 +113,21 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.el-card {
+    transform: none !important;
+}
+
 .login-container {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
     width: 100vw;
-    background-color: var(--secondary-color);
     position: fixed;
+    background-image: url("/images/background.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
     top: 0;
     left: 0;
     overflow: hidden;
@@ -166,7 +139,6 @@ onMounted(() => {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
     opacity: 0.1;
     z-index: 0;
 }
@@ -176,7 +148,8 @@ onMounted(() => {
     padding: 40px;
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    background-color: var(--el-bg-color);
+    background: var(--secondary-bg-color);
+    backdrop-filter: blur(10px);
     position: relative;
     z-index: 1;
     border: none;
@@ -190,9 +163,8 @@ onMounted(() => {
 }
 
 .login-logo {
-    width: 80px;
-    height: 80px;
-    margin-bottom: 16px;
+    width: 50px;
+    height: 50px;
 }
 
 .login-title {
@@ -200,8 +172,8 @@ onMounted(() => {
     font-weight: 600;
     margin: 0;
     background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
 }
 
 .login-form {
@@ -259,6 +231,9 @@ onMounted(() => {
 .login-button:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background-image: linear-gradient(45deg, var(--primary-color), var(--accent-color), var(--primary-color));
+    background-size: 200%;
+    animation: gradient-animation 3s ease infinite;
 }
 
 .login-footer {

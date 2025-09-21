@@ -11,10 +11,14 @@ export default defineConfig({
     plugins: [
         vue(),
         AutoImport({
-            resolvers: [ElementPlusResolver()]
+            resolvers: [ElementPlusResolver({
+                importStyle: "sass"
+            })]
         }),
         Components({
-            resolvers: [ElementPlusResolver()]
+            resolvers: [ElementPlusResolver({
+                importStyle: "sass"
+            })]
         })
     ],
     resolve: {
@@ -47,12 +51,28 @@ export default defineConfig({
             "/api": "http://127.0.0.1:6810"
         }
     },
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    'vue': ['vue', 'vue-router', 'vue-echarts', 'vue-toastification'],
+                    'element-plus': ['element-plus'],
+                    'element-plus-icon': ['@element-plus/icons-vue'],
+                    'ol': ['ol', 'ol-mapbox-style'],
+                    'utils': ['./src/utils/message.js', './src/utils/permission.js', './src/utils/request.js', './src/utils/utils.js']
+                },
+                entryFileNames: 'js/[name].[hash].js',
+                chunkFileNames: 'js/[name].[hash].js',
+                assetFileNames: 'assets/[name].[hash].[ext]'
+            }
+        }
+    },
     esbuild: {
         supported: {
             "top-level-await": true
         },
         drop: [
-            // 'debugger'
+            'debugger'
         ]
     }
 })

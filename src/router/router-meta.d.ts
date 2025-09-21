@@ -2,9 +2,10 @@ import {PermissionNode} from "@/utils/permission.js";
 
 declare module 'vue-router' {
     interface RouteMeta {
-        title?: string
-        requirePermissions: PermissionNode[]
+        title: string
         requireAuth: boolean
+        requirePermissions?: PermissionNode[]
+        authFunction?: (user: UserModel) => boolean
     }
 }
 

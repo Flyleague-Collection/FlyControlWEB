@@ -6,7 +6,7 @@ type Config = {
     flight_path_color: string;
     atc_border: string,
     atc_fill: string,
-    rating_color: string[];
+    facilities: string[];
     activity_status: {
         label: string;
         class: string;
@@ -20,7 +20,72 @@ type Config = {
     ratings: {
         label: string;
         value: number;
+        color: string;
     }[];
 }
 
 type Airports = { value: string }[]
+
+type StaffInfo = {
+    nickname: string;
+    qq: string;
+    email: string;
+    description: string;
+}
+
+type Job = StaffInfo & {
+    office: string;
+    qq: string;
+}
+
+type HomeConfig = {
+    title: string;
+    contact_email: string;
+    content: {
+        github: string;
+        qq_group: number;
+        qq_join_link: string;
+        icp: string;
+        icp_police: string;
+        icp_police_url: string;
+        copyright: string;
+        bilibili_name: string;
+        bilibili_uid: number;
+        teamspeak_server: string;
+        teamspeak_server_password: string;
+        qq_group_name: string;
+    };
+    partner: {
+        image: string;
+        url: string;
+    }[];
+    meetings: {
+        name: string;
+        file_url: string;
+        file_display_name: string;
+    }[];
+    software: {
+        name: string;
+        platform: {
+            windows: boolean;
+            linux: boolean;
+            macos: boolean;
+        };
+        description: string;
+        version: string;
+        file_url: string;
+        official_uri: string;
+    }
+    staff: {
+        staffers: {
+            [key: string]: StaffInfo;
+        },
+        officer: Job[],
+        technical_department: Job[],
+        train_department: {
+            train: Job[],
+            sector: Job[],
+        },
+        activity_department: Job[],
+    }
+}

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import {Check, Close} from "@element-plus/icons-vue";
+
 const model = defineModel({type: Boolean, default: false});
 
 const emit = defineEmits<{
@@ -16,26 +18,26 @@ defineProps({
         required: false,
         default: 250
     }
-})
+});
 
 const cancelCallback = () => {
-    hide()
-    emit('dialogCancelEvent')
+    hide();
+    emit("dialogCancelEvent");
 }
 
 const handleCommit = async () => {
-    emit('dialogConfirmEvent')
+    emit("dialogConfirmEvent");
 }
 
 const show = () => {
-    model.value = true
+    model.value = true;
 }
 
 const hide = () => {
-    model.value = false
+    model.value = false;
 }
 
-defineExpose({show, hide})
+defineExpose({show, hide});
 </script>
 
 <template>
@@ -49,10 +51,10 @@ defineExpose({show, hide})
         </template>
         <slot></slot>
         <template #footer>
-            <div class="flex justify-content-flex-end">
-                <el-button type="primary" @click="handleCommit">确认</el-button>
-                <el-button @click="cancelCallback">取消</el-button>
-            </div>
+            <el-space>
+                <el-button type="success" :icon="Check" @click="handleCommit">确认</el-button>
+                <el-button type="danger" :icon="Close" @click="cancelCallback">取消</el-button>
+            </el-space>
         </template>
     </el-dialog>
 </template>

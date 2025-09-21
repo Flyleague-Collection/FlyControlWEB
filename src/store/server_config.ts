@@ -22,6 +22,7 @@ export const useServerConfigStore = defineStore("server-config-store", () => {
             max_allow_size: 5242880,
             allowed_ext: [".jpg", ".png", ".bmp", ".jpeg"]
         },
+        email_send_interval: 60,
         facilities: [
             {
                 id: 0,

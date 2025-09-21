@@ -74,7 +74,7 @@ onMounted(async () => {
             <template #date-cell="{ data }">
                 {{ data.day.split("-")[2] }}
                 <div v-if="activitiesRecord[data.day] != null" class="activity"
-                     :class="activityStatusClass[activitiesRecord[data.day].status-1]"
+                     :class="activityStatusClass[activitiesRecord[data.day].status]"
                      @click="router.push(`/activities/${activitiesRecord[data.day].id}`)">
                     <span>{{ activitiesRecord[data.day].start_time }}</span>
                     <span>{{ activitiesRecord[data.day].title }}</span>
