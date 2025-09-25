@@ -8,7 +8,7 @@ import {onMounted, Ref, ref} from 'vue';
 import ActivityCalendar from "@/components/ActivityCalendar.vue";
 import {useUserStore} from "@/store/user.js";
 import request from "@/utils/request.js";
-import {handleImageUrl} from "@/utils/utils.js";
+import {formatCid, handleImageUrl} from "@/utils/utils.js";
 
 use([BarChart, TitleComponent, TooltipComponent, DatasetComponent, GridComponent, SVGRenderer]);
 
@@ -109,10 +109,10 @@ onMounted(async () => {
                         <div class="flex">
                             <div class="flex align-items-center">
                                 <el-avatar size="large" v-if="item.avatar_url != ''" :src="item.avatar_url"></el-avatar>
-                                <el-avatar size="large" v-else>{{ item.cid }}</el-avatar>
+                                <el-avatar size="large" v-else>{{ formatCid(item.cid) }}</el-avatar>
                             </div>
                             <div class="flex flex-direction-column w-full margin-left-10">
-                                <span class="margin-bottom-10" style="font-size: 1.2rem">{{ item.cid }}</span>
+                                <span class="margin-bottom-10" style="font-size: 1.2rem">{{ formatCid(item.cid) }}</span>
                                 <el-progress :percentage="item.time/pilotRatingMax * 100"
                                              :stroke-width="20">
                                     {{ (item.time / 3600.0).toFixed(2) }}h
@@ -131,10 +131,10 @@ onMounted(async () => {
                         <div class="flex">
                             <div class="flex">
                                 <el-avatar size="large" v-if="item.avatar_url != ''" :src="item.avatar_url"></el-avatar>
-                                <el-avatar size="large" v-else>{{ item.cid }}</el-avatar>
+                                <el-avatar size="large" v-else>{{ formatCid(item.cid) }}</el-avatar>
                             </div>
                             <div class="flex flex-direction-column w-full margin-left-10">
-                                <span class="margin-bottom-10" style="font-size: 1.2rem">{{ item.cid }}</span>
+                                <span class="margin-bottom-10" style="font-size: 1.2rem">{{ formatCid(item.cid) }}</span>
                                 <el-progress :percentage="item.time/controllerRatingMax * 100"
                                              :stroke-width="20">
                                     {{ (item.time / 3600.0).toFixed(2) }}h

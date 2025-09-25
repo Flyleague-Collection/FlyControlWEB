@@ -60,6 +60,28 @@ export const Global = {
             value: 4,
             type: "info"
         }
+    ],
+    supportedPlatforms: [
+        {
+            label: "Vatprc(Vatsim)",
+            value: "Vatprc(Vatsim)"
+        },
+        {
+            label: "Skyline",
+            value: "Skyline"
+        },
+        {
+            label: "Xflysim",
+            value: "Xflysim"
+        },
+        {
+            label: "Chinaflier",
+            value: "Chinaflier"
+        },
+        {
+            label: "Sino",
+            value: "Sino"
+        }
     ]
 }
 
@@ -78,4 +100,11 @@ export enum Ratings {
     Instructor3,
     Supervisor,
     Administrator
+}
+
+export enum ApplicationStatus {
+    Submitted,
+    Processing,
+    Passed,
+    Rejected
 }

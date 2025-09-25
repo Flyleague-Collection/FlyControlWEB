@@ -77,7 +77,7 @@ const updateUserProfile = async () => {
     }
     userEditFormRef.value?.clearValidate()
     const data: RequestUpdateUserProfile = {};
-    if (userStore.permission.hasPermission(PermissionNode.UserEditBaseInfo)) {
+    if (userStore.permission.hasPermissionNode(PermissionNode.UserEditBaseInfo)) {
         if (userData.value.username != "" && oldUserData.username != userData.value.username) {
             try {
                 await userEditFormRef.value?.validateField("username")
@@ -100,7 +100,7 @@ const updateUserProfile = async () => {
             data.qq = userData.value.qq
         }
     }
-    if (userStore.permission.hasPermission(PermissionNode.UserSetPassword) && userData.value.password != "") {
+    if (userStore.permission.hasPermissionNode(PermissionNode.UserSetPassword) && userData.value.password != "") {
         data.new_password = userData.value.password;
     }
     if (Object.keys(data).length == 0) {
@@ -190,7 +190,7 @@ const exit = () => {
             </el-form-item>
             <el-form-item label="密码" prop="password">
                 <el-input v-model="userData.password" type="password"
-                          :disable="userStore.permission.hasPermission(PermissionNode.UserSetPassword)"/>
+                          :disable="userStore.permission.hasPermissionNode(PermissionNode.UserSetPassword)"/>
             </el-form-item>
         </el-form>
         <template #footer>

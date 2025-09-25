@@ -81,20 +81,20 @@ const confirmUpdateRating = async () => {
         return
     }
     const requestData: Record<string, string | number | boolean> = {}
-    if (userStore.permission.hasPermission(PermissionNode.ControllerEditRating) && oldValue.value.rating != userInfo.value.rating) {
+    if (userStore.permission.hasPermissionNode(PermissionNode.ControllerEditRating) && oldValue.value.rating != userInfo.value.rating) {
         requestData.rating = userInfo.value.rating
     }
-    if (userStore.permission.hasPermission(PermissionNode.ControllerTier2Rating) && oldValue.value.tier2 != userInfo.value.tier2) {
+    if (userStore.permission.hasPermissionNode(PermissionNode.ControllerTier2Rating) && oldValue.value.tier2 != userInfo.value.tier2) {
         requestData.tier2 = userInfo.value.tier2
     }
-    if (userStore.permission.hasPermission(PermissionNode.ControllerChangeGuest) && oldValue.value.guest != userInfo.value.guest) {
+    if (userStore.permission.hasPermissionNode(PermissionNode.ControllerChangeGuest) && oldValue.value.guest != userInfo.value.guest) {
         requestData.guest = userInfo.value.guest
     }
     if (!userInfo.value.guest) {
-        if (userStore.permission.hasPermission(PermissionNode.ControllerChangeUnderMonitor) && oldValue.value.under_monitor != userInfo.value.under_monitor) {
+        if (userStore.permission.hasPermissionNode(PermissionNode.ControllerChangeUnderMonitor) && oldValue.value.under_monitor != userInfo.value.under_monitor) {
             requestData.under_monitor = userInfo.value.under_monitor
         }
-        if (userStore.permission.hasPermission(PermissionNode.ControllerChangeSolo) && oldValue.value.under_solo != userInfo.value.under_solo) {
+        if (userStore.permission.hasPermissionNode(PermissionNode.ControllerChangeSolo) && oldValue.value.under_solo != userInfo.value.under_solo) {
             requestData.under_solo = userInfo.value.under_solo
             if (userInfo.value.under_solo) {
                 if (moment(userInfo.value.solo_until).isBefore(moment())) {
@@ -114,7 +114,7 @@ const confirmUpdateRating = async () => {
     requestData.guest = userInfo.value.guest
     requestData.under_monitor = userInfo.value.under_monitor
     requestData.under_solo = userInfo.value.under_solo
-    requestData.solo_until = userInfo.value.solo_until
+    requestData.solo_until = moment(userInfo.value.solo_until).utc().format()
     const response = await request.put(`/controllers/${userInfo.value.id}/rating`, requestData) as AxiosXHR<boolean>
     if (response.status == 200 && response.data) {
         showSuccess("编辑管制权限成功")
@@ -199,7 +199,7 @@ const confirmUpdateRating = async () => {
                 </el-button>
                 <el-button :icon="EditPen" type="primary"
                            @click="router.push(`/admin/controllers/${scope.row.id}`)"
-                           :disabled="!userStore.permission.hasPermission(PermissionNode.ControllerShowRecord)">
+                           :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ControllerShowRecord)">
                     编辑履历
                 </el-button>
             </template>
@@ -215,27 +215,27 @@ const confirmUpdateRating = async () => {
             </el-form-item>
             <el-form-item label="管制权限">
                 <el-select v-model.number="userInfo.rating" :options="config.ratings"
-                           :disabled="!userStore.permission.hasPermission(PermissionNode.ControllerEditRating)"/>
+                           :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ControllerEditRating)"/>
             </el-form-item>
             <el-form-item label="客座管制">
                 <el-switch v-model="userInfo.guest"
-                           :disabled="!userStore.permission.hasPermission(PermissionNode.ControllerChangeGuest)"/>
+                           :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ControllerChangeGuest)"/>
             </el-form-item>
             <el-form-item label="UM权限" v-if="!userInfo.guest">
                 <el-switch v-model="userInfo.under_monitor"
-                           :disabled="!userStore.permission.hasPermission(PermissionNode.ControllerChangeSolo)"/>
+                           :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ControllerChangeSolo)"/>
             </el-form-item>
             <el-form-item label="Solo权限" v-if="!userInfo.guest">
                 <el-switch v-model="userInfo.under_solo"
-                           :disabled="!userStore.permission.hasPermission(PermissionNode.ControllerChangeSolo)"/>
+                           :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ControllerChangeSolo)"/>
             </el-form-item>
             <el-form-item label="Solo直至" v-if="!userInfo.guest && userInfo.under_solo">
                 <el-date-picker type="datetime" v-model="userInfo.solo_until"
-                                :disabled="!userStore.permission.hasPermission(PermissionNode.ControllerChangeSolo)"/>
+                                :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ControllerChangeSolo)"/>
             </el-form-item>
             <el-form-item label="Tier2权限">
                 <el-switch v-model="userInfo.tier2"
-                           :disabled="!userStore.permission.hasPermission(PermissionNode.ControllerTier2Rating)"/>
+                           :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ControllerTier2Rating)"/>
             </el-form-item>
         </el-form>
     </FormDialog>

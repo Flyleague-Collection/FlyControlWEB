@@ -10,6 +10,7 @@ import {Permission} from "@/utils/permission.js";
 import request from "@/utils/request.js";
 import AxiosXHR = Axios.AxiosXHR;
 import {padStart} from "lodash-es";
+import {formatCid} from "@/utils/utils.js";
 
 const route = useRoute();
 const router = useRouter();
@@ -17,14 +18,14 @@ const userStore = useUserStore();
 
 const loading = ref(false);
 const userModel = ref({} as UserModel);
-const permission = ref(new Permission(0));
+const permission = ref(new Permission(0n));
 
 const fetchUserData = async () => {
     loading.value = true;
     const data = await userStore.getUserByUid(route.params.id)
     if (data != null) {
         userModel.value = data
-        permission.value = new Permission(userModel.value.permission)
+        permission.value = new Permission(BigInt(userModel.value.permission))
     }
     loading.value = false;
 }
@@ -79,7 +80,7 @@ onMounted(async () => {
     <el-card class="no-transform" footer-class="flex justify-content-flex-end">
         <template #header>
             <el-button :icon="ArrowLeft" text @click="confirmExit()"/>
-            <span>编辑{{ padStart(userModel.cid, 4, '0') }}的权限</span>
+            <span>编辑{{ formatCid(userModel.cid) }}的权限</span>
         </template>
         <el-table :data="Object.values(permission.getPermissionsRecord())">
             <el-table-column prop="name" label="权限节点名"/>

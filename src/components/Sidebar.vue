@@ -125,7 +125,7 @@ onMounted(() => {
                 管制员档案
             </el-menu-item>
         </el-sub-menu>
-        <el-sub-menu index="/admin" v-if="userStore.permission?.hasPermission(PermissionNode.AdminEntry)">
+        <el-sub-menu index="/admin" v-if="userStore.permission?.hasPermissionNode(PermissionNode.AdminEntry)">
             <template #title>
                 <el-icon>
                     <Setting/>
@@ -133,31 +133,35 @@ onMounted(() => {
                 <span>管理员中心</span>
             </template>
             <el-menu-item index="/admin/users"
-                          v-if="userStore.permission?.hasPermission(PermissionNode.UserShowList)">
+                          v-if="userStore.permission?.hasPermissionNode(PermissionNode.UserShowList)">
                 用户管理
             </el-menu-item>
             <el-menu-item index="/admin/controllers"
-                          v-if="userStore.permission?.hasPermission(PermissionNode.ControllerShowList)">
+                          v-if="userStore.permission?.hasPermissionNode(PermissionNode.ControllerShowList)">
                 管制员管理
             </el-menu-item>
+            <el-menu-item index="/admin/applications"
+                          v-if="userStore.permission?.hasPermissionNode(PermissionNode.ControllerApplicationShowList)">
+                管制员申请管理
+            </el-menu-item>
             <el-menu-item index="/admin/activities"
-                          v-if="userStore.permission?.hasPermission(PermissionNode.ActivityShowList)">
+                          v-if="userStore.permission?.hasPermissionNode(PermissionNode.ActivityShowList)">
                 活动管理
             </el-menu-item>
             <el-menu-item index="/admin/clients"
-                          v-if="userStore.permission?.hasPermissions(PermissionNode.ClientManagerEntry)">
+                          v-if="userStore.permission?.hasPermissionNode(PermissionNode.ClientManagerEntry)">
                 在线管理
             </el-menu-item>
             <el-menu-item index="/admin/tickets"
-                          v-if="userStore.permission?.hasPermission(PermissionNode.TicketShowList)">
+                          v-if="userStore.permission?.hasPermissionNode(PermissionNode.TicketShowList)">
                 工单管理
             </el-menu-item>
             <el-menu-item index="/admin/permissions"
-                          v-if="userStore.permission?.hasPermissions(PermissionNode.UserShowList)">
+                          v-if="userStore.permission?.hasPermissionNode(PermissionNode.UserShowList)">
                 权限管理
             </el-menu-item>
             <el-menu-item index="/admin/audit"
-                          v-if="userStore.permission?.hasPermission(PermissionNode.AuditLogShow)">
+                          v-if="userStore.permission?.hasPermissionNode(PermissionNode.AuditLogShow)">
                 审计日志
             </el-menu-item>
         </el-sub-menu>

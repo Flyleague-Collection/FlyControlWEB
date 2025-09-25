@@ -35,6 +35,7 @@ import BecomeController from "@/pages/home/BecomeController.vue";
 import Ratings from "@/pages/home/Ratings.vue";
 import ControllerRecord from "@/pages/admin/controller/ControllerRecord.vue";
 import {Ratings as ratings} from "@/global.js";
+import Applications from "@/pages/admin/controller/Applications.vue";
 
 const isController = (userData: UserModel): boolean => {
     return userData.rating >= ratings.Observer;
@@ -241,7 +242,17 @@ const routes: RouteRecordRaw[] = [
                 meta: {
                     requireAuth: true,
                     title: "用户管理",
-                    requirePermissions: [PermissionNode.AdminEntry, PermissionNode.UserShowList]
+                    requirePermission: PermissionNode.AdminEntry | PermissionNode.UserShowList
+                }
+            },
+            {
+                path: "/admin/applications",
+                name: "AdminApplications",
+                component: Applications,
+                meta: {
+                    requireAuth: true,
+                    title: "管制员申请管理",
+                    requirePermission: PermissionNode.AdminEntry | PermissionNode.ControllerApplicationShowList
                 }
             },
             {
@@ -251,7 +262,7 @@ const routes: RouteRecordRaw[] = [
                 meta: {
                     requireAuth: true,
                     title: "管制员管理",
-                    requirePermissions: [PermissionNode.AdminEntry, PermissionNode.UserShowList, PermissionNode.ControllerShowList]
+                    requirePermission: PermissionNode.AdminEntry | PermissionNode.UserShowList | PermissionNode.ControllerShowList
                 }
             },
             {
@@ -261,7 +272,7 @@ const routes: RouteRecordRaw[] = [
                 meta: {
                     requireAuth: true,
                     title: "管制员履历管理",
-                    requirePermissions: [PermissionNode.AdminEntry, PermissionNode.ControllerShowList, PermissionNode.ControllerShowRecord]
+                    requirePermission: PermissionNode.AdminEntry | PermissionNode.ControllerShowList | PermissionNode.ControllerShowRecord
                 }
             },
             {
@@ -271,7 +282,7 @@ const routes: RouteRecordRaw[] = [
                 meta: {
                     requireAuth: true,
                     title: "活动管理",
-                    requirePermissions: [PermissionNode.AdminEntry, PermissionNode.ActivityShowList]
+                    requirePermission: PermissionNode.AdminEntry | PermissionNode.ActivityShowList
                 }
             },
             {
@@ -281,7 +292,7 @@ const routes: RouteRecordRaw[] = [
                 meta: {
                     requireAuth: true,
                     title: "编辑活动",
-                    requirePermissions: [PermissionNode.AdminEntry, PermissionNode.ActivityShowList, PermissionNode.ActivityEdit]
+                    requirePermission: PermissionNode.AdminEntry | PermissionNode.ActivityShowList | PermissionNode.ActivityEdit
                 }
             },
             {
@@ -291,7 +302,7 @@ const routes: RouteRecordRaw[] = [
                 meta: {
                     requireAuth: true,
                     title: "新建活动",
-                    requirePermissions: [PermissionNode.AdminEntry, PermissionNode.ActivityShowList, PermissionNode.ActivityPublish]
+                    requirePermission: PermissionNode.AdminEntry | PermissionNode.ActivityShowList | PermissionNode.ActivityPublish
                 }
             },
             {
@@ -301,7 +312,7 @@ const routes: RouteRecordRaw[] = [
                 meta: {
                     requireAuth: true,
                     title: "在线管理",
-                    requirePermissions: [PermissionNode.AdminEntry, PermissionNode.ClientManagerEntry]
+                    requirePermission: PermissionNode.AdminEntry | PermissionNode.ClientManagerEntry
                 }
             },
             {
@@ -311,7 +322,7 @@ const routes: RouteRecordRaw[] = [
                 meta: {
                     requireAuth: true,
                     title: "工单管理",
-                    requirePermissions: [PermissionNode.AdminEntry, PermissionNode.TicketShowList]
+                    requirePermission: PermissionNode.AdminEntry | PermissionNode.TicketShowList
                 }
             },
             {
@@ -321,7 +332,7 @@ const routes: RouteRecordRaw[] = [
                 meta: {
                     requireAuth: true,
                     title: "权限管理",
-                    requirePermissions: [PermissionNode.AdminEntry, PermissionNode.UserShowList]
+                    requirePermission: PermissionNode.AdminEntry | PermissionNode.UserShowList
                 }
             },
             {
@@ -331,7 +342,7 @@ const routes: RouteRecordRaw[] = [
                 meta: {
                     requireAuth: true,
                     title: "编辑用户权限",
-                    requirePermissions: [PermissionNode.AdminEntry, PermissionNode.UserShowList, PermissionNode.UserEditPermission]
+                    requirePermission: PermissionNode.AdminEntry | PermissionNode.UserShowList | PermissionNode.UserEditPermission
                 }
             },
             {
@@ -341,7 +352,7 @@ const routes: RouteRecordRaw[] = [
                 meta: {
                     requireAuth: true,
                     title: "审计日志",
-                    requirePermissions: [PermissionNode.AdminEntry, PermissionNode.AuditLogShow]
+                    requirePermission: PermissionNode.AdminEntry | PermissionNode.AuditLogShow
                 }
             },
             {
@@ -369,15 +380,17 @@ router.beforeEach((to, _, next) => {
     const userStore = useUserStore();
     if (to.meta.requireAuth) {
         if (userStore.isLogin) {
-            if ((to.meta.requirePermissions == undefined || userStore.permission.hasPermissions(...to.meta.requirePermissions)) &&
+            if ((to.meta.requirePermission == undefined || userStore.permission.hasPermission(to.meta.requirePermission)) &&
                 (to.meta.authFunction == undefined || to.meta.authFunction(userStore.userData))) {
                 next()
             } else {
                 request.post("/audits/unlawful_overreach",
                     {access_path: to.fullPath},
                     {headers: {"Authorization": `Bearer ${userStore.token}`}})
-                    .then(_ => showError("非法的越权访问, 日志已记录"))
-                userStore.logout()
+                    .then(_ => {
+                        showError("非法的越权访问, 日志已记录")
+                        userStore.logout()
+                    })
             }
         } else {
             next({

@@ -1,40 +1,44 @@
-export enum PermissionNode {
-    AdminEntry = 1 << 0,
-    UserShowList = 1 << 1,
-    UserGetProfile = 1 << 2,
-    UserSetPassword = 1 << 3,
-    UserEditBaseInfo = 1 << 4,
-    UserEditPermission = 1 << 5,
-    ControllerShowList = 1 << 6,
-    ControllerTier2Rating = 1 << 7,
-    ControllerEditRating = 1 << 8,
-    ControllerShowRecord = 1 << 9,
-    ControllerCreateRecord = 1 << 10,
-    ControllerDeleteRecord = 1 << 11,
-    ControllerChangeUnderMonitor = 1 << 12,
-    ControllerChangeSolo = 1 << 13,
-    ControllerChangeGuest = 1 << 14,
-    ActivityPublish = 1 << 15,
-    ActivityShowList = 1 << 16,
-    ActivityEdit = 1 << 17,
-    ActivityEditState = 1 << 18,
-    ActivityEditPilotState = 1 << 19,
-    ActivityDelete = 1 << 20,
-    AuditLogShow = 1 << 21,
-    TicketShowList = 1 << 22,
-    TicketReply = 1 << 23,
-    TicketRemove = 1 << 24,
-    FlightPlanShowList = 1 << 25,
-    FlightPlanChangeLock = 1 << 26,
-    FlightPlanDelete = 1 << 27,
-    ClientManagerEntry = 1 << 28,
-    ClientSendMessage = 1 << 29,
-    ClientKill = 1 << 30,
-    ClientSendBroadcastMessage = 1 << 31
+export const PermissionNode = {
+    AdminEntry: 1n << 0n,
+    UserShowList: 1n << 1n,
+    UserGetProfile: 1n << 2n,
+    UserSetPassword: 1n << 3n,
+    UserEditBaseInfo: 1n << 4n,
+    UserEditPermission: 1n << 5n,
+    ControllerShowList: 1n << 6n,
+    ControllerTier2Rating: 1n << 7n,
+    ControllerEditRating: 1n << 8n,
+    ControllerShowRecord: 1n << 9n,
+    ControllerCreateRecord: 1n << 10n,
+    ControllerDeleteRecord: 1n << 11n,
+    ControllerChangeUnderMonitor: 1n << 12n,
+    ControllerChangeSolo: 1n << 13n,
+    ControllerChangeGuest: 1n << 14n,
+    ControllerApplicationShowList: 1n << 15n,
+    ControllerApplicationConfirm: 1n << 16n,
+    ControllerApplicationPass: 1n << 17n,
+    ControllerApplicationReject: 1n << 18n,
+    ActivityPublish: 1n << 19n,
+    ActivityShowList: 1n << 20n,
+    ActivityEdit: 1n << 21n,
+    ActivityEditState: 1n << 22n,
+    ActivityEditPilotState: 1n << 23n,
+    ActivityDelete: 1n << 24n,
+    AuditLogShow: 1n << 25n,
+    TicketShowList: 1n << 26n,
+    TicketReply: 1n << 27n,
+    TicketRemove: 1n << 28n,
+    FlightPlanShowList: 1n << 29n,
+    FlightPlanChangeLock: 1n << 30n,
+    FlightPlanDelete: 1n << 31n,
+    ClientManagerEntry: 1n << 32n,
+    ClientSendMessage: 1n << 33n,
+    ClientKill: 1n << 34n,
+    ClientSendBroadcastMessage: 1n << 35n
 }
 
 
-const permissionNodeMap = new Map<string, PermissionNode>([
+const permissionNodeMap = new Map<string, bigint>([
     ["AdminEntry", PermissionNode.AdminEntry],
     ["UserShowList", PermissionNode.UserShowList],
     ["UserGetProfile", PermissionNode.UserGetProfile],
@@ -50,6 +54,10 @@ const permissionNodeMap = new Map<string, PermissionNode>([
     ["ControllerChangeUnderMonitor", PermissionNode.ControllerChangeUnderMonitor],
     ["ControllerChangeSolo", PermissionNode.ControllerChangeSolo],
     ["ControllerChangeGuest", PermissionNode.ControllerChangeGuest],
+    ["ControllerApplicationShowList", PermissionNode.ControllerApplicationShowList],
+    ["ControllerApplicationConfirm", PermissionNode.ControllerApplicationConfirm],
+    ["ControllerApplicationPass", PermissionNode.ControllerApplicationPass],
+    ["ControllerApplicationReject", PermissionNode.ControllerApplicationReject],
     ["ActivityPublish", PermissionNode.ActivityPublish],
     ["ActivityShowList", PermissionNode.ActivityShowList],
     ["ActivityEdit", PermissionNode.ActivityEdit],
@@ -66,13 +74,15 @@ const permissionNodeMap = new Map<string, PermissionNode>([
     ["ClientManagerEntry", PermissionNode.ClientManagerEntry],
     ["ClientSendMessage", PermissionNode.ClientSendMessage],
     ["ClientKill", PermissionNode.ClientKill],
-    ["ClientSendBroadcastMessage", PermissionNode.ClientSendBroadcastMessage],
+    ["ClientSendBroadcastMessage", PermissionNode.ClientSendBroadcastMessage]
 ]);
 
 export class Permission {
-    private readonly permissionData: Record<PermissionNode, { name: string, desc: string, hasPermission: boolean }>
+    private readonly permissionData: Record<bigint, { name: string, desc: string, hasPermission: boolean }>
+    private readonly permission: bigint
 
-    constructor(permission: number) {
+    constructor(permission: bigint) {
+        this.permission = permission;
         this.permissionData = {
             [PermissionNode.AdminEntry]: {
                 name: "AdminEntry",
@@ -148,6 +158,26 @@ export class Permission {
                 name: "ControllerChangeGuest",
                 desc: "可以修改管制员客座状态",
                 hasPermission: (permission & PermissionNode.ControllerChangeGuest) == PermissionNode.ControllerChangeGuest
+            },
+            [PermissionNode.ControllerApplicationShowList]: {
+                name: "ControllerApplicationShowList",
+                desc: "可以查看管制员申请",
+                hasPermission: (permission & PermissionNode.ControllerApplicationShowList) == PermissionNode.ControllerApplicationShowList
+            },
+            [PermissionNode.ControllerApplicationConfirm]: {
+                name: "ControllerApplicationConfirm",
+                desc: "可以确认管制员申请",
+                hasPermission: (permission & PermissionNode.ControllerApplicationConfirm) == PermissionNode.ControllerApplicationConfirm
+            },
+            [PermissionNode.ControllerApplicationPass]: {
+                name: "ControllerApplicationPass",
+                desc: "可以通过管制员申请",
+                hasPermission: (permission & PermissionNode.ControllerApplicationPass) == PermissionNode.ControllerApplicationPass
+            },
+            [PermissionNode.ControllerApplicationReject]: {
+                name: "ControllerApplicationReject",
+                desc: "可以拒绝管制员申请",
+                hasPermission: (permission & PermissionNode.ControllerApplicationReject) == PermissionNode.ControllerApplicationReject
             },
             [PermissionNode.ActivityPublish]: {
                 name: "ActivityPublish",
@@ -237,13 +267,17 @@ export class Permission {
         };
     }
 
-    hasPermission(permissionNode: PermissionNode): boolean {
+    hasPermission(permission: bigint): boolean {
+        return (this.permission & permission) == permission
+    }
+
+    hasPermissionNode(permissionNode: bigint): boolean {
         return this.permissionData[permissionNode].hasPermission
     }
 
-    hasAnyPermissions(...permissions: PermissionNode[]): boolean {
+    hasAnyPermissions(...permissions: bigint[]): boolean {
         for (const permission of permissions) {
-            if (this.hasPermission(permission)) {
+            if (this.hasPermissionNode(permission)) {
                 return true;
             }
         }
@@ -258,16 +292,7 @@ export class Permission {
         return this.permissionData[node].hasPermission
     }
 
-    hasPermissions(...permissions: PermissionNode[]): boolean {
-        for (const permission of permissions) {
-            if (!this.hasPermission(permission)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    getPermissionsRecord(): Record<PermissionNode, { name: string, desc: string, hasPermission: boolean }> {
+    getPermissionsRecord(): Record<bigint, { name: string, desc: string, hasPermission: boolean }> {
         return this.permissionData;
     }
 }

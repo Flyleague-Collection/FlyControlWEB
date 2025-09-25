@@ -16,6 +16,7 @@ import {FormInstance, FormRules} from "element-plus";
 import {showError, showSuccess} from "@/utils/message.js";
 import ConfirmDialog from "@/components/dialog/ConfirmDialog.vue";
 import {ConfirmDialogInstance} from "@/components/dialog/ConfirmDialog.js";
+import {formatCid} from "@/utils/utils.js";
 
 const userStore = useUserStore();
 
@@ -56,7 +57,7 @@ const showReplyTicketFormDialog = (data: TicketModel) => {
 const replyTicketFormRef: Ref<FormInstance> = ref()
 
 const submitReplyForm = async () => {
-    if (!userStore.permission.hasPermission(PermissionNode.TicketReply)) {
+    if (!userStore.permission.hasPermissionNode(PermissionNode.TicketReply)) {
         showError("你无权这么做")
         return
     }
@@ -90,7 +91,7 @@ const confirmDeleteTicket = async (ticketId: number) => {
 }
 
 const deleteTicket = async () => {
-    if (!userStore.permission.hasPermission(PermissionNode.TicketRemove)) {
+    if (!userStore.permission.hasPermissionNode(PermissionNode.TicketRemove)) {
         showError("你无权这么做")
         return
     }
@@ -119,7 +120,7 @@ const deleteTicket = async () => {
                         {{ moment(scope.row.close_at).format('YYYY-MM-DD HH:mm:ss') }}
                     </el-descriptions-item>
                     <el-descriptions-item label="回复人" v-if="scope.row.closer != 0">
-                        {{ padStart(scope.row.closer, 4, '0') }}
+                        {{ formatCid(scope.row.closer) }}
                     </el-descriptions-item>
                     <el-descriptions-item label="回复内容" v-if="scope.row.closer != 0">
                         {{ scope.row.reply }}
@@ -134,7 +135,7 @@ const deleteTicket = async () => {
         </el-table-column>
         <el-table-column label="创建人">
             <template #default="scope">
-                {{ padStart(scope.row.creator, 4, '0') }}
+                {{ formatCid(scope.row.user.cid) }}
             </template>
         </el-table-column>
         <el-table-column label="工单类型">
@@ -156,11 +157,11 @@ const deleteTicket = async () => {
                 <el-space wrap>
                     <el-button :icon="Edit" type="primary" v-if="scope.row.closer == 0"
                                @click="showReplyTicketFormDialog(scope.row)"
-                               :disabled="!userStore.permission.hasPermission(PermissionNode.TicketReply)">
+                               :disabled="!userStore.permission.hasPermissionNode(PermissionNode.TicketReply)">
                         回复
                     </el-button>
                     <el-button :icon="Delete" type="danger" @click="confirmDeleteTicket(scope.row.id)"
-                               :disabled="!userStore.permission.hasPermission(PermissionNode.TicketRemove)">
+                               :disabled="!userStore.permission.hasPermissionNode(PermissionNode.TicketRemove)">
                         删除
                     </el-button>
                 </el-space>

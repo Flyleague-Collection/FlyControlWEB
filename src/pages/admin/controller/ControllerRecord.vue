@@ -49,7 +49,7 @@ const formData = ref<AddControllerRecord>({
 const recordListCardRef: Ref<PageListCardInstance> = ref()
 
 const submitCreateRecord = async () => {
-    if (!userStore.permission.hasPermission(PermissionNode.ControllerCreateRecord)) {
+    if (!userStore.permission.hasPermissionNode(PermissionNode.ControllerCreateRecord)) {
         showError("你无权这么做")
         return
     }
@@ -64,7 +64,7 @@ const submitCreateRecord = async () => {
 }
 
 const removeRecord = async (recordId: number) => {
-    if (!userStore.permission.hasPermission(PermissionNode.ControllerDeleteRecord)) {
+    if (!userStore.permission.hasPermissionNode(PermissionNode.ControllerDeleteRecord)) {
         showError("你无权这么做")
         return
     }
@@ -83,7 +83,7 @@ const removeRecord = async (recordId: number) => {
                 <el-button :icon="ArrowLeft" text @click="router.push(`/admin/controllers`)"/>
                 <span>{{ padStart(userData.cid, 4, '0') }}的履历</span>
                 <el-button :icon="Plus" type="success" @click="addControllerRecordDialog = true"
-                           :disabled="!userStore.permission.hasPermission(PermissionNode.ControllerCreateRecord)">
+                           :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ControllerCreateRecord)">
                     添加履历
                 </el-button>
             </el-space>
@@ -111,7 +111,7 @@ const removeRecord = async (recordId: number) => {
         <el-table-column label="操作">
             <template #default="scope">
                 <el-button type="danger" dark @click="removeRecord(scope.row.id)"
-                           :disabled="!userStore.permission.hasPermission(PermissionNode.ControllerDeleteRecord)">
+                           :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ControllerDeleteRecord)">
                     删除
                 </el-button>
             </template>

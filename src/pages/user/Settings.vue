@@ -19,11 +19,10 @@ import {
 } from "element-plus";
 import {showError, showSuccess, showWarning} from "@/utils/message.js";
 import {useActivityStore} from "@/store/activity.js";
-import {sizeToString} from "@/utils/utils.js";
+import {formatCid, sizeToString} from "@/utils/utils.js";
 import {Global} from "@/global.js";
 import {padStart} from "lodash-es";
 
-const serverConfig = useServerConfigStore();
 const userStore = useUserStore();
 const activityStore = useActivityStore();
 const serverConfigStore = useServerConfigStore();
@@ -73,18 +72,18 @@ const changePasswordRules = reactive<FormRules>({
     origin_password: [
         {required: true, message: "原密码不能为空", trigger: 'blur'},
         {
-            min: serverConfig.limits.password_length_min,
-            max: serverConfig.limits.password_length_max,
-            message: `长度在${serverConfig.limits.password_length_min}到${serverConfig.limits.password_length_max}个字符`,
+            min: serverConfigStore.limits.password_length_min,
+            max: serverConfigStore.limits.password_length_max,
+            message: `长度在${serverConfigStore.limits.password_length_min}到${serverConfigStore.limits.password_length_max}个字符`,
             trigger: 'blur'
         }
     ],
     new_password: [
         {required: true, message: "新密码不能为空", trigger: 'blur'},
         {
-            min: serverConfig.limits.password_length_min,
-            max: serverConfig.limits.password_length_max,
-            message: `长度在${serverConfig.limits.password_length_min}到${serverConfig.limits.password_length_max}个字符`,
+            min: serverConfigStore.limits.password_length_min,
+            max: serverConfigStore.limits.password_length_max,
+            message: `长度在${serverConfigStore.limits.password_length_min}到${serverConfigStore.limits.password_length_max}个字符`,
             trigger: 'blur'
         },
         {
@@ -100,9 +99,9 @@ const changePasswordRules = reactive<FormRules>({
     confirm_password: [
         {required: true, message: '请输入确认密码', trigger: 'blur'},
         {
-            min: serverConfig.config.limits.password_length_min,
-            max: serverConfig.config.limits.password_length_max,
-            message: `长度在${serverConfig.config.limits.password_length_min}到${serverConfig.config.limits.password_length_max}个字符`,
+            min: serverConfigStore.config.limits.password_length_min,
+            max: serverConfigStore.config.limits.password_length_max,
+            message: `长度在${serverConfigStore.config.limits.password_length_min}到${serverConfigStore.config.limits.password_length_max}个字符`,
             trigger: 'blur'
         },
         {
@@ -140,8 +139,8 @@ const updateUserInfoForm = reactive<UpdateUserInfoForm>({
     email: ''
 })
 const updateUserInfoRules = reactive<FormRules>({
-    username: serverConfig.usernameLimit,
-    email: serverConfig.emailLimit
+    username: serverConfigStore.usernameLimit,
+    email: serverConfigStore.emailLimit
 })
 
 const uploadRef = ref<UploadInstance>()
@@ -150,13 +149,13 @@ const fileList = ref<UploadUserFile[]>([])
 const handleChanged = (uploadFile: UploadFile, _) => {
     selectedImage.value = null;
     // 5MB
-    if (uploadFile.size > serverConfig.config.image_limit.max_allow_size) {
-        showError(`不能上传大于${sizeToString(serverConfig.config.image_limit.max_allow_size)}的文件`);
+    if (uploadFile.size > serverConfigStore.config.image_limit.max_allow_size) {
+        showError(`不能上传大于${sizeToString(serverConfigStore.config.image_limit.max_allow_size)}的文件`);
         uploadRef.value!.clearFiles()
         return;
     }
     const ext = `.${uploadFile.name.split('.').pop()?.toLowerCase()}`;
-    if (serverConfig.config.image_limit.allowed_ext.findIndex(x => x === ext) === -1) {
+    if (serverConfigStore.config.image_limit.allowed_ext.findIndex(x => x === ext) === -1) {
         showError(`不支持的图片类型`);
         uploadRef.value!.clearFiles()
         return;
@@ -241,10 +240,10 @@ const submitUpdateUserInfoForm = async () => {
                             <el-space direction="vertical" class="w-full">
                                 <el-avatar v-if="userData.avatar_url != ''" :src="userData.avatar_url"
                                            :size="100"></el-avatar>
-                                <el-avatar v-else :size="100">{{ padStart(userData.cid, 4, '0') }}</el-avatar>
+                                <el-avatar v-else :size="100">{{ formatCid(userData.cid) }}</el-avatar>
                                 <el-space direction="vertical">
                                     <span class="font-size-15rem">{{ userData.username }}</span>
-                                    <span class="font-size-12rem">CID: {{ padStart(userData.cid, 4, '0') }}</span>
+                                    <span class="font-size-12rem">CID: {{ formatCid(userData.cid) }}</span>
                                     <el-space wrap class="justify-content-center">
                                         <el-tag class="border-none" effect="dark"
                                                 :color="config.ratings[userData.rating + 1].color">
@@ -292,7 +291,7 @@ const submitUpdateUserInfoForm = async () => {
                                     {{ userData.id }}
                                 </el-descriptions-item>
                                 <el-descriptions-item label="CID">
-                                    {{ padStart(userData.cid, 4, '0') }}
+                                    {{ formatCid(userData.cid) }}
                                 </el-descriptions-item>
                                 <el-descriptions-item label="用户名">
                                     {{ userData.username }}
@@ -337,32 +336,32 @@ const submitUpdateUserInfoForm = async () => {
                         <span>连线记录(最近10次)</span>
                     </template>
                     <el-table v-if="historyData.pilots.length > 0" :data="historyData.pilots">
-                        <el-table-column prop="callsign" label="呼号"></el-table-column>
-                        <el-table-column prop="start_time" label="上线时间"></el-table-column>
-                        <el-table-column prop="end_time" label="下线时间"></el-table-column>
+                        <el-table-column prop="callsign" label="呼号"/>
+                        <el-table-column prop="start_time" label="上线时间"/>
+                        <el-table-column prop="end_time" label="下线时间"/>
                         <el-table-column prop="online_time" label="在线时间">
                             <template #default="scope">
                                 {{ (scope.row.online_time / 3600.0).toFixed(2) }} h
                             </template>
                         </el-table-column>
                     </el-table>
-                    <el-empty v-else description="你好像还没有连线过"></el-empty>
+                    <el-empty v-else description="你好像还没有连线过"/>
                 </el-card>
                 <el-card>
                     <template #header>
                         <span>管制记录(最近10次)</span>
                     </template>
                     <el-table v-if="historyData.controllers.length > 0" :data="historyData.controllers">
-                        <el-table-column prop="callsign" label="席位"></el-table-column>
-                        <el-table-column prop="start_time" label="上线时间"></el-table-column>
-                        <el-table-column prop="end_time" label="下线时间"></el-table-column>
+                        <el-table-column prop="callsign" label="席位"/>
+                        <el-table-column prop="start_time" label="上线时间"/>
+                        <el-table-column prop="end_time" label="下线时间"/>
                         <el-table-column prop="online_time" label="在线时间">
                             <template #default="scope">
                                 {{ (scope.row.online_time / 3600.0).toFixed(2) }} h
                             </template>
                         </el-table-column>
                     </el-table>
-                    <el-empty v-else description="你好像还没有进行过管制"></el-empty>
+                    <el-empty v-else description="你好像还没有进行过管制"/>
                 </el-card>
             </el-col>
         </el-row>

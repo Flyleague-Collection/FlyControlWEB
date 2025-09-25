@@ -23,7 +23,7 @@ import Footer from "@/components/Footer.vue";
 }
 
 .el-footer {
-    --el-footer-height: 40px;
+    --el-footer-height: auto;
     width: 100vw;
     border-top: 1px solid var(--el-border-color);
 }

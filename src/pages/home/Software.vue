@@ -8,7 +8,7 @@ import {homeConfig} from "@/config/index.js";
     <div class="container">
         <span class="title">软件下载</span>
         <div class="content">
-            <el-row :gutter="10">
+            <el-row :gutter="10" v-if="homeConfig.software.length != 0">
                 <el-col v-for="item in homeConfig.software" :xs="24" :sm="12">
                     <el-card>
                         <template #header>
@@ -44,9 +44,9 @@ import {homeConfig} from "@/config/index.js";
                             </div>
                         </template>
                     </el-card>
-
                 </el-col>
             </el-row>
+            <el-empty v-else description="看起来这里并没有可以下载的软件"/>
         </div>
     </div>
 </template>

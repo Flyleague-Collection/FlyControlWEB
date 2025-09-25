@@ -1,4 +1,5 @@
 import config from "@/config/index.js";
+import {padStart} from "lodash-es";
 
 export const KB = 1024
 export const MB = 1024 * KB
@@ -25,4 +26,8 @@ export const handleImageUrl = (url: string): string => {
         return `${config.backend_url}/${url}`;
     }
     return url;
+}
+
+export const formatCid = (cid?: number): string => {
+    return padStart(cid ? cid.toString() : cid, 4, '0')
 }

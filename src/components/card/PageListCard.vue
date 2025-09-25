@@ -1,7 +1,8 @@
 <script setup lang="ts" generic="T">
-import {onMounted, Ref, ref} from "vue";
+import {onBeforeMount, onMounted, Ref, ref} from "vue";
 import {TableColumnCtx} from "element-plus";
 import type {PageListResponse} from "@/components/card/PageListCard.js";
+import {List} from "@element-plus/icons-vue";
 
 const props = defineProps<{
     fetchData?: (page: number, pageSize: number) => Promise<PageListResponse<T>>
@@ -9,7 +10,12 @@ const props = defineProps<{
     cardTitle?: string;
 }>()
 
-const storedData = defineModel({default: []})
+const storedData = defineModel({
+    type: List,
+    default() {
+        return []
+    }
+})
 
 const pageSize = ref(20);
 const page = ref(1);
@@ -41,11 +47,11 @@ const getDataByIndex = (index: number): T => {
     return storedData.value[index];
 }
 
-defineExpose({flushData, getDataByIndex})
-
 onMounted(async () => {
     await flushData()
 })
+
+defineExpose({flushData, getDataByIndex})
 </script>
 
 <template>

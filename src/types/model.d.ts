@@ -11,7 +11,7 @@ type UserModel = {
     under_solo: boolean;
     tier2: boolean;
     solo_until: string;
-    permission: number;
+    permission: BigInt;
     total_atc_time: number;
     total_pilot_time: number;
 }
@@ -143,4 +143,18 @@ type TicketModel = {
     closer: number;
     open_at: Date;
     close_at: Date;
+}
+
+type ControllerApplicationModel = {
+    id: number;
+    controller_record: string;
+    evidence: string;
+    is_guest: boolean;
+    message: string;
+    platform: string;
+    status: number;
+    user: UserModel;
+    user_id: number;
+    why_want_to_be_controller: string;
+    created_at: string;
 }

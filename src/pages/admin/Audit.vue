@@ -6,6 +6,7 @@ import PageListCard from "@/components/card/PageListCard.vue";
 import {PageListResponse} from "@/components/card/PageListCard.js";
 import request from "@/utils/request.js";
 import {padStart} from "lodash-es";
+import {formatCid} from "@/utils/utils.js";
 
 const fetchAuditLogs = async (page: number, pageSize: number): Promise<PageListResponse<AuditLogModel>> => {
     const data: PageListResponse<AuditLogModel> = {data: [], total: 0};
@@ -29,11 +30,13 @@ const fetchAuditLogs = async (page: number, pageSize: number): Promise<PageListR
                     <el-descriptions-item label="来源IP">
                         {{ props.row.ip }}
                     </el-descriptions-item>
-                    <el-descriptions-item label="事件名">
-                        {{ props.row.event_type }}
-                    </el-descriptions-item>
+                    <el-table-column label="事件名">
+                        <template #default="scope">
+                            <el-tag>{{ scope.row.event_type }}</el-tag>
+                        </template>
+                    </el-table-column>
                     <el-descriptions-item label="操作人">
-                        {{ padStart(props.row.subject, 4, '0') }}
+                        {{ formatCid(props.row.subject) }}
                     </el-descriptions-item>
                     <el-descriptions-item label="操作对象">
                         {{ props.row.object }}
@@ -59,9 +62,17 @@ const fetchAuditLogs = async (page: number, pageSize: number): Promise<PageListR
                 {{ moment(scope.row.time).format('YYYY-MM-DD HH:mm:ss') }}
             </template>
         </el-table-column>
-        <el-table-column prop="event_type" label="事件名"></el-table-column>
-        <el-table-column prop="subject" label="操作人"></el-table-column>
-        <el-table-column prop="object" label="操作对象"></el-table-column>
+        <el-table-column label="事件名">
+            <template #default="scope">
+                <el-tag>{{ scope.row.event_type }}</el-tag>
+            </template>
+        </el-table-column>
+        <el-table-column label="操作人">
+            <template #default="scope">
+                {{ formatCid(scope.row.subject) }}
+            </template>
+        </el-table-column>
+        <el-table-column prop="object" label="操作对象"/>
     </PageListCard>
 </template>
 

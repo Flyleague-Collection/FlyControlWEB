@@ -3,6 +3,7 @@ import axios from 'axios'
 import config from "@/config/index.js";
 import {useUserStore} from "@/store/user.js";
 import {showApiErrorMsg, showError} from "@/utils/message.js";
+import AxiosXHR = Axios.AxiosXHR;
 
 const request = axios.create({
     baseURL: config.backend_url,
@@ -39,4 +40,17 @@ request.interceptors.response.use(
     }
 )
 
-export default request 
+export default request
+
+export const uploadImage = async (file: File): Promise<string | null> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    const response = await request.post('/files/images', formData) as AxiosXHR<{
+        file_size: number;
+        access_path: string;
+    }>
+    if (response.status == 200) {
+        return response.data.access_path;
+    }
+    return null;
+}

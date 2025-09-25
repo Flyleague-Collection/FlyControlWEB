@@ -21,7 +21,7 @@ export const useUserStore = defineStore("UserStore", () => {
         isLogin.value = true;
         userData.value = response.user as UserModel;
         userData.value.avatar_url = handleImageUrl(userData.value.avatar_url);
-        permission.value = new Permission(userData.value.permission)
+        permission.value = new Permission(BigInt(userData.value.permission))
         token.value = response.token as string;
         flushToken.value = response.flush_token as string;
         localStorage.setItem("token", token.value);
@@ -44,7 +44,7 @@ export const useUserStore = defineStore("UserStore", () => {
                     flushToken.value = storeFlushToken;
                     userData.value = response.data as UserModel;
                     userData.value.avatar_url = handleImageUrl(userData.value.avatar_url);
-                    permission.value = new Permission(userData.value.permission);
+                    permission.value = new Permission(BigInt(userData.value.permission));
                     localStorage.setItem("token", token.value);
                     localStorage.setItem("flush_token", flushToken.value);
                 } else {
@@ -82,7 +82,7 @@ export const useUserStore = defineStore("UserStore", () => {
         if (response.status == 200) {
             userData.value = response.data.user;
             userData.value.avatar_url = handleImageUrl(userData.value.avatar_url);
-            permission.value = new Permission(userData.value.permission);
+            permission.value = new Permission(BigInt(userData.value.permission));
             token.value = response.data.token;
             if (response.data.flush_token != "") {
                 flushToken.value = response.data.flush_token;

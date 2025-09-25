@@ -15,6 +15,7 @@ import ConfirmDialog from "@/components/dialog/ConfirmDialog.vue";
 import {ConfirmDialogInstance} from "@/components/dialog/ConfirmDialog.js";
 import {PermissionNode} from "@/utils/permission.js";
 import AxiosXHR = Axios.AxiosXHR;
+import {formatCid} from "@/utils/utils.js";
 
 const userStore = useUserStore();
 const serverConfigStore = useServerConfigStore();
@@ -93,7 +94,7 @@ const sendMessage = (callsign: string) => {
 }
 
 const submitSendMessageForm = async () => {
-    if (!userStore.permission.hasPermission(PermissionNode.ClientSendMessage)) {
+    if (!userStore.permission.hasPermissionNode(PermissionNode.ClientSendMessage)) {
         showError("你无权这么做")
         return
     }
@@ -134,7 +135,7 @@ const broadcastMessage = (target: string) => {
 }
 
 const submitBroadcastMessageForm = async () => {
-    if (!userStore.permission.hasPermission(PermissionNode.ClientSendBroadcastMessage)) {
+    if (!userStore.permission.hasPermissionNode(PermissionNode.ClientSendBroadcastMessage)) {
         showError("你无权这么做")
         return
     }
@@ -180,7 +181,7 @@ const confirmKick = () => {
 }
 
 const submitKickFromServerForm = async () => {
-    if (!userStore.permission.hasPermission(PermissionNode.ClientKill)) {
+    if (!userStore.permission.hasPermissionNode(PermissionNode.ClientKill)) {
         showError("你无权这么做")
         return
     }
@@ -205,7 +206,7 @@ const submitKickFromServerForm = async () => {
             <el-space wrap>
                 <span>在线飞行员</span>
                 <el-button type="warning" @click="broadcastMessage('*P')"
-                           :disabled="!userStore.permission.hasPermission(PermissionNode.ClientSendBroadcastMessage)">
+                           :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientSendBroadcastMessage)">
                     飞行员广播
                 </el-button>
             </el-space>
@@ -213,7 +214,7 @@ const submitKickFromServerForm = async () => {
         <el-table-column label="呼号" prop="callsign"/>
         <el-table-column label="CID">
             <template #default="scope">
-                {{ padStart(scope.row.cid, 4, '0') }}
+                {{ formatCid(scope.row.cid) }}
             </template>
         </el-table-column>
         <el-table-column label="登录时间">
@@ -236,11 +237,11 @@ const submitKickFromServerForm = async () => {
             <template #default="scope">
                 <el-space wrap>
                     <el-button type="primary" @click="sendMessage(scope.row.callsign)"
-                               :disabled="!userStore.permission.hasPermission(PermissionNode.ClientSendMessage)">
+                               :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientSendMessage)">
                         发送消息
                     </el-button>
                     <el-button type="danger" @click="kickFromServer(scope.row.callsign)"
-                               :disabled="!userStore.permission.hasPermission(PermissionNode.ClientKill)">
+                               :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientKill)">
                         踢出服务器
                     </el-button>
                 </el-space>
@@ -252,15 +253,15 @@ const submitKickFromServerForm = async () => {
             <el-space wrap>
                 <span>在线管制员</span>
                 <el-button type="warning" @click="broadcastMessage('*A')"
-                           :disabled="!userStore.permission.hasPermission(PermissionNode.ClientSendBroadcastMessage)">
+                           :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientSendBroadcastMessage)">
                     管制员广播
                 </el-button>
                 <el-button type="warning" @click="broadcastMessage('*S')"
-                           :disabled="!userStore.permission.hasPermission(PermissionNode.ClientSendBroadcastMessage)">
+                           :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientSendBroadcastMessage)">
                     SUP广播
                 </el-button>
                 <el-button type="warning" @click="broadcastMessage('*')"
-                           :disabled="!userStore.permission.hasPermission(PermissionNode.ClientSendBroadcastMessage)">
+                           :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientSendBroadcastMessage)">
                     客户端广播
                 </el-button>
             </el-space>
@@ -268,7 +269,7 @@ const submitKickFromServerForm = async () => {
         <el-table-column label="呼号" prop="callsign"/>
         <el-table-column label="CID">
             <template #default="scope">
-                {{ padStart(scope.row.cid, 4, '0') }}
+                {{ formatCid(scope.row.cid) }}
             </template>
         </el-table-column>
         <el-table-column label="登录时间">
@@ -303,11 +304,11 @@ const submitKickFromServerForm = async () => {
             <template #default="scope">
                 <el-space wrap>
                     <el-button type="primary" @click="sendMessage(scope.row.callsign)"
-                               :disabled="!userStore.permission.hasPermission(PermissionNode.ClientSendMessage)">
+                               :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientSendMessage)">
                         发送消息
                     </el-button>
                     <el-button type="danger" @click="kickFromServer(scope.row.callsign)"
-                               :disabled="!userStore.permission.hasPermission(PermissionNode.ClientKill)">
+                               :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientKill)">
                         踢出服务器
                     </el-button>
                 </el-space>

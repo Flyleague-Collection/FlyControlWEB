@@ -10,6 +10,7 @@ import ConfirmDialog from "@/components/dialog/ConfirmDialog.vue";
 import {ConfirmDialogInstance} from "@/components/dialog/ConfirmDialog.js";
 import PageListCard from "@/components/card/PageListCard.vue";
 import {PageListCardInstance, PageListResponse} from "@/components/card/PageListCard.js";
+import {formatCid} from "@/utils/utils.js";
 
 const activityStore = useActivityStore();
 const userStore = useUserStore();
@@ -32,7 +33,7 @@ const confirmDeleteActivityRef: Ref<ConfirmDialogInstance> = ref()
 const activityId = ref(0)
 
 const confirmDeleteActivity = (id: number) => {
-    if (!userStore.permission.hasPermission(PermissionNode.ActivityDelete)) {
+    if (!userStore.permission.hasPermissionNode(PermissionNode.ActivityDelete)) {
         showError("你无权这么做")
         return
     }
@@ -63,13 +64,17 @@ const deleteActivity = async () => {
                 <span>活动总览</span>
                 <el-button class="margin-left-10" :icon="Plus" type="success"
                            @click="router.push(`/admin/activities/new`)"
-                           :disabled="!userStore.permission.hasPermission(PermissionNode.ActivityPublish)">
+                           :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ActivityPublish)">
                     发布活动
                 </el-button>
             </el-space>
         </template>
         <el-table-column prop="id" label="活动ID"/>
-        <el-table-column prop="publisher" label="发布者"/>
+        <el-table-column label="发布者">
+            <template #default="scope">
+                {{ formatCid(scope.row.publisher) }}
+            </template>
+        </el-table-column>
         <el-table-column prop="title" label="活动标题"/>
         <el-table-column prop="active_time" label="活动时间"/>
         <el-table-column label="操作">
@@ -77,12 +82,12 @@ const deleteActivity = async () => {
                 <el-space wrap>
                     <el-button id="activity-option-edit-btn" :icon="EditPen" type="primary"
                                @click="router.push(`/admin/activities/${scope.row.id}`)"
-                               :disabled="!userStore.permission.hasPermission(PermissionNode.ActivityEdit)">
+                               :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ActivityEdit)">
                         编辑
                     </el-button>
                     <el-button id="activity-option-delete-btn" :icon="Delete" type="danger"
                                @click="confirmDeleteActivity(scope.row.id)"
-                               :disabled="!userStore.permission.hasPermission(PermissionNode.ActivityDelete)">
+                               :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ActivityDelete)">
                         删除
                     </el-button>
                 </el-space>

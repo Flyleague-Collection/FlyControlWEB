@@ -354,7 +354,7 @@ const drawLine = async (callsign: string) => {
         lineFeature = null;
     }
 
-    const response = (await request.get(`/clients/paths?callsign=${callsign}`)) as AxiosXHR<{
+    const response = (await request.get(`/clients/paths/${callsign}`)) as AxiosXHR<{
         latitude: number;
         longitude: number,
         altitude: number
