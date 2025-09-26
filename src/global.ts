@@ -1,5 +1,5 @@
 export const Global = {
-    version: "0.7.0",
+    version: "0.8.0",
     controllerRecordTypes: [
         {
             label: "面试",

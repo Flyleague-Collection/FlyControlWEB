@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, onMounted, onUnmounted, watch} from 'vue';
+import {ref, onMounted, onUnmounted, watch, Ref} from 'vue';
 import OlMap from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
@@ -9,8 +9,9 @@ import VectorSource from 'ol/source/Vector';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
 import {fromLonLat} from 'ol/proj';
-import {Style, Icon, Stroke, Fill} from 'ol/style';
+import {Style, Icon, Stroke, Fill, Circle} from 'ol/style';
 import Overlay from 'ol/Overlay';
+import axios from "axios";
 import 'ol/ol.css';
 import request from "@/utils/request.js";
 import AxiosXHR = Axios.AxiosXHR;
@@ -26,6 +27,15 @@ import {TileGrid} from "ol/tilegrid.js";
 import {applyStyle} from 'ol-mapbox-style';
 import config from "@/config/index.js";
 import {XYZ} from "ol/source.js";
+import {Cloudy, Expand} from "@element-plus/icons-vue";
+import {formatCid} from "@/utils/utils.js";
+import {useServerConfigStore} from "@/store/server_config.js";
+import {useToggle} from "@vueuse/core";
+
+const serverConfigStore = useServerConfigStore();
+
+const showDetailList = ref(false);
+const toggleDetailList = useToggle(showDetailList);
 
 const resolutions = [];
 for (let i = 0; i <= 8; ++i) {
@@ -121,12 +131,16 @@ watch(() => selectedLayer.value, (value: string, oldValue: string) => {
     }
 })
 
-let onlineData: GetOnlineClientResponse;
+const onlineData: Ref<GetOnlineClientResponse> = ref({
+    general: {},
+    pilots: [],
+    controllers: []
+});
 
 const fetchWhazzupData = async () => {
     const response = await request.get(`/clients`) as AxiosXHR<GetOnlineClientResponse>
     if (response.status == 200) {
-        onlineData = response.data
+        onlineData.value = response.data
     }
 }
 
@@ -138,8 +152,42 @@ let centerLayer: Layer;
 let approachSource: VectorSource;
 const approachFeatureMap: Map<string, Feature> = new Map();
 let approachLayer: Layer;
+let towerLayer: Layer;
+let weatherLayer: Layer;
 let lineFeature: Feature | null = null;
 let interval: number;
+
+const weatherShow = ref(false);
+const weatherUrl = ref('');
+const generateTime = ref(0);
+const toggleWeather = useToggle(weatherShow);
+const loadingWeather = ref(false);
+const toggleLoadingWeather = useToggle(loadingWeather);
+
+const generateWeatherUrl = async () => {
+    const response = await axios.get(`https://api.rainviewer.com/public/weather-maps.json`) as AxiosXHR<any>;
+    if (response.status == 200 && generateTime.value != response.data.generated) {
+        const baseUrl = response.data.host;
+        const availableData = response.data.radar.past;
+        const selectData = availableData[availableData.length - 1].path;
+        weatherUrl.value = `${baseUrl}${selectData}/256/{z}/{x}/{y}/3/1_1.png`;
+    }
+}
+
+const toggleWeatherShow = async () => {
+    toggleLoadingWeather();
+    toggleWeather();
+    await generateWeatherUrl();
+    weatherLayer.setVisible(weatherShow.value);
+    if (weatherShow.value) {
+        weatherLayer.setSource(new XYZ({
+            url: weatherUrl.value,
+            crossOrigin: 'anonymous',
+            wrapX: true
+        }))
+    }
+    toggleLoadingWeather();
+}
 
 const createStyle = (heading: number): Style => {
     return new Style({
@@ -153,11 +201,70 @@ const createStyle = (heading: number): Style => {
     });
 }
 
+const flushMapShow = () => {
+    onlineData.value.pilots.forEach(pilot => {
+        const feature = new Feature({
+            geometry: new Point(fromLonLat([pilot.longitude, pilot.latitude])),
+            isPilot: true,
+            cid: formatCid(pilot.cid),
+            callsign: pilot.callsign,
+            flightPlan: pilot.flight_plan,
+            groundSpeed: pilot.ground_speed,
+            altitude: pilot.altitude,
+            transponder: pilot.transponder
+        });
+
+        feature.setStyle(createStyle(pilot.heading));
+        aircraftLayer.getSource().addFeature(feature);
+    });
+    onlineData.value.controllers.forEach(controller => {
+        if (controller.facility == 2) {
+            // FSS
+        } else if (controller.facility == 6) {
+            // CTR
+            const tmp = controller.callsign.split("_");
+            const callsign = tmp.slice(0, tmp.length - 1);
+            const feature = centerFeatureMap.get(join(callsign, '-'))?.clone()
+            feature?.set("isPilot", false)
+            feature?.set("callsign", controller.callsign)
+            feature?.set("frequency", controller.frequency)
+            feature?.set("atis", controller.atc_info)
+            feature?.set("cid", controller.cid)
+            centerLayer.getSource().addFeature(feature);
+        } else if (controller.facility == 5) {
+            // APP
+            const tmp = controller.callsign.split("_");
+            const callsign = tmp.slice(0, tmp.length - 1);
+            const feature = approachFeatureMap.get(join(callsign, '_'))?.clone()
+            feature?.set("isPilot", false)
+            feature?.set("callsign", controller.callsign)
+            feature?.set("frequency", controller.frequency)
+            feature?.set("offline_time", controller.offline_time)
+            feature?.set("is_break", controller.is_break)
+            feature?.set("atis", controller.atc_info)
+            feature?.set("cid", controller.cid)
+            approachLayer.getSource().addFeature(feature);
+        } else {
+            // TWR GND DEL
+            const feature = new Feature({
+                geometry: new Point(fromLonLat([controller.longitude, controller.latitude])),
+                isPilot: false,
+                callsign: controller.callsign,
+                frequency: controller.frequency,
+                offline_time: controller.offline_time,
+                is_break: controller.is_break,
+                atis: controller.atc_info,
+                cid: formatCid(controller.cid)
+            });
+            towerLayer.getSource().addFeature(feature);
+        }
+    })
+}
+
 // 初始化地图
 onMounted(async () => {
     if (!mapContainer.value) return;
 
-    await fetchWhazzupData();
     mapBoxAvailable.value = config.mapbox_token != ""
 
     if (mapBoxAvailable.value) {
@@ -242,52 +349,35 @@ onMounted(async () => {
         })
     })
 
+    towerLayer = new VectorLayer({
+        source: new VectorSource(),
+        style: new Style({
+            image: new Circle({
+                radius: 6,
+                fill: new Fill({
+                    color: '#c8504e'
+                })
+            })
+        })
+    })
+
+    await generateWeatherUrl();
+
+    weatherLayer = new TileLayer({
+        visible: false,
+        source: new XYZ({
+            url: weatherUrl.value,
+            crossOrigin: 'anonymous',
+            wrapX: true
+        })
+    })
+
     map.value.addLayer(centerLayer);
     map.value.addLayer(approachLayer);
+    map.value.addLayer(weatherLayer);
     map.value.addLayer(lineLayer);
     map.value.addLayer(aircraftLayer);
-
-    // 添加标记
-    onlineData.pilots.forEach(pilot => {
-        const feature = new Feature({
-            geometry: new Point(fromLonLat([pilot.longitude, pilot.latitude])),
-            isPilot: true,
-            callsign: pilot.callsign,
-            flightPlan: pilot.flight_plan,
-            groundSpeed: pilot.ground_speed,
-            altitude: pilot.altitude
-        });
-
-        feature.setStyle(createStyle(pilot.heading));
-        aircraftLayer.getSource().addFeature(feature);
-    });
-    onlineData.controllers.forEach(controller => {
-        if (controller.facility == 6) {
-            // CTR
-            const tmp = controller.callsign.split("_");
-            const callsign = tmp.slice(0, tmp.length - 1);
-            const feature = centerFeatureMap.get(join(callsign, '-'))?.clone()
-            feature?.set("isPilot", false)
-            feature?.set("callsign", controller.callsign)
-            feature?.set("frequency", controller.frequency)
-            feature?.set("atis", controller.atc_info)
-            feature?.set("cid", controller.cid)
-            centerLayer.getSource().addFeature(feature);
-        } else if (controller.facility == 5) {
-            // APP
-            const tmp = controller.callsign.split("_");
-            const callsign = tmp.slice(0, tmp.length - 1);
-            const feature = approachFeatureMap.get(join(callsign, '_'))?.clone()
-            feature?.set("isPilot", false)
-            feature?.set("callsign", controller.callsign)
-            feature?.set("frequency", controller.frequency)
-            feature?.set("offline_time", controller.offline_time)
-            feature?.set("is_break", controller.is_break)
-            feature?.set("atis", controller.atc_info)
-            feature?.set("cid", controller.cid)
-            approachLayer.getSource().addFeature(feature);
-        }
-    })
+    map.value.addLayer(towerLayer);
 
     // 初始化弹出框
     initializePopup();
@@ -295,56 +385,17 @@ onMounted(async () => {
     // 添加点击事件处理
     setupClickHandler();
 
+    await fetchWhazzupData();
+    flushMapShow()
+
     interval = setInterval(async () => {
-        await fetchWhazzupData();
         aircraftLayer.getSource().clear();
-        onlineData.pilots.forEach(pilot => {
-            const feature = new Feature({
-                geometry: new Point(fromLonLat([pilot.longitude, pilot.latitude])),
-                isPilot: true,
-                callsign: pilot.callsign,
-                flightPlan: pilot.flight_plan,
-                groundSpeed: pilot.ground_speed,
-                altitude: pilot.altitude
-            })
-
-            feature.setStyle(createStyle(pilot.heading));
-            aircraftLayer.getSource().addFeature(feature);
-        });
-
         centerLayer.getSource().clear();
         approachLayer.getSource().clear();
-        onlineData.controllers.forEach(controller => {
-            if (controller.facility == 6) {
-                // CTR
-                const tmp = controller.callsign.split("_");
-                const callsign = tmp.slice(0, tmp.length - 1);
-                const feature = centerFeatureMap.get(join(callsign, '-'))?.clone()
-                feature?.set("isPilot", false)
-                feature?.set("callsign", controller.callsign)
-                feature?.set("frequency", controller.frequency)
-                feature?.set("offline_time", controller.offline_time)
-                feature?.set("is_break", controller.is_break)
-                feature?.set("atis", controller.atc_info)
-                feature?.set("cid", controller.cid)
-                centerLayer.getSource().addFeature(feature);
-            } else if (controller.facility == 5) {
-                // APP
-                const tmp = controller.callsign.split("_");
-                const callsign = tmp.slice(0, tmp.length - 1);
-                const feature = approachFeatureMap.get(join(callsign, '-'))?.clone()
-                feature?.set("isPilot", false)
-                feature?.set("callsign", controller.callsign)
-                feature?.set("frequency", controller.frequency)
-                feature?.set("offline_time", controller.offline_time)
-                feature?.set("is_break", controller.is_break)
-                feature?.set("atis", controller.atc_info)
-                feature?.set("cid", controller.cid)
-                approachLayer.getSource().addFeature(feature);
-            }
-        })
+        towerLayer.getSource().clear();
+        await fetchWhazzupData();
+        flushMapShow()
     }, 15000)
-
 });
 
 
@@ -395,7 +446,7 @@ const initializePopup = () => {
     popup.value = new Overlay({
         element: popupElement,
         positioning: 'bottom-center',
-        offset: [0, -40],
+        offset: [0, 0],
         autoPan: {
             animation: {
                 duration: 250
@@ -450,16 +501,23 @@ const showPopup = (feature: Feature, coordinate: number[]) => {
         const flightPlan = feature.get('flightPlan') as FlightPlanModel;
         const groundSpeed = feature.get('groundSpeed') as number;
         const altitude = feature.get('altitude') as number;
+        const transponder = feature.get('transponder') as string;
+        const cid = feature.get('cid') as string;
 
         popupContent.value = `
             <h3>${callsign}</h3>
+            <p>${cid}</p>
+            <p>机型: ${flightPlan.aircraft.split("-")[0]}</p>
+            <p>应答机: ${transponder}</p>
             <p>地速：${groundSpeed}kt</p>
             <p>高度：${altitude}ft</p>
+            <p>出发机场: ${flightPlan.departure}</p>
+            <p>到达机场: ${flightPlan.arrival}</p>
           `;
     } else {
         const callsign = feature.get('callsign') as string;
         const frequency = (Number(feature.get('frequency')) / 1000).toFixed(3);
-        const cid = feature.get('cid') as number;
+        const cid = feature.get('cid') as string;
         const atcInfo = join(feature.get('atis') as string[], '<br/>');
         const offline_time = feature.get("offline_time") as string;
         const is_break = feature.get("is_break") as boolean;
@@ -501,7 +559,6 @@ onUnmounted(() => {
     <div class="map-wrapper">
         <div ref="mapContainer" id="map" class="map-container"></div>
         <div id="popup" class="ol-popup">
-            <a href="#" id="popup-closer" class="ol-popup-closer" @click="closePopup">&times;</a>
             <div id="popup-content" v-html="popupContent"></div>
         </div>
         <div class="ol-switch">
@@ -514,10 +571,115 @@ onUnmounted(() => {
                 <el-radio value="ArcGis" label="ArcGis卫星图"/>
             </el-radio-group>
         </div>
+        <div class="ol-tab">
+            <el-space class="ol-tab-show">
+                <el-button type="primary" :icon="Expand" @click="toggleDetailList()"/>
+                <el-button type="primary" :icon="Cloudy" @click="toggleWeatherShow()" :loading="loadingWeather"/>
+            </el-space>
+        </div>
+        <div class="left-box" v-if="showDetailList">
+            <el-table :data="onlineData.pilots" height="100%" class="data-table">
+                <el-table-column label="呼号" prop="callsign"/>
+                <el-table-column label="CID">
+                    <template #default="scope">
+                        {{ formatCid(scope.row.cid) }}
+                    </template>
+                </el-table-column>
+                <el-table-column label="地速">
+                    <template #default="scope">
+                        {{ scope.row.ground_speed }} kt
+                    </template>
+                </el-table-column>
+                <el-table-column label="高度">
+                    <template #default="scope">
+                        {{ scope.row.altitude }} ft
+                    </template>
+                </el-table-column>
+                <el-table-column label="应答机" prop="transponder"/>
+            </el-table>
+        </div>
+        <div class="right-box" v-if="showDetailList">
+            <el-table :data="onlineData.controllers" height="100%" class="data-table">
+                <el-table-column label="呼号" prop="callsign"/>
+                <el-table-column label="CID">
+                    <template #default="scope">
+                        {{ formatCid(scope.row.cid) }}
+                    </template>
+                </el-table-column>
+                <el-table-column label="登录权限">
+                    <template #default="scope">
+                        <el-tag class="border-none"
+                                :color="config.ratings[scope.row.rating + 1].color"
+                                effect="dark">
+                            {{ config.ratings[scope.row.rating + 1].label }}
+                        </el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column label="席位">
+                    <template #default="scope">
+                        <el-tag class="border-none"
+                                :color="config.facilities[scope.row.facility]"
+                                effect="dark">
+                            {{ serverConfigStore.facilities[scope.row.facility].short_name }}
+                        </el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column label="频率">
+                    <template #default="scope">
+                        {{ (scope.row.frequency / 1000).toFixed(3) }}
+                    </template>
+                </el-table-column>
+            </el-table>
+        </div>
     </div>
 </template>
 
 <style scoped>
+.left-box,
+.right-box,
+.data-table {
+    background-color: var(--el-bg-color-overlay);
+    border-radius: 20px;
+}
+
+.left-box {
+    position: absolute;
+    left: .5em;
+    bottom: .5em;
+    width: 33%;
+    height: 33%;
+    backdrop-filter: blur(10px);
+    background-image: linear-gradient(45deg, rgba(66, 60, 90, 0.15), rgba(66, 60, 90, 0.15));
+}
+
+.right-box {
+    position: absolute;
+    right: .5em;
+    bottom: .5em;
+    width: 33%;
+    height: 33%;
+    backdrop-filter: blur(10px);
+    background-image: linear-gradient(45deg, rgba(66, 60, 90, 0.15), rgba(66, 60, 90, 0.15));
+}
+
+.ol-tab-show {
+    padding: 10px;
+    border-radius: 20px;
+}
+
+.ol-tab-show:hover {
+    backdrop-filter: blur(10px);
+    background-image: linear-gradient(45deg, rgba(66, 60, 90, 0.15), rgba(66, 60, 90, 0.15));
+}
+
+.ol-tab {
+    position: absolute;
+    bottom: .5em;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
 .map-wrapper {
     position: relative;
     width: 100%;
@@ -559,8 +721,8 @@ onUnmounted(() => {
 }
 
 .ol-popup {
+    background-color: var(--el-bg-color-overlay);
     position: absolute;
-    background-color: white;
     padding: 15px;
     border-radius: 10px;
     border: 1px solid #ccc;
