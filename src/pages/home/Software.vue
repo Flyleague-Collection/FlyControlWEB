@@ -1,6 +1,9 @@
 <script setup lang="ts">
-
 import {homeConfig} from "@/config/index.js";
+
+const jumpToUrl = (url: string) => {
+    window.open(url, '_blank');
+}
 </script>
 
 <template>
@@ -8,8 +11,8 @@ import {homeConfig} from "@/config/index.js";
     <div class="container">
         <span class="title">软件下载</span>
         <div class="content">
-            <el-row :gutter="10" v-if="homeConfig.software.length != 0">
-                <el-col v-for="item in homeConfig.software" :xs="24" :sm="12">
+            <el-row :gutter="10" v-if="homeConfig.software.length != 0" class="justify-content-center">
+                <el-col v-for="item in homeConfig.software" :span="24" :sm="12">
                     <el-card>
                         <template #header>
                             <div class="flex justify-content-between">
@@ -34,10 +37,10 @@ import {homeConfig} from "@/config/index.js";
                                     </el-tag>
                                 </div>
                                 <div class="flex justify-content-flex-end">
-                                    <el-button :disabled="item.file_url == ''" dark round type="success">
+                                    <el-button :disabled="item.file_url == ''" dark round type="success" @click="jumpToUrl(item.file_url)">
                                         {{ item.file_url == '' ? '暂无镜像下载地址' : '镜像下载' }}
                                     </el-button>
-                                    <el-button :disabled="item.official_uri == ''" dark round type="primary">
+                                    <el-button :disabled="item.official_uri == ''" dark round type="primary" @click="jumpToUrl(item.official_uri)">
                                         {{ item.official_uri == '' ? '暂无官方下载地址' : '官方下载' }}
                                     </el-button>
                                 </div>

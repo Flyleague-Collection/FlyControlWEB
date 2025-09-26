@@ -125,7 +125,9 @@ const submitForm = async () => {
     <FormDialog ref="newTicketFormDialogRef" title="新建工单" :width="450" @dialog-confirm-event="submitForm()">
         <el-form ref="newTicketFormRef" :model="formData" :rules="formRule">
             <el-form-item label="工单类型" prop="type">
-                <el-select v-model.number="formData.type" :options="Global.ticketTypes"/>
+                <el-radio-group v-model.number="formData.type">
+                    <el-radio-button v-for="item in Global.ticketTypes" :value="item.value" :label="item.label"/>
+                </el-radio-group>
             </el-form-item>
             <el-form-item label="工单标题" prop="title">
                 <el-input v-model="formData.title" placeholder="请输入工单标题"/>
