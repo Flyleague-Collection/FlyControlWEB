@@ -26,5 +26,4 @@ app.use(router);
 
 useStateStore();
 useServerConfigStore().getConfigFromServer().catch();
-const userStore = useUserStore();
-userStore.initUser().finally(() => app.mount('#app'));
+useUserStore().initUser().finally(() => app.mount('#app'));

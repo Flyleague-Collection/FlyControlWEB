@@ -26,13 +26,13 @@ export const useServerConfigStore = defineStore("server-config-store", () => {
         facilities: [
             {
                 id: 0,
-                short_name: "Pilot",
-                long_name: "Pilot"
+                short_name: "OBS",
+                long_name: "Observer"
             },
             {
                 id: 1,
-                short_name: "OBS",
-                long_name: "Observer"
+                short_name: "FSS",
+                long_name: "Flight Service Station"
             },
             {
                 id: 2,
@@ -61,8 +61,8 @@ export const useServerConfigStore = defineStore("server-config-store", () => {
             },
             {
                 id: 7,
-                short_name: "FSS",
-                long_name: "Flight Service Station"
+                short_name: "Pilot",
+                long_name: "Pilot"
             }
         ],
         ratings: [
@@ -245,9 +245,9 @@ export const useServerConfigStore = defineStore("server-config-store", () => {
 
     return {
         config,
-        ratings: config.value.ratings,
-        facilities: config.value.facilities,
-        limits: config.value.limits,
+        ratings: computed(() => config.value.ratings),
+        facilities: computed(() => config.value.facilities),
+        limits: computed(() => config.value.limits),
         usernameLimit,
         passwordLimit,
         cidLimit,

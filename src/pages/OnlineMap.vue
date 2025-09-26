@@ -59,7 +59,7 @@ function tileUrlFunction(tileCoord) {
 const layers = {
     OSM: new TileLayer({
         title: 'OSM',
-        visible: true,
+        visible: false,
         source: new OSM()
     }),
     Mapbox: new VectorTileLayer({
@@ -119,7 +119,7 @@ const map = ref<OlMap | null>(null);
 const selectedFeature = ref<Feature | null>(null);
 const popup = ref<Overlay>();
 const popupContent = ref<string>('');
-const selectedLayer = ref("OSM");
+const selectedLayer = ref("GaoDe");
 const mapBoxAvailable = ref(false)
 
 watch(() => selectedLayer.value, (value: string, oldValue: string) => {
@@ -218,7 +218,7 @@ const flushMapShow = () => {
         aircraftLayer.getSource().addFeature(feature);
     });
     onlineData.value.controllers.forEach(controller => {
-        if (controller.facility == 2) {
+        if (controller.facility == 1) {
             // FSS
         } else if (controller.facility == 6) {
             // CTR
@@ -244,7 +244,7 @@ const flushMapShow = () => {
             feature?.set("atis", controller.atc_info)
             feature?.set("cid", controller.cid)
             approachLayer.getSource().addFeature(feature);
-        } else {
+        } else if (controller.facility >= 2 && controller.facility <= 4) {
             // TWR GND DEL
             const feature = new Feature({
                 geometry: new Point(fromLonLat([controller.longitude, controller.latitude])),
@@ -384,6 +384,8 @@ onMounted(async () => {
 
     // 添加点击事件处理
     setupClickHandler();
+
+    layers[selectedLayer.value].setVisible(true);
 
     await fetchWhazzupData();
     flushMapShow()
