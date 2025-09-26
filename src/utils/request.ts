@@ -32,7 +32,7 @@ request.interceptors.response.use(
     },
     error => {
         if (error.response) {
-            showApiErrorMsg(error.response.data.message, error.response.data.status)
+            showError(error.response.data.message)
         } else if (error.request) {
             showError("连接超时, 请检查网络设置")
         }

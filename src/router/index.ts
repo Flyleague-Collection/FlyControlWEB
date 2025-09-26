@@ -36,6 +36,8 @@ import Ratings from "@/pages/home/Ratings.vue";
 import ControllerRecord from "@/pages/admin/controller/ControllerRecord.vue";
 import {Ratings as ratings} from "@/global.js";
 import Applications from "@/pages/admin/controller/Applications.vue";
+import FlightPlan from "@/pages/FlightPlan.vue";
+import FlightPlanList from "@/pages/admin/FlightPlanList.vue";
 
 const isController = (userData: UserModel): boolean => {
     return userData.rating >= ratings.Observer;
@@ -188,6 +190,15 @@ const routes: RouteRecordRaw[] = [
                 }
             },
             {
+                path: "/flight-plan",
+                name: "FlightPlan",
+                component: FlightPlan,
+                meta: {
+                    requireAuth: true,
+                    title: "飞行计划"
+                }
+            },
+            {
                 path: "/controllers/application",
                 name: "Application",
                 component: Application,
@@ -303,6 +314,16 @@ const routes: RouteRecordRaw[] = [
                     requireAuth: true,
                     title: "新建活动",
                     requirePermission: PermissionNode.AdminEntry | PermissionNode.ActivityShowList | PermissionNode.ActivityPublish
+                }
+            },
+            {
+                path: "/admin/flight-plan",
+                name: "AdminFlightPlan",
+                component: FlightPlanList,
+                meta: {
+                    requireAuth: true,
+                    title: "飞行计划管理",
+                    requirePermission: PermissionNode.AdminEntry | PermissionNode.FlightPlanShowList
                 }
             },
             {

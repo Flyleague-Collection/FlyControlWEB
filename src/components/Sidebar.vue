@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import config from "@/config/index.js";
 import {
-    Calendar,
+    Calendar, Document,
     DocumentChecked,
     HomeFilled,
     MapLocation,
@@ -105,6 +105,12 @@ onMounted(() => {
             </el-icon>
             <span>投诉与反馈中心</span>
         </el-menu-item>
+        <el-menu-item index="/flight-plan">
+            <el-icon>
+                <Document/>
+            </el-icon>
+            <span>提交飞行计划</span>
+        </el-menu-item>
         <el-sub-menu index="/controllers">
             <template #title>
                 <el-icon>
@@ -147,6 +153,10 @@ onMounted(() => {
             <el-menu-item index="/admin/activities"
                           v-if="userStore.permission?.hasPermissionNode(PermissionNode.ActivityShowList)">
                 活动管理
+            </el-menu-item>
+            <el-menu-item index="/admin/flight-plan"
+                          v-if="userStore.permission?.hasPermissionNode(PermissionNode.FlightPlanShowList)">
+                飞行计划管理
             </el-menu-item>
             <el-menu-item index="/admin/clients"
                           v-if="userStore.permission?.hasPermissionNode(PermissionNode.ClientManagerEntry)">

@@ -69,6 +69,7 @@ type FlightPlanModel = {
     route: string;
     route_time_hour: string;
     route_time_minute: string;
+    locked: boolean;
 }
 
 type AuditLogModel = {
