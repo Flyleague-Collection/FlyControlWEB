@@ -304,7 +304,7 @@ const toFlightPlanModel = (data: FlightPlanData): FlightPlanModel => {
     result.fuel_time_hour = fuel_time.split(':')[0];
     result.fuel_time_minute = fuel_time.split(':')[1];
     result.route = data.route;
-    result.remarks = encodeRemarks(data);
+    result.remarks = encodeRemarks(data).replace('\n', '');
     return result;
 }
 

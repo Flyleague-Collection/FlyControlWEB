@@ -9,7 +9,6 @@ import Register from "@/pages/user/Register.vue";
 import ActivityStatus from "@/pages/controller/ActivityStatus.vue";
 import Activity from "@/pages/activity/Activity.vue";
 import ActivityDetail from "@/pages/activity/ActivityDetail.vue";
-import Booking from "@/pages/controller/Booking.vue";
 import Profile from "@/pages/controller/Profile.vue";
 import Ticket from "@/pages/Ticket.vue";
 import Users from "@/pages/admin/user/Users.vue";
@@ -214,16 +213,6 @@ const routes: RouteRecordRaw[] = [
                 meta: {
                     requireAuth: true,
                     title: "活动登记",
-                    authFunction: isController
-                }
-            },
-            {
-                path: "/controllers/booking",
-                name: "Booking",
-                component: Booking,
-                meta: {
-                    requireAuth: true,
-                    title: "考核预约",
                     authFunction: isController
                 }
             },

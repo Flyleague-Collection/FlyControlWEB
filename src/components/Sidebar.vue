@@ -124,9 +124,6 @@ onMounted(() => {
             <el-menu-item index="/controllers/activity" v-if="userStore.userData.rating >= Ratings.Observer">
                 活动登记
             </el-menu-item>
-            <el-menu-item index="/controllers/booking" v-if="userStore.userData.rating >= Ratings.Observer">
-                考核预约
-            </el-menu-item>
             <el-menu-item index="/controllers/profile" v-if="userStore.userData.rating >= Ratings.Observer">
                 管制员档案
             </el-menu-item>
