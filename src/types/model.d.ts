@@ -23,34 +23,6 @@ type HistoryModel = {
     online_time: number;
 }
 
-type OnlineControllerModel = {
-    atc_info: string[];
-    callsign: string;
-    cid: number;
-    facility: number;
-    frequency: number;
-    latitude: number;
-    logon_time: string;
-    offline_time: string;
-    is_break: boolean;
-    longitude: number;
-    rating: number;
-    real_name: string;
-}
-
-type OnlinePilotModel = {
-    altitude: number;
-    callsign: string;
-    cid: number;
-    flight_plan: FlightPlanModel;
-    ground_speed: number;
-    heading: number;
-    latitude: number;
-    logon_time: string;
-    longitude: number;
-    real_name: string;
-    transponder: string;
-}
 
 type FlightPlanModel = {
     aircraft: string;

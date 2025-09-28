@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {PageListCardInstance, PageListResponse} from "@/components/card/PageListCard.js";
-import request from "@/utils/request.js";
+import request from "@/api/request.js";
 import PageListCard from "@/components/card/PageListCard.vue";
 import {Global} from "@/global.js";
 import moment from "moment";
@@ -109,7 +109,7 @@ const deleteTicket = async () => {
 </script>
 
 <template>
-    <PageListCard ref="ticketDataListRef" :fetch-data="getTickets" card-title="工单">
+    <PageListCard ref="ticketDataListRef" :fetch-data="getTickets" card-title="工单" no-transform>
         <el-table-column type="expand">
             <template #default="scope">
                 <el-descriptions :column="1" border>

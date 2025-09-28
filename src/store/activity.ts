@@ -5,7 +5,7 @@ import {ref} from "vue";
 import config, {airports} from "@/config/index.js";
 import {useUserStore} from "@/store/user.js";
 import {showError} from "@/utils/message.js";
-import request from "@/utils/request.js";
+import request from "@/api/request.js";
 import {handleImageUrl} from "@/utils/utils.js";
 
 export const useActivityStore = defineStore("activity", () => {

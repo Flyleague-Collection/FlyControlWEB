@@ -13,7 +13,7 @@ import {Style, Icon, Stroke, Fill, Circle} from 'ol/style';
 import Overlay from 'ol/Overlay';
 import axios from "axios";
 import 'ol/ol.css';
-import request from "@/utils/request.js";
+import request from "@/api/request.js";
 import AxiosXHR = Axios.AxiosXHR;
 import {Layer} from "ol/layer.js";
 import {showError} from "@/utils/message.js";

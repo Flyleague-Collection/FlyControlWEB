@@ -7,7 +7,7 @@ import {cloneDeep, join} from "lodash";
 import {padStart} from "lodash-es";
 import {showError, showSuccess, showWarning} from "@/utils/message.js";
 import {useClipboard} from "@vueuse/core";
-import request from "@/utils/request.js";
+import request from "@/api/request.js";
 import axios from "axios";
 import AxiosXHR = Axios.AxiosXHR;
 import FormDialog from "@/components/dialog/FormDialog.vue";

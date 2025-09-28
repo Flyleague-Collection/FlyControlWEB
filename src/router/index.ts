@@ -2,7 +2,7 @@ import {createRouter, createWebHistory, RouteRecordRaw} from "vue-router";
 import {useUserStore} from "@/store/user.js";
 import {PermissionNode} from "@/utils/permission.js";
 import {showError} from "@/utils/message.js";
-import request from "@/utils/request.js";
+import request from "@/api/request.js";
 import Portal from "@/pages/home/Portal.vue";
 import Login from "@/pages/user/Login.vue";
 import Register from "@/pages/user/Register.vue";
@@ -37,6 +37,7 @@ import {Ratings as ratings} from "@/global.js";
 import Applications from "@/pages/admin/controller/Applications.vue";
 import FlightPlan from "@/pages/FlightPlan.vue";
 import FlightPlanList from "@/pages/admin/FlightPlanList.vue";
+import Announcement from "@/pages/admin/Announcement.vue";
 
 const isController = (userData: UserModel): boolean => {
     return userData.rating >= ratings.Observer;
@@ -316,6 +317,16 @@ const routes: RouteRecordRaw[] = [
                 }
             },
             {
+                path: "/admin/announcements",
+                name: "AdminAnnouncements",
+                component: Announcement,
+                meta: {
+                    requireAuth: true,
+                    title: "公告管理",
+                    requirePermission: PermissionNode.AdminEntry | PermissionNode.AnnouncementShowList
+                }
+            },
+            {
                 path: "/admin/clients",
                 name: "AdminClients",
                 component: Online,
@@ -342,7 +353,7 @@ const routes: RouteRecordRaw[] = [
                 meta: {
                     requireAuth: true,
                     title: "权限管理",
-                    requirePermission: PermissionNode.AdminEntry | PermissionNode.UserShowList
+                    requirePermission: PermissionNode.AdminEntry | PermissionNode.UserShowPermission
                 }
             },
             {
@@ -352,7 +363,7 @@ const routes: RouteRecordRaw[] = [
                 meta: {
                     requireAuth: true,
                     title: "编辑用户权限",
-                    requirePermission: PermissionNode.AdminEntry | PermissionNode.UserShowList | PermissionNode.UserEditPermission
+                    requirePermission: PermissionNode.AdminEntry | PermissionNode.UserShowPermission | PermissionNode.UserEditPermission
                 }
             },
             {

@@ -4,7 +4,7 @@ import config from "@/config/index.js";
 import {useServerConfigStore} from "@/store/server_config.js";
 import {computed, onMounted, reactive, Ref, ref} from "vue";
 import {Plus} from "@element-plus/icons-vue";
-import request from "@/utils/request.js";
+import request from "@/api/request.js";
 import moment from "moment";
 import AxiosXHR = Axios.AxiosXHR;
 import FormDialog from "@/components/dialog/FormDialog.vue";

@@ -7,7 +7,7 @@ import ConfirmDialog from "@/components/dialog/ConfirmDialog.vue";
 import {useUserStore} from "@/store/user.js";
 import {showSuccess, showWarning} from "@/utils/message.js";
 import {Permission} from "@/utils/permission.js";
-import request from "@/utils/request.js";
+import request from "@/api/request.js";
 import AxiosXHR = Axios.AxiosXHR;
 import {padStart} from "lodash-es";
 import {formatCid} from "@/utils/utils.js";

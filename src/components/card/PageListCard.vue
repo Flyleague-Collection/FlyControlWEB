@@ -8,6 +8,7 @@ const props = defineProps<{
     fetchData?: (page: number, pageSize: number) => Promise<PageListResponse<T>>
     doubleClickRow?: (row: T, column: TableColumnCtx<T>, cell: HTMLTableCellElement, event: Event) => void;
     cardTitle?: string;
+    noTransform?: boolean;
 }>()
 
 const storedData = defineModel({
@@ -55,7 +56,7 @@ defineExpose({flushData, getDataByIndex})
 </script>
 
 <template>
-    <el-card class="no-transform" footer-class="flex justify-content-center">
+    <el-card :class="{'no-transform': noTransform}" footer-class="flex justify-content-center">
         <template #header>
             <slot name="header">
                 <div class="flex align-items-center">
@@ -64,11 +65,13 @@ defineExpose({flushData, getDataByIndex})
             </slot>
         </template>
         <el-skeleton :rows="5" animated v-if="loading" :throttle="{ leading: 1000, trailing: 1000}"/>
-        <el-table :data="storedData" @row-dblclick="doubleClickRow" v-else-if="storedData.length != 0">
-            <slot/>
-        </el-table>
+        <slot name="main" :data="storedData" v-else-if="storedData.length != 0">
+            <el-table :data="storedData" @row-dblclick="doubleClickRow">
+                <slot/>
+            </el-table>
+        </slot>
         <el-empty v-else/>
-        <template #footer>
+        <template #footer v-if="total > pageSize">
             <el-pagination
                 :page-size="pageSize"
                 :current-page="page"
@@ -83,4 +86,7 @@ defineExpose({flushData, getDataByIndex})
 </template>
 
 <style scoped>
+.el-card {
+    margin-bottom: 0;
+}
 </style>

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import {onMounted} from "vue";
-import request from "@/utils/request.js";
+import request from "@/api/request.js";
 import AxiosXHR = Axios.AxiosXHR;
 import PageListCard from "@/components/card/PageListCard.vue";
 import type {PageListResponse} from "@/components/card/PageListCard.js";

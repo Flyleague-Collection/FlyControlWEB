@@ -4,12 +4,12 @@ import {defineStore} from "pinia";
 import moment from "moment";
 
 import {Permission} from "@/utils/permission.js";
-import request from "@/utils/request.js";
+import request from "@/api/request.js";
 import {handleImageUrl} from "@/utils/utils.js";
 
 export const useUserStore = defineStore("UserStore", () => {
     const isLogin: Ref<boolean> = ref(false);
-    const userData: Ref<UserModel> = ref({} as UserModel);
+    const userData: Ref<UserModel> = ref(null);
     const token: Ref<string> = ref("");
     const flushToken: Ref<string> = ref("");
     const router = useRouter();

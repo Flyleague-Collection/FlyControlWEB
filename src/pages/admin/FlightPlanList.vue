@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import request from "@/utils/request.js";
+import request from "@/api/request.js";
 import AxiosXHR = Axios.AxiosXHR;
 import type {PageListCardInstance, PageListResponse} from "@/components/card/PageListCard.js";
 import PageListCard from "@/components/card/PageListCard.vue";
@@ -76,7 +76,7 @@ const deleteFlightPlan = async () => {
 </script>
 
 <template>
-    <PageListCard ref="flightPlanListRef" :fetch-data="getFlightPlans" card-title="飞行计划管理">
+    <PageListCard ref="flightPlanListRef" :fetch-data="getFlightPlans" card-title="飞行计划管理" no-transform>
         <el-table-column label="CID">
             <template #default="scope">
                 {{ formatCid(scope.row.cid) }}

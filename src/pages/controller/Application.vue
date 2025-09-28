@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import {useUserStore} from "@/store/user.js";
-import {onMounted, ref, Ref} from "vue";
+import {onMounted, onUnmounted, ref, Ref} from "vue";
 import {useRouter} from "vue-router";
 import {ApplicationStatus, Global, Ratings} from "@/global.js";
 import {showError, showInfo, showSuccess, showWarning} from "@/utils/message.js";
-import request from "@/utils/request.js";
+import request from "@/api/request.js";
 import AxiosXHR = Axios.AxiosXHR;
 import {Check, CircleCheck, CircleClose, Clock, Close, EditPen, List, Picture} from "@element-plus/icons-vue";
 import {formatCid} from "@/utils/utils.js";
@@ -45,14 +45,22 @@ const getSelfApplication = async () => {
     }
 }
 
+let timeoutHandler = null;
+
 onMounted(async () => {
     if (userStore.userData.rating >= Ratings.Observer) {
         showInfo("你已是管制员，正在跳转至管制员档案")
-        setTimeout(async () => {
+        timeoutHandler = setTimeout(async () => {
             await router.push("/controllers/profile")
         }, 3000)
     }
     await getSelfApplication();
+})
+
+onUnmounted(() => {
+    if (timeoutHandler) {
+        clearTimeout(timeoutHandler);
+    }
 })
 
 type ApplicationForm = {

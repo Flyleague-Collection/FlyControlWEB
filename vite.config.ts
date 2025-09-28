@@ -55,11 +55,12 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 manualChunks: {
-                    'vue': ['vue', 'vue-router', 'vue-echarts', 'vue-toastification'],
+                    'vue': ['vue', 'vue-router', 'vue-toastification'],
                     'element-plus': ['element-plus'],
                     'element-plus-icon': ['@element-plus/icons-vue'],
                     'ol': ['ol', 'ol-mapbox-style'],
-                    'utils': ['./src/utils/message.js', './src/utils/permission.js', './src/utils/request.js', './src/utils/utils.js']
+                    'apis': ['./src/api/announcement.js', './src/api/file.js', './src/api/request.js', './src/api/server.js', './src/api/utils.js'],
+                    'utils': ['./src/utils/message.js', './src/utils/permission.js', './src/utils/utils.js']
                 },
                 entryFileNames: 'js/[name].[hash].js',
                 chunkFileNames: 'js/[name].[hash].js',

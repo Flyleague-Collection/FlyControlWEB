@@ -4,7 +4,7 @@ import moment from "moment";
 
 import PageListCard from "@/components/card/PageListCard.vue";
 import {PageListResponse} from "@/components/card/PageListCard.js";
-import request from "@/utils/request.js";
+import request from "@/api/request.js";
 import {padStart} from "lodash-es";
 import {formatCid} from "@/utils/utils.js";
 
@@ -20,7 +20,7 @@ const fetchAuditLogs = async (page: number, pageSize: number): Promise<PageListR
 </script>
 
 <template>
-    <PageListCard :fetch-data="fetchAuditLogs" card-title="审计日志">
+    <PageListCard :fetch-data="fetchAuditLogs" card-title="审计日志" no-transform>
         <el-table-column type="expand">
             <template #default="props">
                 <el-descriptions :label-width="100" border>

@@ -10,7 +10,7 @@ import type {FormDialogInstance} from "@/components/dialog/FormDialog.js";
 import FormDialog from "@/components/dialog/FormDialog.vue";
 import {Global} from "@/global.js";
 import {showError, showSuccess} from "@/utils/message.js";
-import request from "@/utils/request.js";
+import request from "@/api/request.js";
 import AxiosXHR = Axios.AxiosXHR;
 
 const getTickets = async (page: number, pageSize: number): PageListResponse<TicketModel> => {
@@ -80,7 +80,7 @@ const submitForm = async () => {
 </script>
 
 <template>
-    <PageListCard ref="ticketListCardRef" :fetch-data="getTickets">
+    <PageListCard ref="ticketListCardRef" :fetch-data="getTickets" no-transform>
         <template #header>
             <el-space wrap>
                 <span>历史工单记录</span>

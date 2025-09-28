@@ -3,7 +3,7 @@ import {useRoute, useRouter} from "vue-router";
 import {ArrowLeft, Plus} from "@element-plus/icons-vue";
 
 import {useUserStore} from "@/store/user.js";
-import request from "@/utils/request.js";
+import request from "@/api/request.js";
 import AxiosXHR = Axios.AxiosXHR;
 import PageListCard from "@/components/card/PageListCard.vue";
 import {PageListCardInstance, PageListResponse} from "@/components/card/PageListCard.js";
@@ -77,7 +77,7 @@ const removeRecord = async (recordId: number) => {
 </script>
 
 <template>
-    <PageListCard ref="recordListCardRef" :fetch-data="fetchControllerRecord">
+    <PageListCard ref="recordListCardRef" :fetch-data="fetchControllerRecord" no-transform>
         <template #header>
             <el-space wrap>
                 <el-button :icon="ArrowLeft" text @click="router.push(`/admin/controllers`)"/>

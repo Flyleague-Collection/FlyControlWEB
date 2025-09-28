@@ -218,7 +218,7 @@ const handleExceed = (files: File[], _) => {
 </script>
 
 <template>
-    <el-card footer-class="flex justify-content-flex-end">
+    <el-card class="container no-transform" footer-class="flex justify-content-flex-end">
         <template #header>
             <el-button :icon="ArrowLeft" text @click="router.push(`/admin/activities`)"/>
             <span>{{ model.title }}</span>
@@ -330,8 +330,7 @@ const handleExceed = (files: File[], _) => {
 </template>
 
 <style scoped>
-
-.el-card {
+.container:deep(.el-card) {
     transform: none;
     margin-bottom: 10px;
 }

@@ -5,7 +5,7 @@ import {genFileId, UploadFile, UploadInstance, UploadRawFile, UploadUserFile} fr
 import {showError} from "@/utils/message.js";
 import {sizeToString} from "@/utils/utils.js";
 import {useServerConfigStore} from "@/store/server_config.js";
-import {uploadImage} from "@/utils/request.js";
+import {uploadImage} from "@/api/file.js";
 
 const fileUrl = defineModel({type: String})
 

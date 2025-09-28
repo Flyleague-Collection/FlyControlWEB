@@ -155,6 +155,10 @@ onMounted(() => {
                           v-if="userStore.permission?.hasPermissionNode(PermissionNode.FlightPlanShowList)">
                 飞行计划管理
             </el-menu-item>
+            <el-menu-item index="/admin/announcements"
+                          v-if="userStore.permission?.hasPermissionNode(PermissionNode.AnnouncementShowList)">
+                公告管理
+            </el-menu-item>
             <el-menu-item index="/admin/clients"
                           v-if="userStore.permission?.hasPermissionNode(PermissionNode.ClientManagerEntry)">
                 在线管理
@@ -164,7 +168,7 @@ onMounted(() => {
                 工单管理
             </el-menu-item>
             <el-menu-item index="/admin/permissions"
-                          v-if="userStore.permission?.hasPermissionNode(PermissionNode.UserShowList)">
+                          v-if="userStore.permission?.hasPermissionNode(PermissionNode.UserShowPermission)">
                 权限管理
             </el-menu-item>
             <el-menu-item index="/admin/audit"

@@ -1,6 +1,6 @@
 export const Global = {
-    version: "0.8.1",
-    whatsNew: "<p>1、修复飞行计划提交错误;</p><p>2、优化部分页面的交互逻辑</p><p>3、添加更新提示框</p>",
+    version: "0.8.2",
+    whatsNew: "<p>1、添加公告栏</p><p>2、优化部分元素动画</p>",
     controllerRecordTypes: [
         {
             label: "面试",
@@ -83,6 +83,23 @@ export const Global = {
             label: "Sino",
             value: "Sino"
         }
+    ],
+    announcementType: [
+        {
+            label: "普通公告",
+            value: 0,
+            color: "#45a1ba"
+        },
+        {
+            label: "空管中心公告",
+            value: 1,
+            color: "#45ba99"
+        },
+        {
+            label: "技术组公告",
+            value: 2,
+            color: "#4566ba"
+        }
     ]
 }
 
@@ -108,4 +125,12 @@ export enum ApplicationStatus {
     Processing,
     Passed,
     Rejected
+}
+
+export const getAnnouncementTypeColor = (id: number): string => {
+    return Global.announcementType[id].color;
+}
+
+export const getAnnouncementTypeLabel = (id: number): string => {
+    return Global.announcementType[id].label;
 }

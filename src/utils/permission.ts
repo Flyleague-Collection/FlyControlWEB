@@ -4,37 +4,42 @@ export const PermissionNode = {
     UserGetProfile: 1n << 2n,
     UserSetPassword: 1n << 3n,
     UserEditBaseInfo: 1n << 4n,
-    UserEditPermission: 1n << 5n,
-    ControllerShowList: 1n << 6n,
-    ControllerTier2Rating: 1n << 7n,
-    ControllerEditRating: 1n << 8n,
-    ControllerShowRecord: 1n << 9n,
-    ControllerCreateRecord: 1n << 10n,
-    ControllerDeleteRecord: 1n << 11n,
-    ControllerChangeUnderMonitor: 1n << 12n,
-    ControllerChangeSolo: 1n << 13n,
-    ControllerChangeGuest: 1n << 14n,
-    ControllerApplicationShowList: 1n << 15n,
-    ControllerApplicationConfirm: 1n << 16n,
-    ControllerApplicationPass: 1n << 17n,
-    ControllerApplicationReject: 1n << 18n,
-    ActivityPublish: 1n << 19n,
-    ActivityShowList: 1n << 20n,
-    ActivityEdit: 1n << 21n,
-    ActivityEditState: 1n << 22n,
-    ActivityEditPilotState: 1n << 23n,
-    ActivityDelete: 1n << 24n,
-    AuditLogShow: 1n << 25n,
-    TicketShowList: 1n << 26n,
-    TicketReply: 1n << 27n,
-    TicketRemove: 1n << 28n,
-    FlightPlanShowList: 1n << 29n,
-    FlightPlanChangeLock: 1n << 30n,
-    FlightPlanDelete: 1n << 31n,
-    ClientManagerEntry: 1n << 32n,
-    ClientSendMessage: 1n << 33n,
-    ClientKill: 1n << 34n,
-    ClientSendBroadcastMessage: 1n << 35n
+    UserShowPermission: 1n << 5n,
+    UserEditPermission: 1n << 6n,
+    ControllerShowList: 1n << 7n,
+    ControllerTier2Rating: 1n << 8n,
+    ControllerEditRating: 1n << 9n,
+    ControllerShowRecord: 1n << 10n,
+    ControllerCreateRecord: 1n << 11n,
+    ControllerDeleteRecord: 1n << 12n,
+    ControllerChangeUnderMonitor: 1n << 13n,
+    ControllerChangeSolo: 1n << 14n,
+    ControllerChangeGuest: 1n << 15n,
+    ControllerApplicationShowList: 1n << 16n,
+    ControllerApplicationConfirm: 1n << 17n,
+    ControllerApplicationPass: 1n << 18n,
+    ControllerApplicationReject: 1n << 19n,
+    ActivityPublish: 1n << 20n,
+    ActivityShowList: 1n << 21n,
+    ActivityEdit: 1n << 22n,
+    ActivityEditState: 1n << 23n,
+    ActivityEditPilotState: 1n << 24n,
+    ActivityDelete: 1n << 25n,
+    AuditLogShow: 1n << 26n,
+    TicketShowList: 1n << 27n,
+    TicketReply: 1n << 28n,
+    TicketRemove: 1n << 29n,
+    FlightPlanShowList: 1n << 30n,
+    FlightPlanChangeLock: 1n << 31n,
+    FlightPlanDelete: 1n << 32n,
+    ClientManagerEntry: 1n << 33n,
+    ClientSendMessage: 1n << 34n,
+    ClientSendBroadcastMessage: 1n << 35n,
+    ClientKill: 1n << 36n,
+    AnnouncementShowList: 1n << 37n,
+    AnnouncementPublish: 1n << 38n,
+    AnnouncementEdit: 1n << 39n,
+    AnnouncementDelete: 1n << 40n
 }
 
 
@@ -44,6 +49,7 @@ const permissionNodeMap = new Map<string, bigint>([
     ["UserGetProfile", PermissionNode.UserGetProfile],
     ["UserSetPassword", PermissionNode.UserSetPassword],
     ["UserEditBaseInfo", PermissionNode.UserEditBaseInfo],
+    ["UserShowPermission", PermissionNode.UserShowPermission],
     ["UserEditPermission", PermissionNode.UserEditPermission],
     ["ControllerShowList", PermissionNode.ControllerShowList],
     ["ControllerTier2Rating", PermissionNode.ControllerTier2Rating],
@@ -73,8 +79,12 @@ const permissionNodeMap = new Map<string, bigint>([
     ["FlightPlanDelete", PermissionNode.FlightPlanDelete],
     ["ClientManagerEntry", PermissionNode.ClientManagerEntry],
     ["ClientSendMessage", PermissionNode.ClientSendMessage],
+    ["ClientSendBroadcastMessage", PermissionNode.ClientSendBroadcastMessage],
     ["ClientKill", PermissionNode.ClientKill],
-    ["ClientSendBroadcastMessage", PermissionNode.ClientSendBroadcastMessage]
+    ["AnnouncementShowList", PermissionNode.AnnouncementShowList],
+    ["AnnouncementPublish", PermissionNode.AnnouncementPublish],
+    ["AnnouncementEdit", PermissionNode.AnnouncementEdit],
+    ["AnnouncementDelete", PermissionNode.AnnouncementDelete]
 ]);
 
 export class Permission {
@@ -108,6 +118,11 @@ export class Permission {
                 name: "UserEditBaseInfo",
                 desc: "可以编辑用户基础信息",
                 hasPermission: (permission & PermissionNode.UserEditBaseInfo) == PermissionNode.UserEditBaseInfo
+            },
+            [PermissionNode.UserShowPermission]: {
+                name: "UserShowPermission",
+                desc: "可以查看用户详细权限",
+                hasPermission: (permission & PermissionNode.UserShowPermission) == PermissionNode.UserShowPermission
             },
             [PermissionNode.UserEditPermission]: {
                 name: "UserEditPermission",
@@ -254,15 +269,35 @@ export class Permission {
                 desc: "可以向客户端发送消息",
                 hasPermission: (permission & PermissionNode.ClientSendMessage) == PermissionNode.ClientSendMessage
             },
+            [PermissionNode.ClientSendBroadcastMessage]: {
+                name: "ClientSendBroadcastMessage",
+                desc: "可以发送广播消息",
+                hasPermission: (permission & PermissionNode.ClientSendBroadcastMessage) == PermissionNode.ClientSendBroadcastMessage
+            },
             [PermissionNode.ClientKill]: {
                 name: "ClientKill",
                 desc: "可以踢出客户端",
                 hasPermission: (permission & PermissionNode.ClientKill) == PermissionNode.ClientKill
             },
-            [PermissionNode.ClientSendBroadcastMessage]: {
-                name: "ClientSendBroadcastMessage",
-                desc: "可以发送广播消息",
-                hasPermission: (permission & PermissionNode.ClientSendBroadcastMessage) == PermissionNode.ClientSendBroadcastMessage
+            [PermissionNode.AnnouncementShowList]: {
+                name: "AnnouncementShowList",
+                desc: "可以查看公告列表",
+                hasPermission: (permission & PermissionNode.AnnouncementShowList) == PermissionNode.AnnouncementShowList
+            },
+            [PermissionNode.AnnouncementPublish]: {
+                name: "AnnouncementPublish",
+                desc: "可以发布新公告",
+                hasPermission: (permission & PermissionNode.AnnouncementPublish) == PermissionNode.AnnouncementPublish
+            },
+            [PermissionNode.AnnouncementEdit]: {
+                name: "AnnouncementEdit",
+                desc: "可以编辑公告",
+                hasPermission: (permission & PermissionNode.AnnouncementEdit) == PermissionNode.AnnouncementEdit
+            },
+            [PermissionNode.AnnouncementDelete]: {
+                name: "AnnouncementDelete",
+                desc: "可以删除公告",
+                hasPermission: (permission & PermissionNode.AnnouncementDelete) == PermissionNode.AnnouncementDelete
             }
         };
     }

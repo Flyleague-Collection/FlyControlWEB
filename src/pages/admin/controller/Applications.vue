@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type {PageListCardInstance, PageListResponse} from "@/components/card/PageListCard.js";
-import request from "@/utils/request.js";
+import request from "@/api/request.js";
 import PageListCard from "@/components/card/PageListCard.vue";
 import AxiosXHR = Axios.AxiosXHR;
 import moment from "moment";
@@ -133,7 +133,7 @@ const submitApplicationRefuseForm = async () => {
 </script>
 
 <template>
-    <PageListCard ref="applicationPageRef" :fetch-data="fetchApplications" card-title="管制员申请管理">
+    <PageListCard ref="applicationPageRef" :fetch-data="fetchApplications" card-title="管制员申请管理" no-transform>
         <el-table-column type="expand">
             <template #default="scope">
                 <ApplicationDescription :application="scope.row" title="申请详细信息"/>

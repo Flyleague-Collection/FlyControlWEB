@@ -104,6 +104,7 @@ onMounted(async () => {
 .calendar {
     border-radius: 20px;
     margin-bottom: 15px;
+    height: 100%;
 }
 
 .calendar-header {

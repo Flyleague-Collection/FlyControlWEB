@@ -25,7 +25,7 @@ const fetchUsers = async (page: number, pageSize: number): Promise<PageListRespo
 </script>
 
 <template>
-    <PageListCard :fetch-data="fetchUsers" card-title="用户权限一览">
+    <PageListCard :fetch-data="fetchUsers" card-title="用户权限一览" no-transform>
         <el-table-column type="expand">
             <template #default="props">
                 <el-table :data="Object.values(new Permission(BigInt(props.row.permission)).getPermissionsRecord())">

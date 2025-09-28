@@ -58,7 +58,7 @@ const deleteActivity = async () => {
 </script>
 
 <template>
-    <PageListCard ref="activityDataListRef" :fetch-data="getActivityData">
+    <PageListCard ref="activityDataListRef" :fetch-data="getActivityData" no-transform>
         <template #header>
             <el-space wrap>
                 <span>活动总览</span>

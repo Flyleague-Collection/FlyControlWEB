@@ -7,7 +7,7 @@ import {useUserStore} from "@/store/user.js";
 import {showError, showSuccess} from "@/utils/message.js";
 import config from "@/config/index.js";
 import {useServerConfigStore} from "@/store/server_config.js";
-import request from "@/utils/request.js";
+import request from "@/api/request.js";
 import AxiosXHR = Axios.AxiosXHR;
 import {useCountdown} from "@vueuse/core";
 

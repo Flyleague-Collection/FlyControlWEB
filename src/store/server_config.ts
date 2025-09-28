@@ -2,7 +2,7 @@ import {defineStore} from "pinia";
 import {FormItemRule} from "element-plus";
 import {computed, ComputedRef, Ref, ref} from "vue";
 
-import request from "@/utils/request.js";
+import request from "@/api/request.js";
 import {useUserStore} from "@/store/user.js";
 
 export const useServerConfigStore = defineStore("server-config-store", () => {

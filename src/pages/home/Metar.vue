@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import {ref} from "vue";
-import axios from "axios";
 import {showSuccess, showWarning} from "@/utils/message.js";
-import request from "@/utils/request.js";
+import request from "@/api/request.js";
 
 const icao = ref("")
 const metarRawData = ref("")

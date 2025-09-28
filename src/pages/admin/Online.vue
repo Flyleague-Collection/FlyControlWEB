@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import request from "@/utils/request.js";
+import request from "@/api/request.js";
 import {onMounted, onUnmounted, Ref, ref} from "vue";
 import PageListCard from "@/components/card/PageListCard.vue";
 import {padStart} from "lodash-es";
@@ -201,120 +201,122 @@ const submitKickFromServerForm = async () => {
 </script>
 
 <template>
-    <PageListCard ref="onlinePilotsRef" v-model="onlinePilots">
-        <template #header>
-            <el-space wrap>
-                <span>在线飞行员</span>
-                <el-button type="warning" @click="broadcastMessage('*P')"
-                           :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientSendBroadcastMessage)">
-                    飞行员广播
-                </el-button>
-            </el-space>
-        </template>
-        <el-table-column label="呼号" prop="callsign"/>
-        <el-table-column label="CID">
-            <template #default="scope">
-                {{ formatCid(scope.row.cid) }}
-            </template>
-        </el-table-column>
-        <el-table-column label="登录时间">
-            <template #default="scope">
-                {{ moment(scope.row.logon_time).format("YYYY-MM-DD HH:mm:ss") }}
-            </template>
-        </el-table-column>
-        <el-table-column label="地速">
-            <template #default="scope">
-                {{ scope.row.ground_speed }} kt
-            </template>
-        </el-table-column>
-        <el-table-column label="高度">
-            <template #default="scope">
-                {{ scope.row.altitude }} ft
-            </template>
-        </el-table-column>
-        <el-table-column label="应答机" prop="transponder"/>
-        <el-table-column label="操作">
-            <template #default="scope">
+    <el-space wrap fill class="w-full" size="large">
+        <PageListCard ref="onlinePilotsRef" v-model="onlinePilots" no-transform>
+            <template #header>
                 <el-space wrap>
-                    <el-button type="primary" @click="sendMessage(scope.row.callsign)"
-                               :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientSendMessage)">
-                        发送消息
-                    </el-button>
-                    <el-button type="danger" @click="kickFromServer(scope.row.callsign)"
-                               :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientKill)">
-                        踢出服务器
+                    <span>在线飞行员</span>
+                    <el-button type="warning" @click="broadcastMessage('*P')"
+                               :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientSendBroadcastMessage)">
+                        飞行员广播
                     </el-button>
                 </el-space>
             </template>
-        </el-table-column>
-    </PageListCard>
-    <PageListCard ref="onlineControllersRef" v-model="onlineControllers">
-        <template #header>
-            <el-space wrap>
-                <span>在线管制员</span>
-                <el-button type="warning" @click="broadcastMessage('*A')"
-                           :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientSendBroadcastMessage)">
-                    管制员广播
-                </el-button>
-                <el-button type="warning" @click="broadcastMessage('*S')"
-                           :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientSendBroadcastMessage)">
-                    SUP广播
-                </el-button>
-                <el-button type="warning" @click="broadcastMessage('*')"
-                           :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientSendBroadcastMessage)">
-                    客户端广播
-                </el-button>
-            </el-space>
-        </template>
-        <el-table-column label="呼号" prop="callsign"/>
-        <el-table-column label="CID">
-            <template #default="scope">
-                {{ formatCid(scope.row.cid) }}
-            </template>
-        </el-table-column>
-        <el-table-column label="登录时间">
-            <template #default="scope">
-                {{ moment(scope.row.logon_time).format("YYYY-MM-DD HH:mm:ss") }}
-            </template>
-        </el-table-column>
-        <el-table-column label="登录权限">
-            <template #default="scope">
-                <el-tag class="border-none"
-                        :color="config.ratings[scope.row.rating + 1].color"
-                        effect="dark">
-                    {{ config.ratings[scope.row.rating + 1].label }}
-                </el-tag>
-            </template>
-        </el-table-column>
-        <el-table-column label="席位">
-            <template #default="scope">
-                <el-tag class="border-none"
-                        :color="config.facilities[scope.row.facility]"
-                        effect="dark">
-                    {{ serverConfigStore.facilities[scope.row.facility].short_name }}
-                </el-tag>
-            </template>
-        </el-table-column>
-        <el-table-column label="频率">
-            <template #default="scope">
-                {{ (scope.row.frequency / 1000).toFixed(3) }}
-            </template>
-        </el-table-column>
-        <el-table-column label="操作">
-            <template #default="scope">
+            <el-table-column label="呼号" prop="callsign"/>
+            <el-table-column label="CID">
+                <template #default="scope">
+                    {{ formatCid(scope.row.cid) }}
+                </template>
+            </el-table-column>
+            <el-table-column label="登录时间">
+                <template #default="scope">
+                    {{ moment(scope.row.logon_time).format("YYYY-MM-DD HH:mm:ss") }}
+                </template>
+            </el-table-column>
+            <el-table-column label="地速">
+                <template #default="scope">
+                    {{ scope.row.ground_speed }} kt
+                </template>
+            </el-table-column>
+            <el-table-column label="高度">
+                <template #default="scope">
+                    {{ scope.row.altitude }} ft
+                </template>
+            </el-table-column>
+            <el-table-column label="应答机" prop="transponder"/>
+            <el-table-column label="操作">
+                <template #default="scope">
+                    <el-space wrap>
+                        <el-button type="primary" @click="sendMessage(scope.row.callsign)"
+                                   :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientSendMessage)">
+                            发送消息
+                        </el-button>
+                        <el-button type="danger" @click="kickFromServer(scope.row.callsign)"
+                                   :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientKill)">
+                            踢出服务器
+                        </el-button>
+                    </el-space>
+                </template>
+            </el-table-column>
+        </PageListCard>
+        <PageListCard ref="onlineControllersRef" v-model="onlineControllers" no-transform>
+            <template #header>
                 <el-space wrap>
-                    <el-button type="primary" @click="sendMessage(scope.row.callsign)"
-                               :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientSendMessage)">
-                        发送消息
+                    <span>在线管制员</span>
+                    <el-button type="warning" @click="broadcastMessage('*A')"
+                               :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientSendBroadcastMessage)">
+                        管制员广播
                     </el-button>
-                    <el-button type="danger" @click="kickFromServer(scope.row.callsign)"
-                               :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientKill)">
-                        踢出服务器
+                    <el-button type="warning" @click="broadcastMessage('*S')"
+                               :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientSendBroadcastMessage)">
+                        SUP广播
+                    </el-button>
+                    <el-button type="warning" @click="broadcastMessage('*')"
+                               :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientSendBroadcastMessage)">
+                        客户端广播
                     </el-button>
                 </el-space>
             </template>
-        </el-table-column>
-    </PageListCard>
+            <el-table-column label="呼号" prop="callsign"/>
+            <el-table-column label="CID">
+                <template #default="scope">
+                    {{ formatCid(scope.row.cid) }}
+                </template>
+            </el-table-column>
+            <el-table-column label="登录时间">
+                <template #default="scope">
+                    {{ moment(scope.row.logon_time).format("YYYY-MM-DD HH:mm:ss") }}
+                </template>
+            </el-table-column>
+            <el-table-column label="登录权限">
+                <template #default="scope">
+                    <el-tag class="border-none"
+                            :color="config.ratings[scope.row.rating + 1].color"
+                            effect="dark">
+                        {{ config.ratings[scope.row.rating + 1].label }}
+                    </el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column label="席位">
+                <template #default="scope">
+                    <el-tag class="border-none"
+                            :color="config.facilities[scope.row.facility]"
+                            effect="dark">
+                        {{ serverConfigStore.facilities[scope.row.facility].short_name }}
+                    </el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column label="频率">
+                <template #default="scope">
+                    {{ (scope.row.frequency / 1000).toFixed(3) }}
+                </template>
+            </el-table-column>
+            <el-table-column label="操作">
+                <template #default="scope">
+                    <el-space wrap>
+                        <el-button type="primary" @click="sendMessage(scope.row.callsign)"
+                                   :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientSendMessage)">
+                            发送消息
+                        </el-button>
+                        <el-button type="danger" @click="kickFromServer(scope.row.callsign)"
+                                   :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ClientKill)">
+                            踢出服务器
+                        </el-button>
+                    </el-space>
+                </template>
+            </el-table-column>
+        </PageListCard>
+    </el-space>
     <FormDialog ref="sendMessageFormDialogRef" :title="`向${sendMessageFormData.callsign}发送消息`" :width="350"
                 @dialog-confirm-event="submitSendMessageForm()">
         <el-form ref="sendMessageFormRef" :model="sendMessageFormData" :rules="sendMessageFormRules">

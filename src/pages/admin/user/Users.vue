@@ -130,7 +130,7 @@ const exit = () => {
     <PageListCard ref="pageListCardRef"
                   :fetch-data="fetchUsers"
                   card-title="用户总览"
-                  :double-click-row="row => showEditUserProfileDialog(row.id)">
+                  no-transform>
         <el-table-column label="CID">
             <template #default="scope">
                 <div class="flex align-items-center">

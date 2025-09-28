@@ -11,7 +11,7 @@ import FormDialog from "@/components/dialog/FormDialog.vue";
 import type {FormDialogInstance} from "@/components/dialog/FormDialog.js";
 import config from "@/config/index.js";
 import {cloneDeep, padEnd} from "lodash";
-import request from "@/utils/request.js";
+import request from "@/api/request.js";
 import AxiosXHR = Axios.AxiosXHR;
 import {handleImageUrl} from "@/utils/utils.js";
 import moment from "moment";
@@ -126,85 +126,88 @@ const confirmUpdateRating = async () => {
 </script>
 
 <template>
-    <PageListCard ref="userListCardRef"
-                  :fetch-data="fetchUsers"
-                  card-title="用户总览">
-        <el-table-column label="CID">
-            <template #default="scope">
-                <div class="flex align-items-center">
-                    <el-avatar v-if="scope.row.avatar_url == ''">{{ padStart(scope.row.cid, 4, '0') }}</el-avatar>
-                    <el-avatar v-else :src="handleImageUrl(scope.row.avatar_url)"/>
-                    <span class="margin-left-5">{{ padStart(scope.row.cid, 4, '0') }}</span>
-                </div>
-            </template>
-        </el-table-column>
-        <el-table-column prop="username" label="用户名"/>
-        <el-table-column prop="email" label="邮箱"/>
-        <el-table-column label="管制权限">
-            <template #default="scope">
-                <el-space>
-                    <el-tag v-if="scope.row.tier2" type="success" round effect="dark">Tier2</el-tag>
-                    <el-tag v-else type="danger" round effect="dark">Tier2</el-tag>
-                    <el-tag class="level text-color-white border-none" round
-                            :color="config.ratings[scope.row.rating + 1].color">
-                        {{ serverConfig.getRatingShortName(scope.row.rating as number) }}
-                    </el-tag>
-                    <el-tag v-if="scope.row.under_solo" type="primary" effect="dark" round>Solo</el-tag>
-                    <el-tag v-if="scope.row.guest" type="info" effect="dark" round>客座管制</el-tag>
-                    <el-tag v-if="scope.row.under_monitor" type="warning" effect="dark" round>实习管制</el-tag>
-                </el-space>
-            </template>
-        </el-table-column>
-        <el-table-column label="操作">
-            <template #default="scope">
-                <el-button :icon="EditPen" type="primary" @click="showEditRatingDialog(scope.row.id)">
-                    编辑
-                </el-button>
-            </template>
-        </el-table-column>
-    </PageListCard>
-    <PageListCard ref="controllerListCardRef" :fetch-data="fetchControllers" card-title="管制员总览">
-        <el-table-column label="CID">
-            <template #default="scope">
-                <div class="flex align-items-center">
-                    <el-avatar v-if="scope.row.avatar_url == ''">{{ padStart(scope.row.cid, 4, '0') }}</el-avatar>
-                    <el-avatar v-else :src="handleImageUrl(scope.row.avatar_url)"/>
-                    <span class="margin-left-5">{{ padStart(scope.row.cid, 4, '0') }}</span>
-                </div>
-            </template>
-        </el-table-column>
-        <el-table-column prop="username" label="用户名"/>
-        <el-table-column prop="email" label="邮箱"/>
-        <el-table-column label="管制权限">
-            <template #default="scope">
-                <el-space>
-                    <el-tag v-if="scope.row.tier2" type="success" round effect="dark">Tier2</el-tag>
-                    <el-tag v-else type="danger" round effect="dark">Tier2</el-tag>
-                    <el-tag class="level text-color-white border-none" round
-                            :color="config.ratings[scope.row.rating + 1].color">
-                        {{ serverConfig.getRatingShortName(scope.row.rating as number) }}
-                    </el-tag>
-                    <el-tag v-if="scope.row.under_solo" type="primary" effect="dark" round>Solo</el-tag>
-                    <el-tag v-if="scope.row.guest" type="info" effect="dark" round>客座管制</el-tag>
-                    <el-tag v-if="scope.row.under_monitor" type="warning" effect="dark" round>实习管制</el-tag>
-                </el-space>
-            </template>
-        </el-table-column>
-        <el-table-column label="操作">
-            <template #default="scope">
-                <el-button :icon="EditPen" type="success"
-                           @click="showEditRatingDialog(scope.row.id)"
-                           :disabled="!hasAnyEditPermission">
-                    编辑权限
-                </el-button>
-                <el-button :icon="EditPen" type="primary"
-                           @click="router.push(`/admin/controllers/${scope.row.id}`)"
-                           :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ControllerShowRecord)">
-                    编辑履历
-                </el-button>
-            </template>
-        </el-table-column>
-    </PageListCard>
+    <el-space wrap fill class="w-full" size="large">
+        <PageListCard ref="userListCardRef"
+                      :fetch-data="fetchUsers"
+                      card-title="用户总览"
+                      no-transform>
+            <el-table-column label="CID">
+                <template #default="scope">
+                    <div class="flex align-items-center">
+                        <el-avatar v-if="scope.row.avatar_url == ''">{{ padStart(scope.row.cid, 4, '0') }}</el-avatar>
+                        <el-avatar v-else :src="handleImageUrl(scope.row.avatar_url)"/>
+                        <span class="margin-left-5">{{ padStart(scope.row.cid, 4, '0') }}</span>
+                    </div>
+                </template>
+            </el-table-column>
+            <el-table-column prop="username" label="用户名"/>
+            <el-table-column prop="email" label="邮箱"/>
+            <el-table-column label="管制权限">
+                <template #default="scope">
+                    <el-space>
+                        <el-tag v-if="scope.row.tier2" type="success" round effect="dark">Tier2</el-tag>
+                        <el-tag v-else type="danger" round effect="dark">Tier2</el-tag>
+                        <el-tag class="level text-color-white border-none" round
+                                :color="config.ratings[scope.row.rating + 1].color">
+                            {{ serverConfig.getRatingShortName(scope.row.rating as number) }}
+                        </el-tag>
+                        <el-tag v-if="scope.row.under_solo" type="primary" effect="dark" round>Solo</el-tag>
+                        <el-tag v-if="scope.row.guest" type="info" effect="dark" round>客座管制</el-tag>
+                        <el-tag v-if="scope.row.under_monitor" type="warning" effect="dark" round>实习管制</el-tag>
+                    </el-space>
+                </template>
+            </el-table-column>
+            <el-table-column label="操作">
+                <template #default="scope">
+                    <el-button :icon="EditPen" type="primary" @click="showEditRatingDialog(scope.row.id)">
+                        编辑
+                    </el-button>
+                </template>
+            </el-table-column>
+        </PageListCard>
+        <PageListCard ref="controllerListCardRef" :fetch-data="fetchControllers" card-title="管制员总览" no-transform>
+            <el-table-column label="CID">
+                <template #default="scope">
+                    <div class="flex align-items-center">
+                        <el-avatar v-if="scope.row.avatar_url == ''">{{ padStart(scope.row.cid, 4, '0') }}</el-avatar>
+                        <el-avatar v-else :src="handleImageUrl(scope.row.avatar_url)"/>
+                        <span class="margin-left-5">{{ padStart(scope.row.cid, 4, '0') }}</span>
+                    </div>
+                </template>
+            </el-table-column>
+            <el-table-column prop="username" label="用户名"/>
+            <el-table-column prop="email" label="邮箱"/>
+            <el-table-column label="管制权限">
+                <template #default="scope">
+                    <el-space>
+                        <el-tag v-if="scope.row.tier2" type="success" round effect="dark">Tier2</el-tag>
+                        <el-tag v-else type="danger" round effect="dark">Tier2</el-tag>
+                        <el-tag class="level text-color-white border-none" round
+                                :color="config.ratings[scope.row.rating + 1].color">
+                            {{ serverConfig.getRatingShortName(scope.row.rating as number) }}
+                        </el-tag>
+                        <el-tag v-if="scope.row.under_solo" type="primary" effect="dark" round>Solo</el-tag>
+                        <el-tag v-if="scope.row.guest" type="info" effect="dark" round>客座管制</el-tag>
+                        <el-tag v-if="scope.row.under_monitor" type="warning" effect="dark" round>实习管制</el-tag>
+                    </el-space>
+                </template>
+            </el-table-column>
+            <el-table-column label="操作">
+                <template #default="scope">
+                    <el-button :icon="EditPen" type="success"
+                               @click="showEditRatingDialog(scope.row.id)"
+                               :disabled="!hasAnyEditPermission">
+                        编辑权限
+                    </el-button>
+                    <el-button :icon="EditPen" type="primary"
+                               @click="router.push(`/admin/controllers/${scope.row.id}`)"
+                               :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ControllerShowRecord)">
+                        编辑履历
+                    </el-button>
+                </template>
+            </el-table-column>
+        </PageListCard>
+    </el-space>
     <FormDialog ref="editRatingDialogRef"
                 title="修改管制权限"
                 @dialog-confirm-event="confirmUpdateRating()"
