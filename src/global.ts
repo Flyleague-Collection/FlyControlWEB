@@ -1,5 +1,6 @@
 export const Global = {
-    version: "0.8.0",
+    version: "0.8.1",
+    whatsNew: "<p>1、修复飞行计划提交错误;</p><p>2、优化部分页面的交互逻辑</p><p>3、添加更新提示框</p>",
     controllerRecordTypes: [
         {
             label: "面试",

@@ -1,11 +1,13 @@
 <script setup lang="ts">
 
 import {homeConfig} from "@/config/index.js";
+import {Global} from "@/global.js";
 </script>
 
 <template>
     <el-space wrap class="footer">
-        <span>Copyright © 2025 {{ homeConfig.content.copyright }}. All rights reserved.</span>
+        <span>Copyright © 2025 {{ homeConfig.content.copyright }} All rights reserved.</span>
+        <span>v{{ Global.version }}</span>
         <span class="flex align-items-center"><el-link href="https://beian.miit.gov.cn/">{{ homeConfig.content.icp }}</el-link></span>
         <span class="flex align-items-center">
             <img src="/images/icp.png" alt="ICP" style="height: 14px">
