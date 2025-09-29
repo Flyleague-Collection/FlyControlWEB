@@ -238,7 +238,7 @@ onMounted(async () => {
             </el-col>
         </el-row>
     </div>
-    <el-dialog v-model="announcementDialogShow" footer-class="flex justify-content-flex-end" :width="600"
+    <el-dialog v-model="announcementDialogShow" footer-class="flex justify-content-flex-end" style="max-width: 600px;"
                @close="closeAnnouncementDialog()">
         <template #title>
             <el-space fill wrap class="w-full">

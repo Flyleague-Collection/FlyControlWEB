@@ -4,7 +4,7 @@ import {useRoute, useRouter} from "vue-router";
 import {computed, onMounted, Ref, ref} from "vue";
 import moment from "moment";
 import type {Moment} from "moment";
-import {ArrowLeft, Document} from "@element-plus/icons-vue";
+import {ArrowLeft, Document, Promotion} from "@element-plus/icons-vue";
 import config from "@/config/index.js";
 import ActivityPilotCard from "@/components/card/ActivityPilotCard.vue";
 import ActivityFacilityCard from "@/components/card/ActivityFacilityCard.vue";
@@ -91,12 +91,14 @@ const submitControllerSign = async (facilityId: number) => {
     }
 }
 
+const currentPilot = ref()
 const activitySignedCallsign = ref("")
 
 const alreadySignedPilot = computed(() => {
     // @ts-ignore
     const pilot = activity.value?.pilots?.find((element: ActivityPilotModel) => element.uid == userStore.userData.id) as ActivityPilotModel
     if (pilot) {
+        currentPilot.value = pilot;
         activitySignedCallsign.value = pilot.callsign;
         return true;
     }
@@ -134,6 +136,15 @@ const cancelSign = async (facilityId: number = 0) => {
         }
     }
     await getActivityInfo()
+}
+
+const toFlightPlanPage = () => {
+    router.push({
+        name: 'FlightPlan',
+        query: {
+            activity_plan: encodeURI(`(${activity.value.departure_airport}-${activity.value.arrival_airport}-${activity.value.route}-${activitySignedCallsign.value}-${currentPilot.value.aircraft_type})`)
+        }
+    })
 }
 </script>
 
@@ -188,6 +199,8 @@ const cancelSign = async (facilityId: number = 0) => {
                                 航路
                             </template>
                             {{ activity?.route }}
+                            <el-button :icon="Promotion" :text="true" @click="toFlightPlanPage()"
+                                       v-if="alreadySignedPilot"/>
                         </el-descriptions-item>
                         <el-descriptions-item>
                             <template #label>

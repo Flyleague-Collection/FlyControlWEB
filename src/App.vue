@@ -28,7 +28,7 @@ onMounted(() => {
             <router-view></router-view>
         </el-config-provider>
     </div>
-    <el-dialog v-model="showVersionDialog" @close="onShowVersionDialogClose()" :width="500"
+    <el-dialog v-model="showVersionDialog" @close="onShowVersionDialogClose()"
                :close-on-press-escape="false" :close-on-click-modal="false" :show-close="false">
         <template #header>
             飞控已更新至: {{ Global.version }}

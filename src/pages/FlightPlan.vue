@@ -589,16 +589,6 @@ const submitFlightPlan = async () => {
 
 onMounted(async () => {
     simbriefIdent.value = localStorage.getItem('simbrief');
-    const data = await getSelfFlightPlan();
-    if (data == null) {
-        return
-    }
-    flightPlanLocked.value = data.locked;
-    if (data.locked) {
-        showWarning("您的飞行计划已被锁定")
-        flightPlanFormData.value = fromFlightPlanModel(data);
-        return
-    }
     if (simbriefIdent.value == null) {
         simbriefIdent.value = ''
     }
@@ -611,6 +601,34 @@ onMounted(async () => {
         }
         flightPlanFormData.value.fuel_time = moment(route.query.fuel_time, "HHmm").toDate();
         return
+    }
+    if (route.query.activity_plan) {
+        const activity_plan = decodeURI(route.query.activity_plan)
+        const data = activity_plan.substring(1, activity_plan.length - 1).split("-")
+        if (data.length < 3) {
+            showError("参数解析失败")
+            return
+        }
+        flightPlanFormData.value.flight_rule = 'I';
+        flightPlanFormData.value.voice = '/V/';
+        flightPlanFormData.value.departure = data[0];
+        flightPlanFormData.value.arrival = data[1];
+        flightPlanFormData.value.route = data[2];
+        if (data.length >= 4) {
+            flightPlanFormData.value.callsign = data[3];
+        }
+        if (data.length >= 5) {
+            flightPlanFormData.value.flight_type = data[4];
+        }
+        return
+    }
+    const data = await getSelfFlightPlan();
+    if (data == null) {
+        return
+    }
+    flightPlanLocked.value = data.locked;
+    if (data.locked) {
+        showWarning("您的飞行计划已被锁定")
     }
     flightPlanFormData.value = fromFlightPlanModel(data);
 })

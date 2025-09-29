@@ -331,15 +331,3 @@ export class Permission {
         return this.permissionData;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-

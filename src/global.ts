@@ -1,6 +1,6 @@
 export const Global = {
-    version: "0.8.2",
-    whatsNew: "<p>1、添加公告栏</p><p>2、优化部分元素动画</p>",
+    version: "0.8.3",
+    whatsNew: "<p>1、添加活动页面与飞行计划页面的联动</p><p>2、修复报文查询在移动端显示问题</p><p>3、修复更新公告在移动端显示问题</p><p>4、为主页适配移动端显示</p>",
     controllerRecordTypes: [
         {
             label: "面试",
