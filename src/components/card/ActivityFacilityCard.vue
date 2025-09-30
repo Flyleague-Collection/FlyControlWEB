@@ -28,7 +28,7 @@ const userStore = useUserStore();
                 <div class="flex align-items-center">
                     <span class="callsign">{{ data.callsign }}</span>
                     <el-tag class="text-color-white border-none margin-left-10 display-over-425px" round
-                            :color="ratings[data.min_rating + 1].color">
+                            :color="config.ratings[data.min_rating + 1].color">
                         {{ ratings[data.min_rating + 1].short_name }}
                     </el-tag>
                     <el-tag v-if="data.tier2_tower" class="border-none margin-left-10 display-over-425px" effect="dark"

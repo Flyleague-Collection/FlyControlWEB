@@ -2,7 +2,7 @@ import moment from "moment";
 import {defineStore} from "pinia";
 import {ref} from "vue";
 
-import config, {airports} from "@/config/index.js";
+import config, {airports, facilities} from "@/config/index.js";
 import {useUserStore} from "@/store/user.js";
 import {showError} from "@/utils/message.js";
 import request from "@/api/request.js";
@@ -10,7 +10,8 @@ import {handleImageUrl} from "@/utils/utils.js";
 
 export const useActivityStore = defineStore("activity", () => {
     const userStore = useUserStore();
-    const airportsName = ref<{ value: string }[]>(airports)
+    const airportsName = ref<Airports>(airports)
+    const facilitiesName = ref<Facilities>(facilities)
 
     const querySearch = (queryString: string, cb: any) => {
         if (queryString == "") {
@@ -19,6 +20,14 @@ export const useActivityStore = defineStore("activity", () => {
         const results = airportsName.value.filter((e: {
             value: string
         }) => e.value.indexOf(queryString.toUpperCase()) === 0)
+        cb(results)
+    }
+
+    const queryFacilities = (queryString: string, cb: any) => {
+        if (queryString == "") {
+            cb(facilitiesName.value)
+        }
+        const results = facilitiesName.value.filter((e: Facility) => e.value.indexOf(queryString.toUpperCase()) === 0)
         cb(results)
     }
 
@@ -123,6 +132,7 @@ export const useActivityStore = defineStore("activity", () => {
 
     return {
         querySearch,
+        queryFacilities,
         translateActivityData,
         getActivities,
         getActivitiesPage,

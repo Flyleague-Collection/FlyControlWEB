@@ -26,6 +26,16 @@ type Config = {
 
 type Airports = { value: string }[]
 
+type Facility = {
+    value: string;
+    callsign: string;
+    frequency: string;
+    tier2: boolean;
+    min_ratings: number;
+}
+
+type Facilities = Facility[]
+
 type StaffInfo = {
     nickname: string;
     qq: string;

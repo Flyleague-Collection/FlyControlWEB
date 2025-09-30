@@ -58,7 +58,7 @@ const cancelBtn = () => {
 
 <template>
     <ActivityEditCard v-model="activity" :has-reset-button="true" @confirm-event="createNewActivity"
-                      @reset-event="reset" @cancel-event="cancelBtn"/>
+                      @reset-event="reset" @cancel-event="cancelBtn" cache-key="activity-create-draft"/>
 </template>
 
 <style lang="scss" scoped>

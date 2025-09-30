@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ArrowLeft, Check, Close, Plus, RefreshLeft} from "@element-plus/icons-vue";
+import {ArrowLeft, Check, Close, DocumentAdd, Plus, RefreshLeft} from "@element-plus/icons-vue";
 import config from "@/config/index.js";
 import {useRouter} from "vue-router";
 import {ModelRef, onActivated, onBeforeUpdate, onMounted, onUpdated, reactive, Ref, ref} from "vue";
@@ -17,6 +17,7 @@ import {
 import {showError, showSuccess} from "@/utils/message.js";
 import {sizeToString} from "@/utils/utils.js";
 import {useServerConfigStore} from "@/store/server_config.js";
+import {ConfirmDialogInstance} from "@/components/dialog/ConfirmDialog.js";
 
 const router = useRouter();
 const serverConfig = useServerConfigStore();
@@ -27,11 +28,16 @@ const cancelConfirmDialog = ref(false)
 const uploading = ref(false)
 // @ts-ignore
 const model: ModelRef<ActivityModel> = defineModel()
-defineProps({
+const props = defineProps({
     hasResetButton: {
         type: Boolean,
         required: false,
         default: false
+    },
+    cacheKey: {
+        type: String,
+        required: false,
+        default: 'drafts'
     }
 })
 const emits = defineEmits<{
@@ -40,7 +46,7 @@ const emits = defineEmits<{
     (e: "CancelEvent"): void
 }>()
 const activityFormRef = ref<FormInstance>()
-const facilityFormRefs = ref<FormInstance[]>([]);
+const facilityFormRefs: Ref<FormInstance[]> = ref([]);
 const uploadRef = ref<UploadInstance>()
 const selectedImage = ref<UploadUserFile | null>(null)
 const fileList = ref<UploadUserFile[]>([])
@@ -162,6 +168,7 @@ const confirmBtnClick = async () => {
         model.value.image_url = filePath;
     }
     await emits("ConfirmEvent", model.value)
+    localStorage.removeItem(props.cacheKey)
     uploading.value = false
 }
 
@@ -215,6 +222,37 @@ const handleExceed = (files: File[], _) => {
     file.uid = genFileId()
     uploadRef.value!.handleStart(file)
 }
+
+const saveDraft = () => {
+    localStorage.setItem(props.cacheKey, JSON.stringify(model.value))
+    showSuccess("草稿保存成功")
+}
+
+const drafts = ref('')
+const confirmLoadDraftRef: Ref<ConfirmDialogInstance> = ref()
+
+const loadDraft = () => {
+    model.value = JSON.parse(drafts.value)
+    showSuccess("加载成功")
+    drafts.value = ''
+    localStorage.removeItem(props.cacheKey)
+}
+
+const handleFacilitySelect = (index: number, value: Facility) => {
+    const target = model.value.facilities[index];
+    target.callsign = value.callsign;
+    target.frequency = value.frequency;
+    target.min_rating = value.min_ratings;
+    target.tier2_tower = value.tier2;
+    facilityFormRefs.value[index].clearValidate();
+}
+
+onMounted(() => {
+    drafts.value = localStorage.getItem(props.cacheKey)
+    if (drafts.value) {
+        confirmLoadDraftRef.value?.show();
+    }
+})
 </script>
 
 <template>
@@ -289,7 +327,9 @@ const handleExceed = (files: File[], _) => {
                         <el-form :model="item" :rules="facilityRules" :ref="el => setFormRef(el, index)">
                             <el-form-item prop="callsign">
                                 <template #label>呼号</template>
-                                <el-input v-model="item.callsign"/>
+                                <el-autocomplete v-model="item.callsign"
+                                                 :fetch-suggestions="activityStore.queryFacilities"
+                                                 @select="facility => handleFacilitySelect(index, facility)"/>
                             </el-form-item>
                             <el-form-item prop="frequency">
                                 <template #label>频率</template>
@@ -312,6 +352,7 @@ const handleExceed = (files: File[], _) => {
         </el-card>
         <template #footer>
             <el-button :icon="Check" type="success" @click="confirmBtnClick" :loading="uploading">保存</el-button>
+            <el-button :icon="DocumentAdd" type="primary" @click="saveDraft()" :loading="uploading">保存草稿</el-button>
             <el-button :icon="RefreshLeft" type="warning" @click="resetConfirmDialog = true" :loading="uploading"
                        v-if="hasResetButton">
                 重置
@@ -320,6 +361,11 @@ const handleExceed = (files: File[], _) => {
             </el-button>
         </template>
     </el-card>
+    <ConfirmDialog ref="confirmLoadDraftRef"
+                   body-content="发现存储的草稿, 要加载草稿吗？"
+                   header-content="发现草稿"
+                   @confirm-event="loadDraft()"
+                   @cancel-event="localStorage.removeItem(cacheKey)"/>
     <ConfirmDialog v-model="resetConfirmDialog" header-content="重置已输入的内容"
                    body-content="所有未保存的内容将会丢失, 确认继续吗？"
                    v-if="hasResetButton"

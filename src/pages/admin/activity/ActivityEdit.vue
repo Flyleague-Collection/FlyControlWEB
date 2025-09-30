@@ -30,7 +30,8 @@ const updateActivity = async (_) => {
 </script>
 
 <template>
-    <ActivityEditCard v-model="activity" @confirm-event="updateActivity" @cancel-event="cancelBtn"/>
+    <ActivityEditCard v-model="activity" @confirm-event="updateActivity" @cancel-event="cancelBtn"
+                      cache-key="activity-edit-draft"/>
 </template>
 
 <style lang="scss" scoped>

@@ -1,6 +1,6 @@
 export const Global = {
-    version: "0.8.3",
-    whatsNew: "<p>1、添加活动页面与飞行计划页面的联动</p><p>2、修复报文查询在移动端显示问题</p><p>3、修复更新公告在移动端显示问题</p><p>4、为主页适配移动端显示</p>",
+    version: "0.8.4",
+    whatsNew: "<p>1、修复管制员无法报名问题</p><p>2、为活动编辑页面添加保存草稿功能</p><p>3、添加了席位的自动补全</p>",
     controllerRecordTypes: [
         {
             label: "面试",
