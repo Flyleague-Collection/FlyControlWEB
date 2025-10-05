@@ -30,6 +30,7 @@ export default defineConfig({
             '.json',
             '.jsx',
             '.mjs',
+            '.d.ts',
             '.ts',
             '.tsx',
             '.vue'

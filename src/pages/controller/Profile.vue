@@ -1,81 +1,67 @@
 <script setup lang="ts">
-import {useUserStore} from "@/store/user.js";
-import config from "@/config/index.js";
-import {useServerConfigStore} from "@/store/server_config.js";
-import {computed, onMounted, reactive, Ref, ref} from "vue";
-import {CircleCheckFilled, Plus} from "@element-plus/icons-vue";
-import request from "@/api/request.js";
 import moment from "moment";
-import AxiosXHR = Axios.AxiosXHR;
-import FormDialog from "@/components/dialog/FormDialog.vue";
-import {
-    FormInstance,
-    FormRules,
-    genFileId,
-    UploadFile,
-    UploadInstance,
-    UploadRawFile,
-    UploadUserFile
-} from "element-plus";
-import {showError, showSuccess, showWarning} from "@/utils/message.js";
-import {useActivityStore} from "@/store/activity.js";
-import {sizeToString} from "@/utils/utils.js";
-import {Global, Ratings} from "@/global.js";
+import {computed, onMounted, Ref, ref} from "vue";
+
+import ApiController from "@/api/controller.js";
+import ApiUser from "@/api/user.js";
+import type {PageListResponse} from "@/components/card/PageListCard.js";
 import PageListCard from "@/components/card/PageListCard.vue";
-import {PageListResponse} from "@/components/card/PageListCard.js";
+import config from "@/config/index.js";
+import {Global, Ratings} from "@/global.js";
+import {useServerConfigStore} from "@/store/server_config.js";
+import {useUserStore} from "@/store/user.js";
+import {formatCid} from "@/utils/utils.js";
 
 const userStore = useUserStore();
 const serverConfigStore = useServerConfigStore();
 const userData = userStore.userData;
-
 const ratings = computed(() => {
-    const rating = serverConfigStore.ratings[userData.rating + 1]
-    return `${rating.short_name}/${rating.long_name}`
+    const rating = serverConfigStore.ratings[userData.rating + 1];
+    return `${rating.short_name}/${rating.long_name}`;
 })
-
-const historyData: Ref<GetUserHistoryResponse> = ref({
+const historyData: Ref<UserHistoryData> = ref({
     total_pilot_time: 0,
     total_atc_time: 0,
     controllers: [],
     pilots: []
 });
+const loadingHistoryData = ref(false);
 
 onMounted(async () => {
-    const response = await request.get(`/users/histories/self`) as AxiosXHR<GetUserHistoryResponse>
-    historyData.value = response.data
-    for (const controller of historyData.value.controllers) {
-        controller.start_time = moment(controller.start_time).format('YYYY-MM-DD HH:mm:ss');
-        controller.end_time = moment(controller.end_time).format('YYYY-MM-DD HH:mm:ss');
+    loadingHistoryData.value = true;
+    const data = await ApiUser.getUserHistories();
+    if (data == null) {
+        loadingHistoryData.value = false;
+        return;
     }
+    historyData.value = data;
+    loadingHistoryData.value = false;
 })
 
 const getColor = (selfRating: Ratings): string => {
-    let color = 'danger';
+    let color = "danger";
     if (userData.rating >= selfRating) {
-        color = 'success';
+        color = "success";
     }
     if (userData.rating == selfRating) {
         if (userData.under_monitor) {
-            color = 'warning';
+            color = "warning";
         }
         if (userData.under_solo) {
-            color = 'primary';
+            color = "primary";
         }
     }
     return color;
 }
 
 const fetchControllerRecord = async (page: number, pageSize: number): PageListResponse<ControllerRecordModel> => {
-    const data: PageListResponse<ControllerRecordModel> = {
-        data: [],
-        total: 0
+    const result: PageListResponse<ControllerRecordModel> = {data: [], total: 0}
+    const data = await ApiController.getSelfRecords(page, pageSize);
+    if (data != null) {
+        result.data = data.items;
+        result.total = data.total;
     }
-    const response = await request.get(`/controllers/records/self?page_number=${page}&page_size=${pageSize}`) as AxiosXHR<PageDataResponse<ControllerRecordModel>>;
-    if (response.status == 200) {
-        data.data = response.data.items
-        data.total = response.data.total
-    }
-    return data;
+    return result;
 }
 </script>
 
@@ -85,12 +71,11 @@ const fetchControllerRecord = async (page: number, pageSize: number): PageListRe
             <el-col :xs="24" :sm="12" :md="6" :lg="5" :xl="5">
                 <el-card>
                     <div class="flex flex-direction-column align-items-center">
-                        <el-avatar v-if="userData.avatar_url != ''" :src="userData.avatar_url"
-                                   :size="100"></el-avatar>
-                        <el-avatar v-else :size="100">{{ userData.cid }}</el-avatar>
+                        <el-avatar v-if="userData.avatar_url != ''" :src="userData.avatar_url" :size="100"/>
+                        <el-avatar v-else :size="100">{{ formatCid(userData.cid) }}</el-avatar>
                         <div class="flex flex-direction-column margin-left-10 align-items-center">
                             <span class="font-size-15rem">{{ userData.username }}</span>
-                            <span class="font-size-12rem">CID: {{ userData.cid }}</span>
+                            <span class="font-size-12rem">CID: {{ formatCid(userData.cid) }}</span>
                             <el-space direction="vertical">
                                 <el-space wrap class="justify-content-center">
                                     <el-space wrap class="justify-content-center">
@@ -130,9 +115,9 @@ const fetchControllerRecord = async (page: number, pageSize: number): PageListRe
                         <span>管制记录(最近10次)</span>
                     </template>
                     <el-table v-if="historyData.controllers.length > 0" :data="historyData.controllers">
-                        <el-table-column prop="callsign" label="席位"></el-table-column>
-                        <el-table-column prop="start_time" label="上线时间"></el-table-column>
-                        <el-table-column prop="end_time" label="下线时间"></el-table-column>
+                        <el-table-column prop="callsign" label="席位"/>
+                        <el-table-column prop="start_time" label="上线时间"/>
+                        <el-table-column prop="end_time" label="下线时间"/>
                         <el-table-column prop="online_time" label="在线时间">
                             <template #default="scope">
                                 {{ (scope.row.online_time / 3600.0).toFixed(2) }} h

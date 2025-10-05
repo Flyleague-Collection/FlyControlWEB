@@ -2,61 +2,55 @@ import {Ref, ref} from "vue";
 import {useRouter} from "vue-router";
 import {defineStore} from "pinia";
 import moment from "moment";
+import {refManualReset, useStorage} from '@vueuse/core';
 
 import {Permission} from "@/utils/permission.js";
-import request from "@/api/request.js";
-import {handleImageUrl} from "@/utils/utils.js";
+import ApiUser from "@/api/user.js";
 
 export const useUserStore = defineStore("UserStore", () => {
     const isLogin: Ref<boolean> = ref(false);
-    const userData: Ref<UserModel> = ref(null);
-    const token: Ref<string> = ref("");
-    const flushToken: Ref<string> = ref("");
+    const userData = refManualReset<UserModel>({
+        id: 0,
+        username: "",
+        email: "",
+        cid: 0,
+        avatar_url: "",
+        qq: 0,
+        rating: 0,
+        guest: false,
+        under_monitor: false,
+        under_solo: false,
+        tier2: false,
+        solo_until: moment().toDate(),
+        permission: 0n,
+        total_atc_time: 0,
+        total_pilot_time: 0,
+        register_time: moment().toDate()
+    });
+    const token: Ref<string> = useStorage("token", "", localStorage, {initOnMounted: true});
+    const flushToken: Ref<string> = useStorage("flush_token", "", localStorage, {initOnMounted: true});
+    const permission: Ref<Permission> = ref<Permission>(new Permission(0n));
     const router = useRouter();
-    // @ts-ignore
-    const permission: Ref<Permission> = ref();
-    let timer: NodeJS.Timeout | null = null;
-
-    const decodeResponse = (response: LoginResponse) => {
-        isLogin.value = true;
-        userData.value = response.user as UserModel;
-        userData.value.avatar_url = handleImageUrl(userData.value.avatar_url);
-        permission.value = new Permission(BigInt(userData.value.permission))
-        token.value = response.token as string;
-        flushToken.value = response.flush_token as string;
-        localStorage.setItem("token", token.value);
-        localStorage.setItem("flush_token", flushToken.value);
-    }
+    let timer: Nullable<NodeJS.Timeout> = null;
 
     const initUser = async () => {
-        const storeToken = localStorage.getItem('token');
-        const storeFlushToken = localStorage.getItem('flush_token');
+        const storeToken = token.value;
+        const storeFlushToken = flushToken.value;
         if (storeFlushToken) {
             if (storeToken && verifyTokenExpired(storeToken)) {
-                const response = await request.get("/users/profiles/self", {
-                    headers: {
-                        Authorization: `Bearer ${storeToken}`
-                    }
-                })
-                if (response.status == 200) {
-                    isLogin.value = true;
-                    token.value = storeToken;
-                    flushToken.value = storeFlushToken;
-                    userData.value = response.data as UserModel;
-                    userData.value.avatar_url = handleImageUrl(userData.value.avatar_url);
-                    permission.value = new Permission(BigInt(userData.value.permission));
-                    localStorage.setItem("token", token.value);
-                    localStorage.setItem("flush_token", flushToken.value);
-                } else {
-                    logout();
+                const data = await ApiUser.getSelfProfileWithToken(storeToken);
+                if (data == null) {
+                    await logout();
                 }
+                isLogin.value = true;
+                userData.value = data;
+                permission.value = new Permission(BigInt(userData.value.permission));
             } else if (verifyTokenExpired(storeFlushToken)) {
-                flushToken.value = storeFlushToken;
-                if (await flushAccessToken(true)) {
-                    isLogin.value = true;
-                } else {
-                    logout();
+                if (!(await flushAccessToken(true))) {
+                    await logout();
                 }
+            } else {
+                await logout();
             }
         }
         setFlushTokenTimer();
@@ -74,21 +68,14 @@ export const useUserStore = defineStore("UserStore", () => {
 
     const flushAccessToken = async (first: boolean) => {
         isLogin.value = false;
-        const response = await request.get<LoginResponse>(`/users/sessions?first=${first}`, {
-            headers: {
-                Authorization: `Bearer ${flushToken.value}`
-            }
-        })
-        if (response.status == 200) {
-            userData.value = response.data.user;
-            userData.value.avatar_url = handleImageUrl(userData.value.avatar_url);
+        const data = await ApiUser.flushAccessToken(flushToken.value, first);
+        if (data != null) {
+            userData.value = data.user;
             permission.value = new Permission(BigInt(userData.value.permission));
-            token.value = response.data.token;
-            if (response.data.flush_token != "") {
-                flushToken.value = response.data.flush_token;
+            token.value = data.token;
+            if (data.flush_token != "") {
+                flushToken.value = data.flush_token;
             }
-            localStorage.setItem("token", token.value);
-            localStorage.setItem("flush_token", flushToken.value);
             isLogin.value = true;
         }
         timer = null;
@@ -102,98 +89,30 @@ export const useUserStore = defineStore("UserStore", () => {
         return time.isAfter(moment());
     }
 
-    const login = async (data: LoginForm): Promise<boolean> => {
-        const response = await request.post<LoginResponse>("/users/sessions", data);
-        if (response.status == 200) {
-            decodeResponse(response.data);
-            timer = null;
-            setFlushTokenTimer();
-            return true;
+    const login = async (username: string, password: string): Promise<boolean> => {
+        const data = await ApiUser.userLogin(username, password)
+        if (data == null) {
+            return false;
         }
-        return false;
+        isLogin.value = true;
+        userData.value = data.user;
+        permission.value = new Permission(BigInt(userData.value.permission))
+        token.value = data.token;
+        flushToken.value = data.flush_token;
+        timer = null;
+        setFlushTokenTimer();
+        return true;
     }
 
-    const register = async (data: RegisterForm): Promise<boolean> => {
-        const response = await request.post<RegisterResponse>("/users", data);
-        if (response.status == 200) {
-            decodeResponse(response.data);
-            return true;
-        }
-        return false;
-    }
-
-    const sendEmailCode = async (data: EmailCodeForm): Promise<boolean> => {
-        const response = await request.post("/codes", data);
-        return response.status == 200;
-    }
-
-    const logout = () => {
+    const logout = async () => {
         isLogin.value = false;
-        userData.value = {} as UserModel;
-        token.value = "";
-        flushToken.value = "";
-        localStorage.removeItem("token");
-        localStorage.removeItem("flush_token");
+        userData.reset();
+        token.value = null;
+        flushToken.value = null;
         if (timer != null) {
             clearTimeout(timer);
         }
-        router.push("/");
-    }
-
-    const getUserByUid = async (uid: number): Promise<UserModel | null> => {
-        const response = await request.get<UserModel>(`/users/profiles/${uid}`);
-        if (response.status == 200) {
-            return response.data;
-        }
-        return null;
-    }
-
-    const getUserPage = async (page: number, pageSize: number): Promise<GetUsersPageResponse | null> => {
-        const response = await request.get<GetUsersPageResponse>(`/users?page_number=${page}&page_size=${pageSize}`);
-        if (response.status === 200) {
-            return response.data;
-        }
-        return null;
-    }
-
-    const getControllerPage = async (page: number, pageSize: number): Promise<GetUsersPageResponse | null> => {
-        const response = await request.get<GetUsersPageResponse>(`/controllers?page_number=${page}&page_size=${pageSize}`);
-        if (response.status === 200) {
-            return response.data;
-        }
-        return null;
-    }
-
-    const checkCID = async (cid: number): Promise<boolean> => {
-        if (cid <= 0) {
-            return true;
-        }
-        const response = await request.get(`/users/availability?cid=${cid}`);
-        return response.data;
-    }
-
-    const checkUsername = async (username: string): Promise<boolean> => {
-        if (username == "") {
-            return true;
-        }
-        const response = await request.get(`/users/availability?username=${username}`);
-        return response.data;
-    }
-
-    const checkEmail = async (email: string): Promise<boolean> => {
-        if (email == "") {
-            return true;
-        }
-        const response = await request.get(`/users/availability?email=${email}`);
-        return response.data;
-    }
-
-    const updateUserInformation = async (uid: number, data: RequestUpdateUserProfile): Promise<UserModel | null> => {
-        const response = await request.patch<UserModel>(`/users/profiles/${uid}`, data);
-        if (response.status == 200) {
-            return response.data;
-        }
-        return null;
+        await router.push("/");
     }
 
     return {
@@ -204,15 +123,6 @@ export const useUserStore = defineStore("UserStore", () => {
         permission,
         initUser,
         login,
-        register,
-        sendEmailCode,
-        logout,
-        getUserPage,
-        getControllerPage,
-        checkCID,
-        checkUsername,
-        checkEmail,
-        getUserByUid,
-        updateUserInformation
+        logout
     }
 })

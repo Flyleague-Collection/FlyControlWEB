@@ -2,8 +2,7 @@ import axios from 'axios'
 
 import config from "@/config/index.js";
 import {useUserStore} from "@/store/user.js";
-import {showApiErrorMsg, showError} from "@/utils/message.js";
-import AxiosXHR = Axios.AxiosXHR;
+import {showError} from "@/utils/message.js";
 
 const request = axios.create({
     baseURL: config.backend_url,

@@ -28,8 +28,16 @@
         },
         "allowSyntheticDefaultImports": true,
         "types": [
-            "element-plus/global",
-            "node"
+            "node",
+            "axios",
+            "marked",
+            "moment",
+            "lodash",
+            "lodash-es",
+            "estree"
+        ],
+        "typeRoots": [
+            "./node_modules/@types"
         ]
     },
     "include": [

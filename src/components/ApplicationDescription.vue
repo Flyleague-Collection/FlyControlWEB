@@ -5,7 +5,7 @@ defineProps<{ application?: ControllerApplicationModel, title?: string }>();
 </script>
 
 <template>
-    <el-descriptions class="information" :column="1" border :title="title ? title : '提交的申请信息'" :label-width="200">
+    <el-descriptions class="information" :column="1" border :title="title ? title : '提交的申请信息'">
         <el-descriptions-item label="申请ID">
             {{ application?.id }}
         </el-descriptions-item>
@@ -41,5 +41,11 @@ defineProps<{ application?: ControllerApplicationModel, title?: string }>();
 <style scoped>
 .information {
     margin: 0 20%;
+}
+
+@media (max-width: 600px) {
+    .information {
+        margin: 0;
+    }
 }
 </style>

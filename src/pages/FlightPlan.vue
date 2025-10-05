@@ -1,20 +1,22 @@
 <script setup lang="ts">
+import axios from "axios";
+import {FormInstance, FormItemInstance, FormRules} from "element-plus";
 import {Check, Delete, Download, Share} from "@element-plus/icons-vue";
-import {onMounted, Ref, ref} from "vue";
-import moment from "moment";
-import {useRoute} from "vue-router";
 import {cloneDeep, join} from "lodash";
 import {padStart} from "lodash-es";
-import {showError, showSuccess, showWarning} from "@/utils/message.js";
-import {useClipboard} from "@vueuse/core";
-import request from "@/api/request.js";
-import axios from "axios";
-import AxiosXHR = Axios.AxiosXHR;
-import FormDialog from "@/components/dialog/FormDialog.vue";
-import {FormDialogInstance} from "@/components/dialog/FormDialog.js";
-import {FormInstance, FormItemInstance, FormRules} from "element-plus";
+import moment from "moment";
+import {onMounted, Ref, ref} from "vue";
+import {refManualReset, useClipboard, useStorage} from "@vueuse/core";
+import {useRoute} from "vue-router";
+
+import ApiFlightPlan from "@/api/flightplan.js";
+import type {ConfirmDialogInstance} from "@/components/dialog/ConfirmDialog.js";
 import ConfirmDialog from "@/components/dialog/ConfirmDialog.vue";
-import {ConfirmDialogInstance} from "@/components/dialog/ConfirmDialog.js";
+import type {FormDialogInstance} from "@/components/dialog/FormDialog.js";
+import FormDialog from "@/components/dialog/FormDialog.vue";
+import {showError, showSuccess, showWarning} from "@/utils/message.js";
+
+import AxiosXHR = Axios.AxiosXHR;
 
 const route = useRoute();
 
@@ -88,42 +90,6 @@ type FlightPlanData = {
     voice: string;
 }
 const defaultFlightPlanData = {
-    air_time: "",
-    alternate: "",
-    altitude: 0,
-    arrival: "",
-    callsign: "",
-    code: "",
-    com: "",
-    dat: "",
-    departure: "",
-    departure_time: "",
-    dof: undefined,
-    eet: "",
-    equipment_code: "",
-    flight_rule: "",
-    flight_type: "",
-    fuel_time: "",
-    nav: "",
-    opr: "",
-    orgn: "",
-    pbn: "",
-    per: "",
-    ralt: "",
-    reg: "",
-    rmk: "",
-    route: "",
-    rvr: "",
-    sel: "",
-    sur: "",
-    talt: "",
-    tas: 0,
-    transponder_code: "",
-    voice: "",
-    wake_category: ""
-}
-
-const flightPlanFormData: Ref<FlightPlanData> = ref({
     callsign: '',
     flight_rule: 'I',
     flight_type: '',
@@ -157,7 +123,9 @@ const flightPlanFormData: Ref<FlightPlanData> = ref({
     sur: "",
     talt: "",
     voice: "/V/"
-})
+}
+
+const flightPlanFormData = refManualReset<FlightPlanData>(defaultFlightPlanData);
 
 const flightPlanFormRule: Ref<FormRules<FlightPlanData>> = ref({
     callsign: [
@@ -201,66 +169,66 @@ const parseAltitude = (altitude: string): number => {
 const encodeRemarks = (data: FlightPlanData): string => {
     const remarks: string[] = [];
     remarks.push(data.voice);
-    remarks.push(`DOF/${moment(data.dof).format("YYMMDD")}`)
+    remarks.push(`DOF/${moment(data.dof).format("YYMMDD")}`);
 
     if (data.pbn != "") {
-        remarks.push(`PBN/${data.pbn}`)
+        remarks.push(`PBN/${data.pbn}`);
     }
 
     if (data.nav != "") {
-        remarks.push(`NAV/${data.nav}`)
+        remarks.push(`NAV/${data.nav}`);
     }
 
     if (data.dat != "") {
-        remarks.push(`DAT/${data.dat}`)
+        remarks.push(`DAT/${data.dat}`);
     }
 
     if (data.sur != "") {
-        remarks.push(`SUR/${data.sur}`)
+        remarks.push(`SUR/${data.sur}`);
     }
 
     if (data.reg != "") {
-        remarks.push(`REG/${data.reg}`)
+        remarks.push(`REG/${data.reg}`);
     }
 
     if (data.sel != "") {
-        remarks.push(`SEL/${data.sel}`)
+        remarks.push(`SEL/${data.sel}`);
     }
 
     if (data.code != "") {
-        remarks.push(`CODE/${data.code}`)
+        remarks.push(`CODE/${data.code}`);
     }
 
     if (data.rvr != "") {
-        remarks.push(`RVR/${data.rvr}`)
+        remarks.push(`RVR/${data.rvr}`);
     }
 
     if (data.opr != "") {
-        remarks.push(`OPR/${data.opr}`)
+        remarks.push(`OPR/${data.opr}`);
     }
 
     if (data.per != "") {
-        remarks.push(`PER/${data.per}`)
+        remarks.push(`PER/${data.per}`);
     }
 
     if (data.ralt != "") {
-        remarks.push(`RALT/${data.ralt}`)
+        remarks.push(`RALT/${data.ralt}`);
     }
 
     if (data.talt != "") {
-        remarks.push(`TALT/${data.talt}`)
+        remarks.push(`TALT/${data.talt}`);
     }
 
     if (data.orgn != "") {
-        remarks.push(`ORGN/${data.orgn}`)
+        remarks.push(`ORGN/${data.orgn}`);
     }
 
     if (data.eet != "") {
-        remarks.push(`EET/${data.eet}`)
+        remarks.push(`EET/${data.eet}`);
     }
 
     if (data.rmk != "") {
-        remarks.push(`RMK/${data.rmk}`)
+        remarks.push(`RMK/${data.rmk}`);
     }
 
     return join(remarks, " ");
@@ -309,21 +277,21 @@ const toFlightPlanModel = (data: FlightPlanData): FlightPlanModel => {
 }
 
 const decodeAircraftType = (aircraft: string, data: FlightPlanData) => {
-    const temp = aircraft.split("-")
+    const temp = aircraft.split("-");
     if (temp.length > 0) {
-        const d = temp[0].split("/")
+        const d = temp[0].split("/");
         data.flight_type = d[0]
         if (d.length > 1) {
-            data.wake_category = d[1]
+            data.wake_category = d[1];
         }
     }
     if (temp.length > 1) {
-        const d = temp[1].split("/")
+        const d = temp[1].split("/");
         if (d.length > 0) {
-            data.equipment_code = d[0]
+            data.equipment_code = d[0];
         }
         if (d.length > 1) {
-            data.transponder_code = d[1]
+            data.transponder_code = d[1];
         }
     }
 }
@@ -387,7 +355,7 @@ const setTargetData = (data: FlightPlanData, target: string, d: string) => {
 }
 
 const decodeRemarks = (remarks: string, data: FlightPlanData) => {
-    const remarkData = remarks.split(" ")
+    const remarkData = remarks.split(" ");
     for (let i = 0; i < remarkData.length; i++) {
         const remark = remarkData[i];
         const temp = remark.split("/");
@@ -404,7 +372,7 @@ const decodeRemarks = (remarks: string, data: FlightPlanData) => {
 }
 
 const fromFlightPlanModel = (data: FlightPlanModel): FlightPlanData => {
-    const result: FlightPlanData = cloneDeep(defaultFlightPlanData)
+    const result: FlightPlanData = cloneDeep(defaultFlightPlanData);
     result.callsign = data.callsign;
     result.flight_rule = data.flight_rules;
     decodeAircraftType(data.aircraft, result);
@@ -433,63 +401,63 @@ const toICAOPlan = (data: FlightPlanData): string => {
 }
 
 const fromICAOPlan = (raw: string): FlightPlanData => {
-    const result: FlightPlanData = cloneDeep(defaultFlightPlanData)
-    raw = raw.substring(1, raw.length - 1)
-    let lines = raw.split(" -")
+    const result: FlightPlanData = cloneDeep(defaultFlightPlanData);
+    raw = raw.substring(1, raw.length - 1);
+    let lines = raw.split(" -");
     if (lines.length < 6) {
-        lines = lines[0].split("\n-")
+        lines = lines[0].split("\n-");
         if (lines.length < 6) {
-            showError("飞行计划格式错误")
-            return
+            showError("飞行计划格式错误");
+            return;
         }
     }
-    const callsignLine = lines[0].split("-")
+    const callsignLine = lines[0].split("-");
     if (callsignLine.length < 3) {
-        showError("飞行计划格式错误")
-        return
+        showError("飞行计划格式错误");
+        return;
     }
-    result.callsign = callsignLine[1]
-    decodeAircraftType(lines[1], result)
-    const departureLine = lines[2]
-    result.departure = departureLine.substring(0, 4)
+    result.callsign = callsignLine[1];
+    decodeAircraftType(lines[1], result);
+    const departureLine = lines[2];
+    result.departure = departureLine.substring(0, 4);
     result.departure_time = moment.utc(departureLine.substring(4), "HHmm").toDate();
-    const routeLine = lines[3].split(" ")
+    const routeLine = lines[3].split(" ");
     if (routeLine.length < 2) {
-        showError("飞行计划格式错误")
-        return
+        showError("飞行计划格式错误");
+        return;
     }
     if (routeLine[0].includes("F")) {
-        const flightInfo = routeLine[0].split("F")
+        const flightInfo = routeLine[0].split("F");
         if (flightInfo.length < 2) {
-            showError("飞行计划格式错误")
-            return
+            showError("飞行计划格式错误");
+            return;
         }
-        result.tas = Number(flightInfo[0].substring(1))
+        result.tas = Number(flightInfo[0].substring(1));
         result.altitude = Number(flightInfo[1]) * 100;
     } else if (routeLine[0].includes("S")) {
-        const flightInfo = routeLine[0].split("S")
+        const flightInfo = routeLine[0].split("S");
         if (flightInfo.length < 2) {
-            showError("飞行计划格式错误")
-            return
+            showError("飞行计划格式错误");
+            return;
         }
-        result.tas = (Number(flightInfo[0].substring(1)) / 1.852).toFixed(0)
+        result.tas = (Number(flightInfo[0].substring(1)) / 1.852).toFixed(0);
         result.altitude = (Number(flightInfo[1]) * 10 * 3.281 / 100).toFixed(0) * 100;
     }
     result.route = join(routeLine.slice(1), " ").replace('\n', '');
-    const destLine = lines[4].split(" ")
+    const destLine = lines[4].split(" ");
     if (destLine.length < 2) {
-        showError("飞行计划格式错误")
-        return
+        showError("飞行计划格式错误");
+        return;
     }
-    result.arrival = destLine[0].substring(0, 4)
+    result.arrival = destLine[0].substring(0, 4);
     result.air_time = moment(destLine[0].substring(4), "HHmm").toDate();
-    result.alternate = destLine[1]
-    decodeRemarks(lines[5], result)
-    return result
+    result.alternate = destLine[1];
+    decodeRemarks(lines[5], result);
+    return result;
 }
 
-const sharedUrl = ref('')
-const {copy, copied} = useClipboard({source: sharedUrl})
+const sharedUrl = ref('');
+const {copy, copied} = useClipboard({source: sharedUrl});
 
 const sharePlans = () => {
     const currentUrl = document.location.href.split("?")[0];
@@ -497,27 +465,19 @@ const sharePlans = () => {
     sharedUrl.value = `${currentUrl}?raw=${encodeURI(plan)}&fuel_time=${moment(flightPlanFormData.value.fuel_time).format("HHmm")}`;
     copy(sharedUrl.value);
     if (copied) {
-        showSuccess("复制分享链接成功")
+        showSuccess("复制分享链接成功");
     }
 }
 
-const getSelfFlightPlan = async (): Promise<FlightPlanModel | null> => {
-    const response = await request.get(`/plans/self`) as AxiosXHR<FlightPlanData>
-    if (response.status == 200) {
-        return response.data;
-    }
-    return null;
-}
-
-const icaoPlan = ref('')
-const importFormDialogRef: Ref<FormDialogInstance> = ref()
-const importFormInputRef: Ref<FormItemInstance> = ref()
+const icaoPlan = ref('');
+const importFormDialogRef: Ref<FormDialogInstance> = ref();
+const importFormInputRef: Ref<FormItemInstance> = ref();
 
 const parseICAOPlan = () => {
     importFormInputRef.value.clearValidate()
     if (icaoPlan.value == "") {
         importFormInputRef.value.validateState = 'error';
-        importFormInputRef.value.validateMessage = '此条目不能为空'
+        importFormInputRef.value.validateMessage = '此条目不能为空';
         return
     }
     flightPlanFormData.value = fromICAOPlan(icaoPlan.value);
@@ -528,22 +488,21 @@ const parseICAOPlan = () => {
     importFormDialogRef.value?.hide();
 }
 
-const simbriefIdent = ref('')
-const askSimbriefDialogRef: Ref<FormDialogInstance> = ref()
-const simbriefLoading = ref(false)
+const simbriefIdent = useStorage("simbrief", "");
+const askSimbriefDialogRef: Ref<FormDialogInstance> = ref();
+const simbriefLoading = ref(false);
 
 const getFromSimbrief = async () => {
     simbriefLoading.value = true;
-    localStorage.setItem('simbrief', simbriefIdent.value)
     let url: string;
     if (isNaN(parseInt(simbriefIdent.value))) {
-        url = `https://www.simbrief.com/api/xml.fetcher.php?username=${simbriefIdent.value}&json=v2`
+        url = `https://www.simbrief.com/api/xml.fetcher.php?username=${simbriefIdent.value}&json=v2`;
     } else {
-        url = `https://www.simbrief.com/api/xml.fetcher.php?userid=${simbriefIdent.value}&json=v2`
+        url = `https://www.simbrief.com/api/xml.fetcher.php?userid=${simbriefIdent.value}&json=v2`;
     }
-    const response = await axios.get(url) as AxiosXHR<any>
+    const response = await axios.get(url) as AxiosXHR<any>;
     if (response.status != 200) {
-        return
+        return;
     }
     icaoPlan.value = response.data.atc.flightplan_text;
     flightPlanFormData.value = fromICAOPlan(icaoPlan.value);
@@ -551,63 +510,56 @@ const getFromSimbrief = async () => {
     if (flightPlanFormData.value.voice == "") {
         flightPlanFormData.value.voice = '/V/';
     }
-    flightPlanFormData.value.fuel_time = moment(response.data.times.endurance, "HH:mm:ss").toDate()
+    flightPlanFormData.value.fuel_time = moment(response.data.times.endurance, "HH:mm:ss").toDate();
     askSimbriefDialogRef.value?.hide();
     showSuccess("导入成功")
     simbriefLoading.value = false;
 }
 
-const confirmDeleteFlightPlanRef: Ref<ConfirmDialogInstance> = ref()
+const confirmDeleteFlightPlanRef: Ref<ConfirmDialogInstance> = ref();
 
 const deleteFlightPlan = async () => {
-    const response = await request.delete(`/plans/self`) as AxiosXHR<boolean>;
-    if (response.status == 200 && response.data) {
-        showSuccess("删除计划成功")
-        flightPlanFormData.value = cloneDeep(defaultFlightPlanData)
-        return
+    if (await ApiFlightPlan.deleteSelfFlightPlan()) {
+        showSuccess("删除计划成功");
+        flightPlanFormData.reset();
+        return;
     }
 }
 
-const flightPlanLocked = ref(false)
-const flightPlanFormRef: Ref<FormInstance> = ref()
+const flightPlanLocked = ref(false);
+const flightPlanFormRef: Ref<FormInstance> = ref();
 
 const submitFlightPlan = async () => {
     try {
         await flightPlanFormRef.value.validate();
     } catch {
-        showError("飞行计划校验失败")
-        return
+        showError("飞行计划校验失败");
+        return;
     }
-    const model = toFlightPlanModel(flightPlanFormData.value)
-    const response = await request.post(`/plans`, model) as AxiosXHR<boolean>;
-    if (response.status == 200 && response.data) {
-        showSuccess("提交计划成功")
+    if (await ApiFlightPlan.submitFlightPlan(toFlightPlanModel(flightPlanFormData.value))) {
+        showSuccess("提交计划成功");
         flightPlanLocked.value = false;
-        return
+        return;
     }
 }
 
 onMounted(async () => {
-    simbriefIdent.value = localStorage.getItem('simbrief');
-    if (simbriefIdent.value == null) {
-        simbriefIdent.value = ''
-    }
     if (route.query.raw) {
-        icaoPlan.value = decodeURI(route.query.raw)
+        icaoPlan.value = decodeURI(route.query.raw);
         flightPlanFormData.value = fromICAOPlan(icaoPlan.value);
         flightPlanFormData.value.flight_rule = 'I';
         if (flightPlanFormData.value.voice == "") {
             flightPlanFormData.value.voice = '/V/';
         }
         flightPlanFormData.value.fuel_time = moment(route.query.fuel_time, "HHmm").toDate();
-        return
+        return;
     }
     if (route.query.activity_plan) {
-        const activity_plan = decodeURI(route.query.activity_plan)
-        const data = activity_plan.substring(1, activity_plan.length - 1).split("-")
+        const activity_plan = decodeURI(route.query.activity_plan);
+        const data = activity_plan.substring(1, activity_plan.length - 1).split("-");
         if (data.length < 3) {
-            showError("参数解析失败")
-            return
+            showError("参数解析失败");
+            return;
         }
         flightPlanFormData.value.flight_rule = 'I';
         flightPlanFormData.value.voice = '/V/';
@@ -620,15 +572,15 @@ onMounted(async () => {
         if (data.length >= 5) {
             flightPlanFormData.value.flight_type = data[4];
         }
-        return
+        return;
     }
-    const data = await getSelfFlightPlan();
+    const data = await ApiFlightPlan.getSelfFlightPlan();
     if (data == null) {
-        return
+        return;
     }
     flightPlanLocked.value = data.locked;
     if (data.locked) {
-        showWarning("您的飞行计划已被锁定")
+        showWarning("您的飞行计划已被锁定");
     }
     flightPlanFormData.value = fromFlightPlanModel(data);
 })

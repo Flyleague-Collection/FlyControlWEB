@@ -1,30 +1,27 @@
 <script setup lang="ts">
-import {useActivityStore} from "@/store/activity.js";
 import {Delete, EditPen, Plus} from "@element-plus/icons-vue";
-import {useRouter} from "vue-router";
 import {ref, Ref} from "vue";
-import {showError, showSuccess} from "@/utils/message.js";
-import {useUserStore} from "@/store/user.js";
-import {PermissionNode} from "@/utils/permission.js";
-import ConfirmDialog from "@/components/dialog/ConfirmDialog.vue";
-import {ConfirmDialogInstance} from "@/components/dialog/ConfirmDialog.js";
+import {useRouter} from "vue-router";
+
+import ApiActivity from "@/api/activity.js";
+import type {PageListCardInstance, PageListResponse} from "@/components/card/PageListCard.js";
 import PageListCard from "@/components/card/PageListCard.vue";
-import {PageListCardInstance, PageListResponse} from "@/components/card/PageListCard.js";
+import type {ConfirmDialogInstance} from "@/components/dialog/ConfirmDialog.js";
+import ConfirmDialog from "@/components/dialog/ConfirmDialog.vue";
+import {useUserStore} from "@/store/user.js";
+import {showError, showSuccess} from "@/utils/message.js";
+import {PermissionNode} from "@/utils/permission.js";
 import {formatCid} from "@/utils/utils.js";
 
-const activityStore = useActivityStore();
 const userStore = useUserStore();
 const router = useRouter();
 
 const getActivityData = async (page: number, pageSize: number): PageListResponse<ActivityModel> => {
-    const res: PageListResponse<ActivityModel> = {
-        data: [],
-        total: 0
-    }
-    const data = await activityStore.getActivitiesPage(page, pageSize)
+    const res: PageListResponse<ActivityModel> = {data: [], total: 0}
+    const data = await ApiActivity.getActivitiesPage(page, pageSize);
     if (data != null) {
-        res.data = data.items
-        res.total = data.total
+        res.data = data.items;
+        res.total = data.total;
     }
     return res;
 }
@@ -48,8 +45,7 @@ const deleteActivity = async () => {
         showError("活动ID错误")
         return
     }
-    const response = await activityStore.deleteActivity(activityId.value);
-    if (response) {
+    if (await ApiActivity.deleteActivity(activityId.value)) {
         showSuccess("删除活动成功")
         activityId.value = 0
     }

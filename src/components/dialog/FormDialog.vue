@@ -57,13 +57,16 @@ defineExpose({show, hide});
         <slot></slot>
         <template #footer>
             <el-space>
-                <el-button type="success" :icon="Check" @click="handleCommit" :loading="loading" :disabled="loading">确认</el-button>
-                <el-button type="danger" :icon="Close" @click="cancelCallback" :loading="loading" :disabled="loading">取消</el-button>
+                <el-button type="success" :icon="Check" @click="handleCommit" :loading="loading" :disabled="loading">
+                    确认
+                </el-button>
+                <el-button type="danger" :icon="Close" @click="cancelCallback" :loading="loading" :disabled="loading">
+                    取消
+                </el-button>
             </el-space>
         </template>
     </el-dialog>
 </template>
 
 <style scoped>
-
 </style>

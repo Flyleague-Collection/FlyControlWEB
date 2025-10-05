@@ -13,7 +13,6 @@ declare module 'vue' {
     ActivityEditCard: typeof import('./src/components/card/ActivityEditCard.vue')['default']
     ActivityFacilityCard: typeof import('./src/components/card/ActivityFacilityCard.vue')['default']
     ActivityPilotCard: typeof import('./src/components/card/ActivityPilotCard.vue')['default']
-    ActivityPilotSignDialog: typeof import('./src/components/dialog/ActivityPilotSignDialog.vue')['default']
     ApplicationDescription: typeof import('./src/components/ApplicationDescription.vue')['default']
     ConfirmDialog: typeof import('./src/components/dialog/ConfirmDialog.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']
@@ -83,8 +82,9 @@ declare module 'vue' {
     PersonCard: typeof import('./src/components/card/PersonCard.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SendEmailButton: typeof import('./src/components/SendEmailButton.vue')['default']
     Sidebar: typeof import('./src/components/Sidebar.vue')['default']
-    StaffList: typeof import('./src/components/StaffList.vue')['default']
+    StaffList: typeof import('./src/components/home/StaffList.vue')['default']
     TimePointsInput: typeof import('./src/components/TimePointsInput.vue')['default']
   }
 }

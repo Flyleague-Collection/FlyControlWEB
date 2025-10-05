@@ -2,25 +2,17 @@
 import {ArrowLeft, Check, Close, DocumentAdd, Plus, RefreshLeft} from "@element-plus/icons-vue";
 import config from "@/config/index.js";
 import {useRouter} from "vue-router";
-import {ModelRef, onActivated, onBeforeUpdate, onMounted, onUpdated, reactive, Ref, ref} from "vue";
+import {ModelRef, onMounted, reactive, Ref, ref} from "vue";
 import ConfirmDialog from "@/components/dialog/ConfirmDialog.vue";
 import {useActivityStore} from "@/store/activity.js";
-import {
-    FormInstance,
-    type FormRules,
-    genFileId,
-    UploadFile,
-    UploadInstance,
-    UploadRawFile,
-    UploadUserFile
-} from "element-plus";
+import type {FormInstance, FormRules} from "element-plus";
 import {showError, showSuccess} from "@/utils/message.js";
-import {sizeToString} from "@/utils/utils.js";
-import {useServerConfigStore} from "@/store/server_config.js";
 import {ConfirmDialogInstance} from "@/components/dialog/ConfirmDialog.js";
+import ImageUpload from "@/components/ImageUpload.vue";
+import {ImageUploadInterface} from "@/components/ImageUpload.js";
+import {useStorage} from "@vueuse/core";
 
 const router = useRouter();
-const serverConfig = useServerConfigStore();
 const activityStore = useActivityStore();
 // 弹出框标识
 const resetConfirmDialog = ref(false)
@@ -47,9 +39,6 @@ const emits = defineEmits<{
 }>()
 const activityFormRef = ref<FormInstance>()
 const facilityFormRefs: Ref<FormInstance[]> = ref([]);
-const uploadRef = ref<UploadInstance>()
-const selectedImage = ref<UploadUserFile | null>(null)
-const fileList = ref<UploadUserFile[]>([])
 // 表单校验规则
 const rules = reactive<FormRules>({
     title: [
@@ -126,24 +115,7 @@ const facilityRules = reactive<FormRules>({
     min_rating: [{required: true, message: "最小要求权限不能为空", trigger: "blur"}]
 })
 
-onBeforeUpdate(() => {
-    if (fileList.value.length > 0) {
-        return
-    }
-    if (model.value.image_url != undefined && model.value.image_url != "") {
-        if (model.value.image_url.startsWith("http")) {
-            fileList.value[0] = {
-                name: "",
-                url: model.value.image_url
-            }
-        } else {
-            fileList.value[0] = {
-                name: "",
-                url: `${config.backend_url}/${model.value.image_url}`
-            }
-        }
-    }
-})
+const imageUploadRef: Ref<ImageUploadInterface> = ref();
 
 const confirmBtnClick = async () => {
     try {
@@ -159,8 +131,8 @@ const confirmBtnClick = async () => {
         return
     }
     uploading.value = true
-    if (selectedImage.value != null) {
-        const filePath = await activityStore.uploadActivityImage(selectedImage.value.raw as File)
+    if (imageUploadRef.value?.hasImageSelected()) {
+        const filePath = await imageUploadRef.value?.upload();
         if (filePath == null) {
             uploading.value = false
             return
@@ -173,11 +145,10 @@ const confirmBtnClick = async () => {
 }
 
 const resetBtnClick = () => {
-    uploading.value = false
-    selectedImage.value = null
-    uploadRef.value?.clearFiles()
-    facilityFormRefs.value = []
-    emits("ResetEvent")
+    uploading.value = false;
+    imageUploadRef.value?.reset();
+    facilityFormRefs.value = [];
+    emits("ResetEvent");
 }
 
 const cancelBtnClick = () => {
@@ -199,43 +170,18 @@ const deleteFacility = (id: number) => {
     facilityFormRefs.value.splice(id, 1);
 }
 
-const handleChanged = (uploadFile: UploadFile, _) => {
-    selectedImage.value = null;
-    // 5MB
-    if (uploadFile.size > serverConfig.config.image_limit.max_allow_size) {
-        showError(`不能上传大于${sizeToString(serverConfig.config.image_limit.max_allow_size)}的文件`);
-        uploadRef.value!.clearFiles()
-        return;
-    }
-    const ext = `.${uploadFile.name.split('.').pop()?.toLowerCase()}`;
-    if (serverConfig.config.image_limit.allowed_ext.findIndex(x => x === ext) === -1) {
-        showError(`不支持的图片类型`);
-        uploadRef.value!.clearFiles()
-        return;
-    }
-    selectedImage.value = uploadFile;
-}
-
-const handleExceed = (files: File[], _) => {
-    uploadRef.value!.clearFiles()
-    const file = files[0] as UploadRawFile
-    file.uid = genFileId()
-    uploadRef.value!.handleStart(file)
-}
-
 const saveDraft = () => {
-    localStorage.setItem(props.cacheKey, JSON.stringify(model.value))
-    showSuccess("草稿保存成功")
+    drafts.value = JSON.stringify(model.value);
+    showSuccess("草稿保存成功");
 }
 
-const drafts = ref('')
+const drafts = useStorage(props.cacheKey, null, localStorage, {initOnMounted: true});
 const confirmLoadDraftRef: Ref<ConfirmDialogInstance> = ref()
 
 const loadDraft = () => {
-    model.value = JSON.parse(drafts.value)
-    showSuccess("加载成功")
-    drafts.value = ''
-    localStorage.removeItem(props.cacheKey)
+    model.value = JSON.parse(drafts.value);
+    showSuccess("加载成功");
+    drafts.value = null;
 }
 
 const handleFacilitySelect = (index: number, value: Facility) => {
@@ -248,7 +194,6 @@ const handleFacilitySelect = (index: number, value: Facility) => {
 }
 
 onMounted(() => {
-    drafts.value = localStorage.getItem(props.cacheKey)
     if (drafts.value) {
         confirmLoadDraftRef.value?.show();
     }
@@ -274,19 +219,7 @@ onMounted(() => {
                                     value-format="YYYY-MM-DDTHH:mm:ssZ"></el-date-picker>
                 </el-form-item>
                 <el-form-item label="活动封面">
-                    <el-upload class="activity-img-uploader"
-                               ref="uploadRef"
-                               :auto-upload="false"
-                               :file-list="fileList"
-                               :limit="1"
-                               :on-exceed="handleExceed"
-                               :on-change="handleChanged"
-                               accept="image/*"
-                               list-type="picture-card">
-                        <el-icon>
-                            <Plus/>
-                        </el-icon>
-                    </el-upload>
+                    <ImageUpload v-model="model.image_url" ref="imageUploadRef"/>
                 </el-form-item>
                 <el-form-item label="出发机场" prop="departure_airport">
                     <el-autocomplete v-model="model.departure_airport" :fetch-suggestions="activityStore.querySearch"
@@ -365,7 +298,7 @@ onMounted(() => {
                    body-content="发现存储的草稿, 要加载草稿吗？"
                    header-content="发现草稿"
                    @confirm-event="loadDraft()"
-                   @cancel-event="localStorage.removeItem(cacheKey)"/>
+                   @cancel-event="drafts = null"/>
     <ConfirmDialog v-model="resetConfirmDialog" header-content="重置已输入的内容"
                    body-content="所有未保存的内容将会丢失, 确认继续吗？"
                    v-if="hasResetButton"
@@ -391,11 +324,6 @@ onMounted(() => {
 
 .add-button:hover {
     border-color: var(--el-color-primary);
-}
-
-.activity-img-uploader {
-    width: $image-upload-width;
-    height: $image-upload-height;
 }
 
 .add-button:hover,

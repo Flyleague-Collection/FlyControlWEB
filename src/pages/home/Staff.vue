@@ -1,27 +1,28 @@
 <script setup lang="ts">
+import {onMounted} from "vue";
+
+import StaffList from "@/components/home/StaffList.vue";
 import {homeConfig} from "@/config/index.js";
-import {computed, onMounted, ref} from "vue";
-import StaffList from "@/components/StaffList.vue";
 
 const setData = (job: Job) => {
-    const data = homeConfig.staff.staffers[job.qq]
+    const data = homeConfig.staff.staffers[job.qq];
     if (data) {
-        job.nickname = data.nickname
-        job.email = data.email
-        job.description = data.description != '' ? data.description : '暂无'
+        job.nickname = data.nickname;
+        job.email = data.email;
+        job.description = data.description != "" ? data.description : "暂无";
     } else {
-        job.nickname = '空缺'
-        job.email = '空缺'
-        job.description = '暂无'
+        job.nickname = "空缺";
+        job.email = "空缺";
+        job.description = "暂无";
     }
 }
 
 onMounted(() => {
-    homeConfig.staff.officer.map(setData)
-    homeConfig.staff.technical_department.map(setData)
-    homeConfig.staff.train_department.train.map(setData)
-    homeConfig.staff.train_department.sector.map(setData)
-    homeConfig.staff.activity_department.map(setData)
+    homeConfig.staff.officer.forEach(setData);
+    homeConfig.staff.technical_department.forEach(setData);
+    homeConfig.staff.train_department.train.forEach(setData);
+    homeConfig.staff.train_department.sector.forEach(setData);
+    homeConfig.staff.activity_department.forEach(setData);
 })
 </script>
 

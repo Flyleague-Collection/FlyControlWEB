@@ -1,47 +1,41 @@
 <script setup lang="ts">
-import {useUserStore} from "@/store/user.js";
-import config from "@/config/index.js";
-import {useServerConfigStore} from "@/store/server_config.js";
-import {computed, onMounted, reactive, Ref, ref} from "vue";
-import {Plus} from "@element-plus/icons-vue";
-import request from "@/api/request.js";
+import type {FormInstance, FormRules} from "element-plus";
 import moment from "moment";
-import AxiosXHR = Axios.AxiosXHR;
+import {computed, onMounted, reactive, Ref, ref} from "vue";
+
+import ApiUser from "@/api/user.js";
+import Api from "@/api/utils.js";
+import type {ImageUploadInterface} from "@/components/ImageUpload.js";
+import ImageUpload from "@/components/ImageUpload.vue";
 import FormDialog from "@/components/dialog/FormDialog.vue";
-import {
-    FormInstance,
-    FormRules,
-    genFileId,
-    UploadFile,
-    UploadInstance,
-    UploadRawFile,
-    UploadUserFile
-} from "element-plus";
-import {showError, showSuccess, showWarning} from "@/utils/message.js";
-import {useActivityStore} from "@/store/activity.js";
-import {formatCid, sizeToString} from "@/utils/utils.js";
+import config from "@/config/index.js";
 import {Global} from "@/global.js";
-import {padStart} from "lodash-es";
+import {useServerConfigStore} from "@/store/server_config.js";
+import {useUserStore} from "@/store/user.js";
+import {showError, showSuccess, showWarning} from "@/utils/message.js";
+import {formatCid, formatDate} from "@/utils/utils.js";
+import {FormDialogInstance} from "@/components/dialog/FormDialog.js";
+import SendEmailButton from "@/components/SendEmailButton.vue";
 
 const userStore = useUserStore();
-const activityStore = useActivityStore();
 const serverConfigStore = useServerConfigStore();
 const userData = userStore.userData;
 
 const pilotTime = computed(() => {
     return userData.total_pilot_time / 3600.0;
-})
+});
 
 const atcTime = computed(() => {
     return userData.total_atc_time / 3600.0;
-})
+});
 
 const ratings = computed(() => {
-    const rating = serverConfigStore.ratings[userData.rating + 1]
+    const rating = serverConfigStore.ratings[userData.rating]
     return `${rating.short_name}/${rating.long_name}`
-})
+});
 
-const historyData: Ref<GetUserHistoryResponse> = ref({
+const loadingHistoryData = ref(false);
+const historyData: Ref<UserHistoryData> = ref({
     total_pilot_time: 0,
     total_atc_time: 0,
     controllers: [],
@@ -49,146 +43,105 @@ const historyData: Ref<GetUserHistoryResponse> = ref({
 });
 
 onMounted(async () => {
-    const response = await request.get(`/users/histories/self`) as AxiosXHR<GetUserHistoryResponse>
-    historyData.value = response.data
-    for (const pilot of historyData.value.pilots) {
-        pilot.start_time = moment(pilot.start_time).format('YYYY-MM-DD HH:mm:ss');
-        pilot.end_time = moment(pilot.end_time).format('YYYY-MM-DD HH:mm:ss');
+    loadingHistoryData.value = true;
+    const data = await ApiUser.getUserHistories();
+    if (data == null) {
+        loadingHistoryData.value = false;
+        return;
     }
-    for (const controller of historyData.value.controllers) {
-        controller.start_time = moment(controller.start_time).format('YYYY-MM-DD HH:mm:ss');
-        controller.end_time = moment(controller.end_time).format('YYYY-MM-DD HH:mm:ss');
-    }
+    historyData.value = data;
+    loadingHistoryData.value = false;
 })
 
-const editPasswordDialog = ref(false);
+const editPasswordLoading = ref(false);
+const editPasswordDialogRef: Ref<FormDialogInstance> = ref();
 const changePasswordFormRef = ref<FormInstance>();
 const changePasswordForm = reactive<ChangePasswordForm>({
-    origin_password: '',
-    new_password: '',
-    confirm_password: ''
+    origin_password: "",
+    new_password: "",
+    confirm_password: ""
 })
 const changePasswordRules = reactive<FormRules>({
     origin_password: [
-        {required: true, message: "原密码不能为空", trigger: 'blur'},
-        {
-            min: serverConfigStore.limits.password_length_min,
-            max: serverConfigStore.limits.password_length_max,
-            message: `长度在${serverConfigStore.limits.password_length_min}到${serverConfigStore.limits.password_length_max}个字符`,
-            trigger: 'blur'
-        }
+        {required: true, message: "原密码不能为空", trigger: "blur"},
+        ...serverConfigStore.passwordLimit
     ],
     new_password: [
-        {required: true, message: "新密码不能为空", trigger: 'blur'},
+        {required: true, message: "新密码不能为空", trigger: "blur"},
+        ...serverConfigStore.passwordLimit,
         {
-            min: serverConfigStore.limits.password_length_min,
-            max: serverConfigStore.limits.password_length_max,
-            message: `长度在${serverConfigStore.limits.password_length_min}到${serverConfigStore.limits.password_length_max}个字符`,
-            trigger: 'blur'
-        },
-        {
-            validator: (_, value, callback) => {
+            validator: (_, value: string, callback: Callback1<string | undefined>) => {
                 if (value == changePasswordForm.origin_password) {
-                    callback(new Error("新密码与原密码相同"))
-                    return
+                    callback("新密码与原密码相同");
+                    return;
                 }
-                callback()
-            }, trigger: 'blur'
+                callback();
+            },
+            trigger: "blur"
         }
     ],
     confirm_password: [
-        {required: true, message: '请输入确认密码', trigger: 'blur'},
+        {required: true, message: "请输入确认密码", trigger: "blur"},
+        ...serverConfigStore.passwordLimit,
         {
-            min: serverConfigStore.config.limits.password_length_min,
-            max: serverConfigStore.config.limits.password_length_max,
-            message: `长度在${serverConfigStore.config.limits.password_length_min}到${serverConfigStore.config.limits.password_length_max}个字符`,
-            trigger: 'blur'
-        },
-        {
-            validator: (rule, value, callback) => {
+            validator: (_, value: string, callback: Callback1<string | undefined>) => {
                 if (value !== changePasswordForm.new_password) {
-                    callback(new Error('两次输入的密码不一致'))
-                    return
+                    callback("两次输入的密码不一致");
+                    return;
                 }
-                callback()
+                callback();
             },
-            trigger: 'blur'
+            trigger: "blur"
         }
     ]
 })
 const submitChangePasswordForm = async () => {
     try {
-        await changePasswordFormRef.value?.validate()
+        await changePasswordFormRef.value?.validate();
     } catch (error) {
         return;
     }
-    const response = await request.patch(`/users/profiles/self`, changePasswordForm) as AxiosXHR<UserModel>
-    if (response.status == 200) {
-        showSuccess("修改密码成功，请重新登陆")
-        editPasswordDialog.value = false
+    editPasswordLoading.value = true;
+    if (await ApiUser.updateUserPassword(changePasswordForm.origin_password, changePasswordForm.new_password)) {
+        showSuccess("修改密码成功，请重新登陆");
+        editPasswordDialogRef.value?.hide();
         setTimeout(() => {
             userStore.logout()
-        }, 1000)
+        }, 1000);
     }
+    editPasswordLoading.value = false;
 }
 
-const editInformationDialog = ref(false);
+const editInformationLoading = ref(false);
+const editInformationDialogRef: Ref<FormDialogInstance> = ref();
 const updateUserInfoFormRef = ref<FormInstance>();
 const updateUserInfoForm = reactive<UpdateUserInfoForm>({
-    username: '',
-    email: ''
-})
+    username: "",
+    email: "",
+    avatar_url: ""
+});
 const updateUserInfoRules = reactive<FormRules>({
     username: serverConfigStore.usernameLimit,
     email: serverConfigStore.emailLimit
-})
+});
+const imageUploadRef: Ref<ImageUploadInterface> = ref()
+const sendingEmailLoading = ref(false);
 
-const uploadRef = ref<UploadInstance>()
-const selectedImage = ref<UploadUserFile | null>(null)
-const fileList = ref<UploadUserFile[]>([])
-const handleChanged = (uploadFile: UploadFile, _) => {
-    selectedImage.value = null;
-    // 5MB
-    if (uploadFile.size > serverConfigStore.config.image_limit.max_allow_size) {
-        showError(`不能上传大于${sizeToString(serverConfigStore.config.image_limit.max_allow_size)}的文件`);
-        uploadRef.value!.clearFiles()
-        return;
-    }
-    const ext = `.${uploadFile.name.split('.').pop()?.toLowerCase()}`;
-    if (serverConfigStore.config.image_limit.allowed_ext.findIndex(x => x === ext) === -1) {
-        showError(`不支持的图片类型`);
-        uploadRef.value!.clearFiles()
-        return;
-    }
-    selectedImage.value = uploadFile;
-}
-
-const handleExceed = (files: File[], _) => {
-    uploadRef.value!.clearFiles()
-    const file = files[0] as UploadRawFile
-    file.uid = genFileId()
-    uploadRef.value!.handleStart(file)
-}
-
-const sendEmailCode = async () => {
-    if (updateUserInfoForm.email == '') {
-        showError("邮箱验证失败")
+const sendEmailCodeTo = async () => {
+    if (updateUserInfoForm.email == "") {
+        showError("邮箱不能为空");
         return
-    } else {
-        try {
-            await updateUserInfoFormRef.value?.validateField('email')
-        } catch {
-            showError("邮箱验证失败")
-            return
-        }
     }
-    const response = await request.post(`/codes`, {
-        email: updateUserInfoForm.email,
-        cid: userData.cid
-    }) as AxiosXHR<any>
-    if (response.status == 200) {
-        showSuccess("验证码发送成功, 请查看邮箱")
+    try {
+        await updateUserInfoFormRef.value?.validateField("email");
+    } catch {
+        return;
     }
+    sendingEmailLoading.value = true;
+    if (await Api.sendEmailCode(updateUserInfoForm.email, userData.cid)) {
+        showSuccess("验证码发送成功, 请查看邮箱");
+    }
+    sendingEmailLoading.value = false;
 }
 
 const submitUpdateUserInfoForm = async () => {
@@ -197,36 +150,35 @@ const submitUpdateUserInfoForm = async () => {
     } catch {
         return;
     }
+    editInformationLoading.value = true;
     const data: Record<string, string | number> = {};
     if (updateUserInfoForm.username != "" && updateUserInfoForm.username != userData.username) {
-        data['username'] = updateUserInfoForm.username;
+        data["username"] = updateUserInfoForm.username;
     }
     if (updateUserInfoForm.email != "" && updateUserInfoForm.email != userData.email && updateUserInfoForm.email_code) {
-        data['email'] = updateUserInfoForm.email;
-        data['email_code'] = updateUserInfoForm.email_code;
+        data["email"] = updateUserInfoForm.email;
+        data["email_code"] = updateUserInfoForm.email_code;
     }
     if (updateUserInfoForm.qq && updateUserInfoForm.qq != userData.qq) {
-        data["qq"] = updateUserInfoForm.qq
+        data["qq"] = updateUserInfoForm.qq;
     }
-    if (selectedImage.value != null) {
-        const filePath = await activityStore.uploadActivityImage(selectedImage.value.raw as File)
-        if (filePath == null) {
-            showError("头像上传失败")
-            return
+    if (imageUploadRef.value?.hasImageSelected()) {
+        if (await imageUploadRef.value?.upload() == null) {
+            return;
         }
-        data["avatar_url"] = filePath;
+        data["avatar_url"] = updateUserInfoForm.avatar_url;
     }
     if (Object.keys(data).length == 0) {
-        showWarning("没有需要修改的内容")
-        return
+        showWarning("没有需要修改的内容");
+        editInformationLoading.value = false;
+        return;
     }
-    const response = await request.patch(`/users/profiles/self`, data) as AxiosXHR<UserModel>
-    if (response.status == 200) {
-        showSuccess("修改个人信息成功")
-        document.location.reload()
-        editInformationDialog.value = false
-        return
+    if (await ApiUser.updateSelfInformation(data)) {
+        showSuccess("修改个人信息成功");
+        document.location.reload();
+        editInformationDialogRef.value?.hide();
     }
+    editInformationLoading.value = false;
 }
 </script>
 
@@ -246,7 +198,7 @@ const submitUpdateUserInfoForm = async () => {
                                     <span class="font-size-12rem">CID: {{ formatCid(userData.cid) }}</span>
                                     <el-space wrap class="justify-content-center">
                                         <el-tag class="border-none" effect="dark"
-                                                :color="config.ratings[userData.rating + 1].color">
+                                                :color="config.ratings[userData.rating].color">
                                             {{ ratings }}
                                         </el-tag>
                                         <el-tag v-if="userData.tier2" type="success" effect="dark">Tier2</el-tag>
@@ -266,11 +218,11 @@ const submitUpdateUserInfoForm = async () => {
                             </el-space>
                             <template #footer>
                                 <el-space direction="vertical" class="w-full">
-                                    <el-button type="success" @click="editInformationDialog = true" round>
+                                    <el-button type="success" @click="editInformationDialogRef?.show()" round>
                                         编辑个人信息
                                     </el-button>
                                     <el-space wrap class="justify-content-center">
-                                        <el-button type="primary" @click="editPasswordDialog = true" round>
+                                        <el-button type="primary" @click="editPasswordDialogRef?.show()" round>
                                             修改密码
                                         </el-button>
                                         <el-button type="danger" @click="userStore.logout" round>
@@ -335,7 +287,9 @@ const submitUpdateUserInfoForm = async () => {
                     <template #header>
                         <span>连线记录(最近10次)</span>
                     </template>
-                    <el-table v-if="historyData.pilots.length > 0" :data="historyData.pilots">
+                    <el-skeleton v-if="loadingHistoryData" :rows="10" animated
+                                 :throttle="{ leading: 1000, trailing: 1000}"/>
+                    <el-table v-else-if="historyData.pilots.length > 0" :data="historyData.pilots">
                         <el-table-column prop="callsign" label="呼号"/>
                         <el-table-column prop="start_time" label="上线时间"/>
                         <el-table-column prop="end_time" label="下线时间"/>
@@ -351,7 +305,9 @@ const submitUpdateUserInfoForm = async () => {
                     <template #header>
                         <span>管制记录(最近10次)</span>
                     </template>
-                    <el-table v-if="historyData.controllers.length > 0" :data="historyData.controllers">
+                    <el-skeleton v-if="loadingHistoryData" :rows="10" animated
+                                 :throttle="{ leading: 1000, trailing: 1000}"/>
+                    <el-table v-else-if="historyData.controllers.length > 0" :data="historyData.controllers">
                         <el-table-column prop="callsign" label="席位"/>
                         <el-table-column prop="start_time" label="上线时间"/>
                         <el-table-column prop="end_time" label="下线时间"/>
@@ -366,7 +322,7 @@ const submitUpdateUserInfoForm = async () => {
             </el-col>
         </el-row>
     </div>
-    <FormDialog v-model="editPasswordDialog" title="修改密码" :width="300"
+    <FormDialog ref="editPasswordDialogRef" title="修改密码" :width="300" :loading="editPasswordLoading"
                 @dialog-confirm-event="submitChangePasswordForm()">
         <el-form
             :model="changePasswordForm"
@@ -374,7 +330,6 @@ const submitUpdateUserInfoForm = async () => {
             label-position="right"
             label-width="auto"
             ref="changePasswordFormRef"
-            @keyup.enter="submitChangePasswordForm()"
         >
             <el-form-item label="原密码" prop="origin_password">
                 <el-input v-model="changePasswordForm.origin_password" placeholder="请输入原密码" type="password"
@@ -390,7 +345,7 @@ const submitUpdateUserInfoForm = async () => {
             </el-form-item>
         </el-form>
     </FormDialog>
-    <FormDialog v-model="editInformationDialog" title="修改个人信息" :width="400"
+    <FormDialog ref="editInformationDialogRef" title="修改个人信息" :width="400" :loading="editInformationLoading"
                 @dialog-confirm-event="submitUpdateUserInfoForm()">
         <el-form
             :model="updateUserInfoForm"
@@ -398,7 +353,6 @@ const submitUpdateUserInfoForm = async () => {
             ref="updateUserInfoFormRef"
             label-position="left"
             label-width="auto"
-            @keyup.enter="submitUpdateUserInfoForm()"
         >
             <el-form-item label="CID">
                 <el-input :placeholder="String(userData.cid)" disabled/>
@@ -413,42 +367,20 @@ const submitUpdateUserInfoForm = async () => {
                 <div class="flex flex-direction-column-below-425px">
                     <el-input v-model.number="updateUserInfoForm.email_code" class="margin-bottom-5-below-425px"
                               placeholder="输入验证码" :disabled="updateUserInfoForm.email == ''"/>
-                    <el-button type="primary" :disabled="updateUserInfoForm.email == ''" @click="sendEmailCode()">
-                        发送验证码
-                    </el-button>
+                    <SendEmailButton @button-click-event="sendEmailCodeTo()"
+                                     :disabled="updateUserInfoForm.email == ''"/>
                 </div>
             </el-form-item>
             <el-form-item label="QQ" prop="qq">
                 <el-input v-model.number="updateUserInfoForm.qq" :placeholder="String(userData.qq)"/>
             </el-form-item>
             <el-form-item label="上传头像">
-                <el-upload class="avatar-uploader"
-                           ref="uploadRef"
-                           :auto-upload="false"
-                           :file-list="fileList"
-                           :limit="1"
-                           :on-exceed="handleExceed"
-                           :on-change="handleChanged"
-                           accept="image/*"
-                           list-type="picture-card">
-                    <el-icon>
-                        <Plus/>
-                    </el-icon>
-                </el-upload>
+                <ImageUpload ref="imageUploadRef" v-model="updateUserInfoForm.avatar_url"/>
             </el-form-item>
         </el-form>
     </FormDialog>
 </template>
 
 <style scoped>
-.avatar-uploader {
-    width: 114px;
-    height: 114px;
-    cursor: pointer;
-    transition: var(--el-transition-duration-fast);
-}
 
-.avatar-uploader:hover {
-    border-color: var(--el-color-primary);
-}
 </style>

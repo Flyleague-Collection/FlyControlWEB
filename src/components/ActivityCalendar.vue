@@ -4,8 +4,8 @@ import type {CalendarDateType, CalendarInstance} from 'element-plus'
 import {onMounted, ref} from "vue";
 import {useActivityStore} from "@/store/activity.js";
 import {useRouter} from "vue-router";
-import {showError} from "@/utils/message.js";
 import moment, {Moment} from "moment";
+import ApiActivity from "@/api/activity.js";
 
 const calendar = ref<CalendarInstance>()
 const router = useRouter();
@@ -32,23 +32,22 @@ const selectDate = (val: CalendarDateType) => {
     }
 }
 
-const activities = ref<ActivityModel[]>()
-const activitiesRecord = ref<{ [key: string]: ActivityModel }>({})
+const activities = ref<ActivityModel[]>([]);
+const activitiesRecord = ref<Record<string, ActivityModel>>({});
 
 const fetchActivities = async (date: Moment) => {
-    const time = date.format('YYYY-MM')
-    const data = await activityStore.getActivities(time)
+    const data = await ApiActivity.getActivities(date.format('YYYY-MM'));
     if (data == null) {
-        showError("获取活动数据失败")
         return
     }
-    activities.value = data
-    activitiesRecord.value = activityStore.translateActivityData(activities.value)
+    activities.value = data;
+    activitiesRecord.value = activityStore.translateActivityData(activities.value);
 }
 
+defineExpose({activities, activitiesRecord, fetchActivities});
+
 onMounted(async () => {
-    currentTime = moment()
-    await fetchActivities(currentTime)
+    await fetchActivities(moment());
 })
 </script>
 

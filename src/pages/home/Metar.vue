@@ -1,20 +1,21 @@
 <script setup lang="ts">
 import {ref} from "vue";
-import {showSuccess, showWarning} from "@/utils/message.js";
-import request from "@/api/request.js";
 
-const icao = ref("")
-const metarRawData = ref([])
+import Api from "@/api/utils.js";
+import {showSuccess, showWarning} from "@/utils/message.js";
+
+const icao = ref("");
+const metarRawData = ref([]);
 
 const queryMetar = async () => {
-    metarRawData.value = ''
-    const response = await request.get(`/metar?icao=${icao.value}`)
-    if (response.status === 200) {
-        showSuccess("Metar查询成功")
-        metarRawData.value = response.data
+    metarRawData.value = "";
+    const data = await Api.getMetar(icao.value);
+    if (data != null) {
+        showSuccess("Metar查询成功");
+        metarRawData.value = data;
         return
     }
-    showWarning("未查询到指定机场报文")
+    showWarning("未查询到指定机场报文");
 }
 </script>
 
@@ -22,7 +23,10 @@ const queryMetar = async () => {
     <div class="container">
         <span class="title">Metar查询</span>
         <p class="display-over-450px">
-            部分Metar数据来自 <a href="https://aviationweather.gov/data/metar/" target="_blank">https://aviationweather.gov/data/metar/</a>
+            部分Metar数据来自
+            <el-link href="https://aviationweather.gov/data/metar/" target="_blank">
+                https://aviationweather.gov/data/metar/
+            </el-link>
         </p>
         <div class="content">
             <div class="flex flex-direction-column">

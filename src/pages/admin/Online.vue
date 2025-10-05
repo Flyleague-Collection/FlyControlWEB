@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import request from "@/api/request.js";
-import {onMounted, onUnmounted, Ref, ref} from "vue";
-import PageListCard from "@/components/card/PageListCard.vue";
-import {padStart} from "lodash-es";
-import moment from "moment";
-import config from "@/config/index.js";
-import {useUserStore} from "@/store/user.js";
-import {useServerConfigStore} from "@/store/server_config.js";
-import {showError, showSuccess} from "@/utils/message.js";
-import FormDialog from "@/components/dialog/FormDialog.vue";
 import {FormInstance, FormRules} from "element-plus";
-import {FormDialogInstance} from "@/components/dialog/FormDialog.js";
+import moment from "moment";
+import {onMounted, onUnmounted, Ref, ref} from "vue";
+
+import ApiClient from "@/api/client.js";
+import PageListCard from "@/components/card/PageListCard.vue";
+import type {ConfirmDialogInstance} from "@/components/dialog/ConfirmDialog.js";
 import ConfirmDialog from "@/components/dialog/ConfirmDialog.vue";
-import {ConfirmDialogInstance} from "@/components/dialog/ConfirmDialog.js";
+import type {FormDialogInstance} from "@/components/dialog/FormDialog.js";
+import FormDialog from "@/components/dialog/FormDialog.vue";
+import config from "@/config/index.js";
+import {useServerConfigStore} from "@/store/server_config.js";
+import {useUserStore} from "@/store/user.js";
+import {showError, showSuccess} from "@/utils/message.js";
 import {PermissionNode} from "@/utils/permission.js";
-import AxiosXHR = Axios.AxiosXHR;
 import {formatCid} from "@/utils/utils.js";
+
 
 const userStore = useUserStore();
 const serverConfigStore = useServerConfigStore();
@@ -24,10 +24,10 @@ const onlineControllers = ref<OnlineControllerModel[]>([]);
 const onlinePilots = ref<OnlinePilotModel[]>([]);
 
 const getOnlineData = async () => {
-    const response = await request.get(`/clients`) as AxiosXHR<GetOnlineClientResponse>
-    if (response.status == 200) {
-        onlineControllers.value = response.data.controllers;
-        onlinePilots.value = response.data.pilots;
+    const data = await ApiClient.getOnlineClient();
+    if (data != null) {
+        onlineControllers.value = data.controllers;
+        onlinePilots.value = data.pilots;
     }
 }
 
@@ -45,8 +45,7 @@ onUnmounted(async () => {
 })
 
 const sendMessageToClient = async (callsign: string, message: string): Promise<boolean> => {
-    const response = await request.post(`/clients/messages/${callsign}`, {message}) as AxiosXHR<boolean>;
-    if (response.status == 200 && response.data) {
+    if (await ApiClient.sendMessageToClient(callsign, message)) {
         showSuccess("发送消息成功")
         return true;
     }
@@ -54,8 +53,7 @@ const sendMessageToClient = async (callsign: string, message: string): Promise<b
 }
 
 const broadcastMessageToClient = async (target: string, message: string): Promise<boolean> => {
-    const response = await request.post(`/clients/messages`, {target, message}) as AxiosXHR<boolean>;
-    if (response.status == 200 && response.data) {
+    if (await ApiClient.broadcastMessageToClient(target, message)) {
         showSuccess("广播消息成功")
         return true;
     }
@@ -63,8 +61,7 @@ const broadcastMessageToClient = async (target: string, message: string): Promis
 }
 
 const kickedFromServer = async (callsign: string, reason: string): Promise<boolean> => {
-    const response = await request.delete(`/clients/${callsign}`, {data: {reason: reason}}) as AxiosXHR<boolean>;
-    if (response.status == 200 && response.data) {
+    if (await ApiClient.kickClientFromServer(callsign, reason)) {
         showSuccess("踢出客户端成功")
         return true;
     }
@@ -76,8 +73,8 @@ type SendMessage = {
     message: string;
 }
 
-const sendMessageFormDialogRef: Ref<FormDialogInstance> = ref()
-const sendMessageFormRef: Ref<FormInstance> = ref()
+const sendMessageFormDialogRef: Ref<FormDialogInstance> = ref();
+const sendMessageFormRef: Ref<FormInstance> = ref();
 const sendMessageFormData = ref<SendMessage>({
     callsign: "",
     message: ""
@@ -95,13 +92,13 @@ const sendMessage = (callsign: string) => {
 
 const submitSendMessageForm = async () => {
     if (!userStore.permission.hasPermissionNode(PermissionNode.ClientSendMessage)) {
-        showError("你无权这么做")
-        return
+        showError("你无权这么做");
+        return;
     }
     try {
-        await sendMessageFormRef.value?.validate()
+        await sendMessageFormRef.value?.validate();
     } catch {
-        return
+        return;
     }
     if (await sendMessageToClient(sendMessageFormData.value.callsign, sendMessageFormData.value.message)) {
         sendMessageFormData.value = {
@@ -117,8 +114,8 @@ type BroadcastMessage = {
     message: string;
 }
 
-const broadcastMessageFormDialogRef: Ref<FormDialogInstance> = ref()
-const broadcastMessageFormRef: Ref<FormInstance> = ref()
+const broadcastMessageFormDialogRef: Ref<FormDialogInstance> = ref();
+const broadcastMessageFormRef: Ref<FormInstance> = ref();
 const broadcastMessageFormData = ref<BroadcastMessage>({
     target: "",
     message: ""
@@ -136,13 +133,13 @@ const broadcastMessage = (target: string) => {
 
 const submitBroadcastMessageForm = async () => {
     if (!userStore.permission.hasPermissionNode(PermissionNode.ClientSendBroadcastMessage)) {
-        showError("你无权这么做")
-        return
+        showError("你无权这么做");
+        return;
     }
     try {
-        await broadcastMessageFormRef.value?.validate()
+        await broadcastMessageFormRef.value?.validate();
     } catch {
-        return
+        return;
     }
     if (await broadcastMessageToClient(broadcastMessageFormData.value.target, broadcastMessageFormData.value.message)) {
         broadcastMessageFormData.value = {
@@ -158,9 +155,9 @@ type KickerFromServer = {
     reason: string;
 }
 
-const kickFromServerFormDialogRef: Ref<FormDialogInstance> = ref()
-const kickFromServerFormRef: Ref<FormInstance> = ref()
-const confirmKickedFromServerRef: Ref<ConfirmDialogInstance> = ref()
+const kickFromServerFormDialogRef: Ref<FormDialogInstance> = ref();
+const kickFromServerFormRef: Ref<FormInstance> = ref();
+const confirmKickedFromServerRef: Ref<ConfirmDialogInstance> = ref();
 const kickFromServerFormData = ref<KickerFromServer>({
     target: "",
     reason: ""
@@ -182,13 +179,13 @@ const confirmKick = () => {
 
 const submitKickFromServerForm = async () => {
     if (!userStore.permission.hasPermissionNode(PermissionNode.ClientKill)) {
-        showError("你无权这么做")
-        return
+        showError("你无权这么做");
+        return;
     }
     try {
-        await kickFromServerFormRef.value?.validate()
+        await kickFromServerFormRef.value?.validate();
     } catch {
-        return
+        return;
     }
     if (await kickedFromServer(kickFromServerFormData.value.target, kickFromServerFormData.value.reason)) {
         kickFromServerFormData.value = {

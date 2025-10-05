@@ -1,15 +1,14 @@
 <script setup lang="ts">
+import {ArrowLeft, Check, Close} from "@element-plus/icons-vue";
 import {onMounted, ref} from "vue";
 import {useRoute, useRouter} from "vue-router";
-import {ArrowLeft, Check, Close} from "@element-plus/icons-vue";
 
+import ApiUser from "@/api/user.js";
 import ConfirmDialog from "@/components/dialog/ConfirmDialog.vue";
+import {useReactiveWidth} from "@/composables/useReactiveWidth.js";
 import {useUserStore} from "@/store/user.js";
 import {showSuccess, showWarning} from "@/utils/message.js";
 import {Permission} from "@/utils/permission.js";
-import request from "@/api/request.js";
-import AxiosXHR = Axios.AxiosXHR;
-import {padStart} from "lodash-es";
 import {formatCid} from "@/utils/utils.js";
 
 const route = useRoute();
@@ -22,10 +21,10 @@ const permission = ref(new Permission(0n));
 
 const fetchUserData = async () => {
     loading.value = true;
-    const data = await userStore.getUserByUid(route.params.id)
+    const data = await ApiUser.getUserByUid(route.params.id);
     if (data != null) {
-        userModel.value = data
-        permission.value = new Permission(BigInt(userModel.value.permission))
+        userModel.value = data;
+        permission.value = new Permission(BigInt(userModel.value.permission));
     }
     loading.value = false;
 }
@@ -44,15 +43,13 @@ const permissionChange = (permission: string, value: boolean) => {
 
 const changePermission = async () => {
     if (Object.keys(changeMap).length == 0) {
-        showWarning("没有需要修改的权限")
-        return
+        showWarning("没有需要修改的权限");
+        return;
     }
     loading.value = true;
-    const response = await request.patch(`/users/profiles/${route.params.id}/permission`, {permissions: changeMap}) as AxiosXHR<UserModel>;
-    if (response.status == 200) {
-        showSuccess("权限编辑成功")
-        loading.value = false;
-        exit()
+    if (await ApiUser.updateUserPermission(Number(route.params.id), changeMap)) {
+        showSuccess("权限编辑成功");
+        exit();
     }
     loading.value = false;
 }
@@ -61,19 +58,21 @@ const confirmExitDialog = ref(false);
 
 const confirmExit = () => {
     if (Object.keys(changeMap).length == 0) {
-        exit()
+        exit();
     } else {
         confirmExitDialog.value = true;
     }
 }
 
 const exit = () => {
-    router.push(`/admin/permissions`)
+    router.push(`/admin/permissions`);
 }
 
 onMounted(async () => {
-    await fetchUserData()
+    await fetchUserData();
 })
+
+const {less900px, less700px} = useReactiveWidth();
 </script>
 
 <template>
@@ -84,8 +83,8 @@ onMounted(async () => {
         </template>
         <el-table :data="Object.values(permission.getPermissionsRecord())">
             <el-table-column prop="name" label="权限节点名"/>
-            <el-table-column prop="desc" label="权限节点描述"/>
-            <el-table-column label="授予该权限">
+            <el-table-column prop="desc" label="权限节点描述" v-if="!less900px"/>
+            <el-table-column label="授予该权限" :width="less700px ? 100 : ''">
                 <template #default="scope">
                     <el-switch v-model="scope.row.hasPermission"
                                inline-prompt
@@ -107,8 +106,7 @@ onMounted(async () => {
     <ConfirmDialog v-model="confirmExitDialog"
                    header-content="确认退出"
                    body-content="未保存的操作将会丢失, 确定退出吗？"
-                   @confirm-event="exit()"
-    />
+                   @confirm-event="exit()"/>
 </template>
 
 <style scoped>

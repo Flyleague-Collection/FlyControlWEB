@@ -1,8 +1,8 @@
 import {ref, onMounted, onUnmounted} from 'vue'
-import {uploadImage, isImageFile} from '@/api/file.js'
-import {showError, showSuccess} from "@/utils/message.js";
+import {showError} from "@/utils/message.js";
 import {sizeToString} from "@/utils/utils.js";
 import {useServerConfigStore} from "@/store/server_config.js";
+import ApiFile from "@/api/file.js";
 
 export const usePasteImage = (onImageUpload: (url: string) => void) => {
     const isUploading = ref(false)
@@ -19,7 +19,7 @@ export const usePasteImage = (onImageUpload: (url: string) => void) => {
                 event.preventDefault()
 
                 const file = item.getAsFile()
-                if (file && isImageFile(file)) {
+                if (file && ApiFile.isImageFile(file)) {
                     if (file.size > serverConfigStore.config.image_limit.max_allow_size) {
                         showError(`不能上传大于${sizeToString(serverConfigStore.config.image_limit.max_allow_size)}的文件`);
                         break
@@ -40,7 +40,7 @@ export const usePasteImage = (onImageUpload: (url: string) => void) => {
         if (isUploading.value) return
 
         isUploading.value = true
-        const imageUrl = await uploadImage(file)
+        const imageUrl = await ApiFile.uploadImage(file)
         if (imageUrl) {
             onImageUpload(imageUrl)
         }

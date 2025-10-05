@@ -1,53 +1,49 @@
 <script setup lang="ts">
-import {PageListCardInstance, PageListResponse} from "@/components/card/PageListCard.js";
-import request from "@/api/request.js";
-import PageListCard from "@/components/card/PageListCard.vue";
-import {Global} from "@/global.js";
-import moment from "moment";
-import {padStart} from "lodash-es";
-import {Delete, Edit} from "@element-plus/icons-vue";
-import {useUserStore} from "@/store/user.js";
-import {PermissionNode} from "@/utils/permission.js";
-import AxiosXHR = Axios.AxiosXHR;
-import FormDialog from "@/components/dialog/FormDialog.vue";
-import {ref, Ref} from "vue";
-import {FormDialogInstance} from "@/components/dialog/FormDialog.js";
 import {FormInstance, FormRules} from "element-plus";
-import {showError, showSuccess} from "@/utils/message.js";
+import {Delete, Edit} from "@element-plus/icons-vue";
+import moment from "moment";
+import {ref, Ref} from "vue";
+
+import ApiTicket from "@/api/ticket.js";
+import type {PageListCardInstance, PageListResponse} from "@/components/card/PageListCard.js";
+import PageListCard from "@/components/card/PageListCard.vue";
+import type {ConfirmDialogInstance} from "@/components/dialog/ConfirmDialog.js";
 import ConfirmDialog from "@/components/dialog/ConfirmDialog.vue";
-import {ConfirmDialogInstance} from "@/components/dialog/ConfirmDialog.js";
+import type {FormDialogInstance} from "@/components/dialog/FormDialog.js";
+import FormDialog from "@/components/dialog/FormDialog.vue";
+import {Global} from "@/global.js";
+import {useUserStore} from "@/store/user.js";
+import {showError, showSuccess} from "@/utils/message.js";
+import {PermissionNode} from "@/utils/permission.js";
 import {formatCid} from "@/utils/utils.js";
 
 const userStore = useUserStore();
 
 const getTickets = async (page: number, pageSize: number): PageListResponse<TicketModel> => {
-    const res: PageListResponse<TicketModel> = {
-        data: [],
-        total: 0
-    }
-    const response = await request.get(`/tickets?page_number=${page}&page_size=${pageSize}`) as AxiosXHR<PageDataResponse<TicketModel>>;
-    if (response.status == 200) {
-        res.data = response.data.items;
-        res.total = response.data.total;
+    const res: PageListResponse<TicketModel> = {data: [], total: 0}
+    const data = await ApiTicket.getTickets(page, pageSize);
+    if (data != null) {
+        res.data = data.items;
+        res.total = data.total;
     }
     return res;
 }
 
-const replyTicketFormDialogRef: Ref<FormDialogInstance> = ref()
-const ticketDataListRef: Ref<PageListCardInstance> = ref()
+const replyTicketFormDialogRef: Ref<FormDialogInstance> = ref();
+const ticketDataListRef: Ref<PageListCardInstance> = ref();
 const formData = ref<TicketModel>({
     creator: 0,
     type: 0,
     title: "",
     content: "",
     reply: ""
-})
+});
 const formRule = ref<FormRules>({
     reply: [
         {required: true, message: "回复不能为空", trigger: "blur"},
         {min: 8, message: "回复内容不能少于8个字", trigger: "blur"}
     ]
-})
+});
 
 const showReplyTicketFormDialog = (data: TicketModel) => {
     formData.value = data;
@@ -58,17 +54,15 @@ const replyTicketFormRef: Ref<FormInstance> = ref()
 
 const submitReplyForm = async () => {
     if (!userStore.permission.hasPermissionNode(PermissionNode.TicketReply)) {
-        showError("你无权这么做")
-        return
+        showError("你无权这么做");
+        return;
     }
     try {
         await replyTicketFormRef.value.validate();
     } catch {
-        showError("您填写的数据有误");
         return;
     }
-    const response = await request.put(`/tickets/${formData.value.id}`, {reply: formData.value.reply}) as AxiosXHR<boolean>;
-    if (response.status == 200 && response.data) {
+    if (await ApiTicket.replyTicket(formData.value.id, formData.value.reply)) {
         showSuccess("回复工单成功");
         formData.value = {
             creator: 0,
@@ -82,30 +76,28 @@ const submitReplyForm = async () => {
     }
 }
 
-const confirmDeleteDialogRef: Ref<ConfirmDialogInstance> = ref()
-const targetTicketId = ref(0)
+const confirmDeleteDialogRef: Ref<ConfirmDialogInstance> = ref();
+const targetTicketId = ref(0);
 
 const confirmDeleteTicket = async (ticketId: number) => {
-    targetTicketId.value = ticketId
+    targetTicketId.value = ticketId;
     confirmDeleteDialogRef.value?.show();
 }
 
 const deleteTicket = async () => {
     if (!userStore.permission.hasPermissionNode(PermissionNode.TicketRemove)) {
-        showError("你无权这么做")
-        return
+        showError("你无权这么做");
+        return;
     }
     if (targetTicketId.value == 0) {
         return;
     }
-    const response = await request.delete(`/tickets/${targetTicketId.value}`) as AxiosXHR<boolean>;
-    if (response.status == 200 && response.data) {
+    if (await ApiTicket.deleteTicket(targetTicketId.value)) {
         showSuccess("删除工单成功");
         ticketDataListRef.value?.flushData();
         targetTicketId.value = 0;
     }
 }
-
 </script>
 
 <template>

@@ -21,6 +21,11 @@ defineProps({
         type: Number,
         required: false,
         default: 250
+    },
+    loading: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 });
 
@@ -57,8 +62,12 @@ defineExpose({show, hide});
         <template #header>{{ headerContent }}</template>
         <span>{{ bodyContent }}</span>
         <template #footer>
-            <el-button :icon="Check" type="success" @click.stop="confirmAction">确认</el-button>
-            <el-button :icon="Close" type="danger" @click.stop="cancelAction">取消</el-button>
+            <el-button :icon="Check" type="success" @click.stop="confirmAction" :loading="loading" :disabled="loading">
+                确认
+            </el-button>
+            <el-button :icon="Close" type="danger" @click.stop="cancelAction" :loading="loading" :disabled="loading">
+                取消
+            </el-button>
         </template>
     </el-dialog>
 </template>

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import {Delete, Plus, ZoomIn} from "@element-plus/icons-vue";
-import {ref} from "vue";
+import {onBeforeUpdate, onMounted, onUpdated, ref} from "vue";
 import {genFileId, UploadFile, UploadInstance, UploadRawFile, UploadUserFile} from "element-plus";
 import {showError} from "@/utils/message.js";
-import {sizeToString} from "@/utils/utils.js";
+import {handleImageUrl, sizeToString} from "@/utils/utils.js";
 import {useServerConfigStore} from "@/store/server_config.js";
-import {uploadImage} from "@/api/file.js";
+import ApiFile from "@/api/file.js";
 
 const fileUrl = defineModel({type: String})
 
@@ -40,12 +40,16 @@ const handleExceed = (files: File[], _) => {
     uploadRef.value!.handleStart(file)
 }
 
+const hasImageSelected = (): boolean => {
+    return selectedImage.value != null
+}
+
 const upload = async (): string | null => {
     if (selectedImage.value == null) {
         showError("未选择图片")
         return null
     }
-    const filePath = await uploadImage(selectedImage.value.raw as File)
+    const filePath = await ApiFile.uploadImage(selectedImage.value.raw as File)
     if (filePath == null) {
         showError("图片上传失败")
         return null
@@ -54,7 +58,14 @@ const upload = async (): string | null => {
     return filePath;
 }
 
-defineExpose({upload})
+const reset = (): void => {
+    selectedImage.value = null;
+    fileList.value = [];
+    fileUrl.value = "";
+    uploadRef.value?.clearFiles();
+}
+
+defineExpose({upload, hasImageSelected, reset});
 
 const showPreview = ref(false)
 
@@ -70,6 +81,18 @@ const handlePictureCardPreview = (file: File) => {
     previewList.value.push(file.url)
     showPreview.value = true
 }
+
+onBeforeUpdate(() => {
+    if (fileUrl.value?.startsWith("blob")) {
+        fileUrl.value = "";
+    }
+    if (fileUrl.value && fileUrl.value != "") {
+        fileList.value.push({
+            name: "",
+            url: handleImageUrl(fileUrl.value)
+        });
+    }
+})
 </script>
 
 <template>

@@ -1,39 +1,39 @@
 <script setup lang="ts">
-import {cloneDeep} from "lodash";
 import {FormInstance, FormRules} from "element-plus";
-import {Check, Close, EditPen} from "@element-plus/icons-vue";
+import {EditPen} from "@element-plus/icons-vue";
+import {cloneDeep} from "lodash";
 import {computed, reactive, Ref, ref} from "vue";
 
-import PageListCard from "@/components/card/PageListCard.vue";
+import ApiUser from "@/api/user.js";
 import type {PageListCardInstance, PageListResponse} from "@/components/card/PageListCard.js";
-import ConfirmDialog from "@/components/dialog/ConfirmDialog.vue";
-import type {ConfirmDialogInstance} from "@/components/dialog/ConfirmDialog.js";
-import {useUserStore} from "@/store/user.js";
-import {useServerConfigStore} from "@/store/server_config.js";
-import {showError, showSuccess, showWarning} from "@/utils/message.js";
+import PageListCard from "@/components/card/PageListCard.vue";
+import type {FormDialogInstance} from "@/components/dialog/FormDialog.js";
+import FormDialog from "@/components/dialog/FormDialog.vue";
 import config from "@/config/index.js";
-import {handleImageUrl} from "@/utils/utils.js";
-import {padStart} from "lodash-es";
+import {useServerConfigStore} from "@/store/server_config.js";
+import {useUserStore} from "@/store/user.js";
+import {showError, showSuccess, showWarning} from "@/utils/message.js";
 import {PermissionNode} from "@/utils/permission.js";
+import {formatCid} from "@/utils/utils.js";
 
 const userStore = useUserStore();
 const serverConfig = useServerConfigStore();
 
 const fetchUsers = async (page: number, pageSize: number): Promise<PageListResponse<UserModel>> => {
     const result: PageListResponse<UserModel> = {data: [], total: 0}
-    const data = await userStore.getUserPage(page, pageSize)
-    if (data == null) {
-        showError("用户数据加载失败")
-    } else {
-        result.data = data.items
-        result.total = data.total
+    const data = await ApiUser.getUserPage(page, pageSize);
+    if (data != null) {
+        result.data = data.items;
+        result.total = data.total;
     }
     return result;
 }
 
-let oldUserData: UserModel | null = null;
-const userData: Ref<UserModel & { password: string }> = ref({} as UserModel & { password: string });
-const showUserEditDialog: Ref<boolean> = ref(false);
+type FullUserModel = UserModel & { password: string }
+
+let oldUserData: Nullable<UserModel> = null;
+const userData: Ref<FullUserModel> = ref({} as FullUserModel);
+const userEditDialogRef: Ref<FormDialogInstance> = ref();
 
 const rules = reactive<FormRules>({
     username: [
@@ -50,93 +50,80 @@ const rules = reactive<FormRules>({
 })
 
 const showEditUserProfileDialog = async (id: number) => {
-    const user = await userStore.getUserByUid(id)
+    const user = await ApiUser.getUserByUid(id);
     if (user == null) {
-        return
+        return;
     }
     oldUserData = cloneDeep(user);
-    userData.value = user as UserModel & { password: string }
-    userData.value.password = ""
-    showUserEditDialog.value = true
+    userData.value = user as FullUserModel;
+    userData.value.password = "";
+    userEditDialogRef.value?.show();
 }
 
-const pageListCardRef: Ref<PageListCardInstance> = ref(null)
-const userEditFormRef = ref<FormInstance>()
-const hasAnyEditPermission = computed(() => {
-    return userStore.permission.hasAnyPermissions(PermissionNode.UserEditBaseInfo, PermissionNode.UserSetPassword)
-})
+const pageListCardRef: Ref<PageListCardInstance> = ref(null);
+const userEditFormRef = ref<FormInstance>();
+const canEditBaseInfo = computed(() => userStore.permission.hasPermissionNode(PermissionNode.UserEditBaseInfo));
+const canEditPassword = computed(() => userStore.permission.hasPermissionNode(PermissionNode.UserSetPassword));
+const hasAnyEditPermission = computed(() => canEditBaseInfo.value | canEditPassword.value);
 
 const updateUserProfile = async () => {
     if (!hasAnyEditPermission.value) {
-        showError("你无权这么做")
-        return
+        showError("你无权这么做");
+        return;
     }
     if (oldUserData == null) {
-        showError("原始用户数据出错")
-        return
+        showError("原始用户数据出错");
+        return;
     }
-    userEditFormRef.value?.clearValidate()
-    const data: RequestUpdateUserProfile = {};
+    userEditFormRef.value?.clearValidate();
+    const data: UpdateUserProfileData = {};
     if (userStore.permission.hasPermissionNode(PermissionNode.UserEditBaseInfo)) {
         if (userData.value.username != "" && oldUserData.username != userData.value.username) {
             try {
-                await userEditFormRef.value?.validateField("username")
+                await userEditFormRef.value?.validateField("username");
             } catch {
-                showError("表单验证失败")
-                return
+                showError("表单验证失败");
+                return;
             }
             data.username = userData.value.username;
         }
         if (userData.value.email != "" && oldUserData.email != userData.value.email) {
             try {
-                await userEditFormRef.value?.validateField("email")
+                await userEditFormRef.value?.validateField("email");
             } catch {
-                showError("表单验证失败")
-                return
+                showError("表单验证失败");
+                return;
             }
             data.email = userData.value.email;
         }
         if (userData.value.qq != 0 && oldUserData.qq != userData.value.qq) {
-            data.qq = userData.value.qq
+            data.qq = userData.value.qq;
         }
     }
     if (userStore.permission.hasPermissionNode(PermissionNode.UserSetPassword) && userData.value.password != "") {
         data.new_password = userData.value.password;
     }
     if (Object.keys(data).length == 0) {
-        showWarning("没有需要修改的内容")
-        return
+        showWarning("没有需要修改的内容");
+        return;
     }
-    const response = await userStore.updateUserInformation(oldUserData.id, data)
+    const response = await ApiUser.updateUserInformation(oldUserData.id, data);
     if (response != null) {
-        showSuccess("编辑用户信息成功")
-        await pageListCardRef.value?.flushData()
-        showUserEditDialog.value = false;
+        showSuccess("编辑用户信息成功");
+        await pageListCardRef.value?.flushData();
+        userEditDialogRef.value?.hide();
     }
-}
-
-const confirmDialogRef: Ref<ConfirmDialogInstance> = ref(null)
-
-const confirmExit = () => {
-    confirmDialogRef.value?.show()
-}
-
-const exit = () => {
-    showUserEditDialog.value = false
 }
 </script>
 
 <template>
-    <PageListCard ref="pageListCardRef"
-                  :fetch-data="fetchUsers"
-                  card-title="用户总览"
-                  no-transform>
+    <PageListCard ref="pageListCardRef" :fetch-data="fetchUsers" card-title="用户总览" no-transform>
         <el-table-column label="CID">
             <template #default="scope">
                 <div class="flex align-items-center">
-                    <el-avatar v-if="scope.row.avatar_url == ''">{{ padStart(scope.row.cid, 4, '0') }}</el-avatar>
-                    <el-avatar v-else :src="handleImageUrl(scope.row.avatar_url)"></el-avatar>
-                    <span class="margin-left-5">{{ padStart(scope.row.cid, 4, '0') }}</span>
+                    <el-avatar v-if="scope.row.avatar_url == ''">{{ formatCid(scope.row.cid) }}</el-avatar>
+                    <el-avatar v-else :src="scope.row.avatar_url"></el-avatar>
+                    <span class="margin-left-5">{{ formatCid(scope.row.cid) }}</span>
                 </div>
             </template>
         </el-table-column>
@@ -148,7 +135,7 @@ const exit = () => {
                 <el-tag v-else type="danger" round effect="dark">Tier2</el-tag>
                 <el-tag class="level text-color-white border-none margin-left-5" round
                         :color="config.ratings[scope.row.rating + 1].color">
-                    {{ serverConfig.getRatingShortName(scope.row.rating as number) }}
+                    {{ serverConfig.getRatingShortName(scope.row.rating) }}
                 </el-tag>
             </template>
         </el-table-column>
@@ -167,43 +154,26 @@ const exit = () => {
             </template>
         </el-table-column>
     </PageListCard>
-    <el-dialog v-model="showUserEditDialog"
-               :close-on-click-modal="false"
-               :show-close="false"
-               :close-on-press-escape="false"
-               :align-center="true">
-        <template #header>
-            编辑用户信息
-        </template>
+    <FormDialog ref="userEditDialogRef" title="编辑用户信息" @dialog-confirm-event="updateUserProfile()" :width="400">
         <el-form :model="userData" :rules="rules" ref="userEditFormRef">
             <el-form-item label="CID">
                 <el-input v-model.number="userData.cid" disabled/>
             </el-form-item>
-            <el-form-item label="用户名" prop="username">
+            <el-form-item label="用户名" prop="username" v-if="canEditBaseInfo">
                 <el-input v-model="userData.username"/>
             </el-form-item>
-            <el-form-item label="邮箱" prop="email">
+            <el-form-item label="邮箱" prop="email" v-if="canEditBaseInfo">
                 <el-input v-model="userData.email"/>
             </el-form-item>
-            <el-form-item label="QQ">
+            <el-form-item label="QQ" v-if="canEditBaseInfo">
                 <el-input v-model.number="userData.qq"/>
             </el-form-item>
-            <el-form-item label="密码" prop="password">
+            <el-form-item label="密码" prop="password" v-if="canEditPassword">
                 <el-input v-model="userData.password" type="password"
                           :disable="userStore.permission.hasPermissionNode(PermissionNode.UserSetPassword)"/>
             </el-form-item>
         </el-form>
-        <template #footer>
-            <div class="flex justify-content-flex-end">
-                <el-button type="success" dark :icon="Check" @click="updateUserProfile()">保存</el-button>
-                <el-button type="danger" dark :icon="Close" @click="confirmExit()">取消</el-button>
-            </div>
-        </template>
-    </el-dialog>
-    <ConfirmDialog ref="confirmDialogRef"
-                   header-content="确认退出"
-                   body-content="未保存的操作会丢失, 确认退出吗？"
-                   @confirm-event="exit()"/>
+    </FormDialog>
 </template>
 
 <style scoped>

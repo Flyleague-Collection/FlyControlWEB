@@ -1,5 +1,6 @@
 import config from "@/config/index.js";
 import {padStart} from "lodash-es";
+import moment from "moment";
 
 export const KB = 1024
 export const MB = 1024 * KB
@@ -27,6 +28,15 @@ export const handleImageUrl = (url: string): string => {
     }
     return url;
 }
+
+export const formatDate = (date: Date | string, format: string = "YYYY-MM-DD HH:mm:ss"): string => {
+    return moment(date).format(format)
+}
+
+export const formatUTCDate = (date: Date | string, format: string = "YYYY-MM-DD HH:mm:ss"): string => {
+    return moment(date).utc().format(format)
+}
+
 
 export const formatCid = (cid?: number): string => {
     return padStart(cid ? cid.toString() : cid, 4, '0')

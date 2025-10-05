@@ -3,15 +3,16 @@ import {onMounted, Ref, ref} from 'vue';
 import ActivityCalendar from "@/components/ActivityCalendar.vue";
 import {useUserStore} from "@/store/user.js";
 import {formatCid, handleImageUrl} from "@/utils/utils.js";
-import Server from "@/api/server";
+import ApiServer from "@/api/server.js";
 import PageListCard from "@/components/card/PageListCard.vue";
 import type {PageListCardInstance, PageListResponse} from "@/components/card/PageListCard.js";
-import Announcement from "@/api/announcement.js";
+import ApiAnnouncement from "@/api/announcement.js";
 import moment from "moment";
 import {Check, Message} from "@element-plus/icons-vue";
 import {getAnnouncementTypeColor, getAnnouncementTypeLabel} from "@/global.js";
 import DOMPurify from "dompurify";
 import {marked} from "marked";
+import ApiClient from "@/api/client.js";
 
 const userStore = useUserStore();
 const totalUser = ref(0);
@@ -26,7 +27,7 @@ const needShowList: Ref<UserAnnouncementModel[]> = ref([]);
 const controllerRatingMax = ref(0);
 
 const getServerInfo = async () => {
-    const data = await Server.getServerInfo()
+    const data = await ApiServer.getServerInfo()
     if (data != null) {
         totalUser.value = data.total_user
         totalController.value = data.total_controller
@@ -35,14 +36,14 @@ const getServerInfo = async () => {
 }
 
 const getServerOnline = async () => {
-    const data = await Server.getServerOnline();
+    const data = await ApiClient.getOnlineClient();
     if (data != null) {
         totalOnline.value = data.general.connected_clients
     }
 }
 
 const getServerRating = async () => {
-    const data = await Server.getServerRating();
+    const data = await ApiServer.getServerRating();
     if (data != null) {
         data.pilots.forEach(pilot => {
             pilot.avatar_url = handleImageUrl(pilot.avatar_url);
@@ -59,7 +60,7 @@ const getServerRating = async () => {
 
 const getAnnouncements = async (page: number, pageSize: number): Promise<PageListResponse<UserAnnouncementModel>> => {
     const result: PageListResponse<UserAnnouncementModel> = {data: [], total: 0}
-    const data = await Announcement.getAnnouncements(page, pageSize);
+    const data = await ApiAnnouncement.getAnnouncements(page, pageSize);
     if (data != null) {
         result.data = data.items;
         result.total = data.total;

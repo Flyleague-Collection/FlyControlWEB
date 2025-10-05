@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import {useUserStore} from "@/store/user.js";
 import {useRouter} from "vue-router";
-import config, {homeConfig} from "@/config/index.js";
 
-const userStore = useUserStore();
+import {homeConfig} from "@/config/index.js";
+
 const router = useRouter();
 </script>
 

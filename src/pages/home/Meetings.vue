@@ -9,9 +9,9 @@ import {homeConfig} from "@/config/index.js";
             <el-table-column label="文件名" prop="name"/>
             <el-table-column label="详细内容">
                 <template #default="scope">
-                    <a :href="scope.row.file_url" target="_blank">
+                    <el-link :href="scope.row.file_url" target="_blank">
                         {{ scope.row.file_display_name }}
-                    </a>
+                    </el-link>
                 </template>
             </el-table-column>
         </el-table>

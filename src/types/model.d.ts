@@ -1,48 +1,9 @@
-type UserModel = {
-    id: number;
-    username: string;
-    email: string;
-    cid: number;
-    avatar_url: string;
-    qq: number;
-    rating: number;
-    guest: boolean;
-    under_monitor: boolean;
-    under_solo: boolean;
-    tier2: boolean;
-    solo_until: string;
-    permission: BigInt;
-    total_atc_time: number;
-    total_pilot_time: number;
-}
-
-type HistoryModel = {
-    callsign: string;
-    start_time: string;
-    end_time: string;
-    online_time: number;
-}
 
 
-type FlightPlanModel = {
-    aircraft: string;
-    alternate: string;
-    altitude: string;
-    arrival: string;
-    callsign: string;
-    cid: number;
-    cruise_tas: number;
-    departure: string;
-    departure_time: number;
-    flight_rules: string;
-    fuel_time_hour: string;
-    fuel_time_minute: string;
-    remarks: string;
-    route: string;
-    route_time_hour: string;
-    route_time_minute: string;
-    locked: boolean;
-}
+
+
+
+
 
 type AuditLogModel = {
     id: number;
@@ -87,47 +48,7 @@ type ServerConfigModel = {
     }[];
 }
 
-type ControllerRating = {
-    avatar_url: string;
-    cid: number;
-    is_guest: boolean;
-    rating: number;
-    solo_until: Date;
-    under_monitor: boolean;
-    under_solo: boolean;
-}
 
-type ControllerRecordModel = {
-    id: number;
-    type: number;
-    uid: number;
-    operator_cid: number;
-    content: string;
-    time: Date;
-}
 
-type TicketModel = {
-    id: number;
-    creator: number;
-    type: number;
-    title: string;
-    content: string;
-    reply: number;
-    closer: number;
-    open_at: Date;
-    close_at: Date;
-}
 
-type ControllerApplicationModel = {
-    id: number;
-    controller_record: string;
-    evidence: string;
-    is_guest: boolean;
-    message: string;
-    platform: string;
-    status: number;
-    user: UserModel;
-    user_id: number;
-    why_want_to_be_controller: string;
-    created_at: string;
-}
+

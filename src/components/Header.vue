@@ -25,7 +25,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="flex align-items-center">
+    <div class="flex align-items-center header">
         <el-menu mode="horizontal" class="w-full" :ellipsis="menuEllipsis" :router="true">
             <el-menu-item>
                 <img :src="config.icon_path" alt="Icon"/>
@@ -54,7 +54,7 @@ onMounted(() => {
                     气象报文查询
                 </el-menu-item>
                 <el-menu-item index="/software">
-                    连飞软件下载
+                    软件下载
                 </el-menu-item>
             </el-sub-menu>
             <el-sub-menu index="/controllers">

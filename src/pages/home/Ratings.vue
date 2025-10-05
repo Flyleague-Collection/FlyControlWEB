@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import request from "@/api/request.js";
-import AxiosXHR = Axios.AxiosXHR;
-import PageListCard from "@/components/card/PageListCard.vue";
+import moment from "moment";
+
+import ApiController from "@/api/controller.js";
 import type {PageListResponse} from "@/components/card/PageListCard.js";
-import {handleImageUrl} from "@/utils/utils.js";
+import PageListCard from "@/components/card/PageListCard.vue";
 import config from "@/config/index.js";
 import {useServerConfigStore} from "@/store/server_config.js";
-import moment from "moment";
+import {formatCid, handleImageUrl} from "@/utils/utils.js";
 
 const serverConfigStore = useServerConfigStore();
 
 const fetchRatingsData = async (page: number, pageSize: number): PageListResponse<ControllerRating> => {
     const result: PageListResponse<ControllerRating> = {data: [], total: 0}
-    const response = await request.get(`/controllers/ratings?page_number=${page}&page_size=${pageSize}`) as AxiosXHR<any>
-    if (response.status == 200) {
-        result.data = response.data.items
-        result.total = response.data.total
+    const data = await ApiController.getControllerRatings(page, pageSize);
+    if (data != null) {
+        result.data = data.items;
+        result.total = data.total;
     }
     return result;
 }
@@ -31,10 +31,10 @@ const fetchRatingsData = async (page: number, pageSize: number): PageListRespons
                 <el-table-column label="CID">
                     <template #default="scope">
                         <el-space>
-                            <el-avatar v-if="scope.row.avatar_url == ''">{{ scope.row.cid }}</el-avatar>
+                            <el-avatar v-if="scope.row.avatar_url == ''">{{ formatCid(scope.row.cid) }}</el-avatar>
                             <el-avatar v-else :src="handleImageUrl(scope.row.avatar_url)"></el-avatar>
                             <span style="font-size: 1.2rem;font-weight: 450;margin-left: 10px">
-                                {{ scope.row.cid }}
+                                {{ formatCid(scope.row.cid) }}
                             </span>
                         </el-space>
                     </template>
@@ -46,7 +46,7 @@ const fetchRatingsData = async (page: number, pageSize: number): PageListRespons
                             <el-tag v-else type="danger" effect="dark">Tier2</el-tag>
                             <el-tag class="level text-color-white border-none" effect="dark"
                                     :color="config.ratings[scope.row.rating + 1].color">
-                                {{ serverConfigStore.ratings[scope.row.rating + 1].short_name }}
+                                {{ serverConfigStore.getRatingShortName(scope.row.rating) }}
                             </el-tag>
                         </el-space>
                     </template>

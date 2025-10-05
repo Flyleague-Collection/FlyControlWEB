@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 import {homeConfig} from "@/config/index.js";
 </script>
 
@@ -23,8 +22,8 @@ import {homeConfig} from "@/config/index.js";
                 <div class="info">
                     {{ homeConfig.content.bilibili_name }}
                     &nbsp;-&nbsp;UID:
-                    <a :href="'https://space.bilibili.com/' + homeConfig.content.bilibili_uid" target="_blank"
-                       rel="noopener noreferrer">
+                    <a :href="'https://space.bilibili.com/' + homeConfig.content.bilibili_uid"
+                       target="_blank" rel="noopener noreferrer">
                         {{ homeConfig.content.bilibili_uid }}
                     </a>
                 </div>
@@ -35,8 +34,9 @@ import {homeConfig} from "@/config/index.js";
                 <div class="info">
                     <p>
                         服务器&nbsp;-&nbsp;
-                        <a :href="'ts3server://'+homeConfig.content.teamspeak_server" target="_blank"
-                           rel="noopener noreferrer">{{ homeConfig.content.teamspeak_server }}
+                        <a :href="'ts3server://'+homeConfig.content.teamspeak_server"
+                           target="_blank" rel="noopener noreferrer">
+                            {{ homeConfig.content.teamspeak_server }}
                         </a>
                     </p>
                     <p>

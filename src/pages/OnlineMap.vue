@@ -13,7 +13,6 @@ import {Style, Icon, Stroke, Fill, Circle} from 'ol/style';
 import Overlay from 'ol/Overlay';
 import axios from "axios";
 import 'ol/ol.css';
-import request from "@/api/request.js";
 import AxiosXHR = Axios.AxiosXHR;
 import {Layer} from "ol/layer.js";
 import {showError} from "@/utils/message.js";
@@ -31,6 +30,7 @@ import {Cloudy, Expand} from "@element-plus/icons-vue";
 import {formatCid} from "@/utils/utils.js";
 import {useServerConfigStore} from "@/store/server_config.js";
 import {useToggle} from "@vueuse/core";
+import ApiClient from "@/api/client.js";
 
 const serverConfigStore = useServerConfigStore();
 
@@ -131,16 +131,16 @@ watch(() => selectedLayer.value, (value: string, oldValue: string) => {
     }
 })
 
-const onlineData: Ref<GetOnlineClientResponse> = ref({
+const onlineData: Ref<OnlineClientModel> = ref({
     general: {},
     pilots: [],
     controllers: []
 });
 
 const fetchWhazzupData = async () => {
-    const response = await request.get(`/clients`) as AxiosXHR<GetOnlineClientResponse>
-    if (response.status == 200) {
-        onlineData.value = response.data
+    const data = await ApiClient.getOnlineClient();
+    if (data != null) {
+        onlineData.value = data;
     }
 }
 
@@ -407,17 +407,11 @@ const drawLine = async (callsign: string) => {
         lineFeature = null;
     }
 
-    const response = (await request.get(`/clients/paths/${callsign}`)) as AxiosXHR<{
-        latitude: number;
-        longitude: number,
-        altitude: number
-    }[]>;
-    if (response.status != 200) {
+    const pointsData = ApiClient.getClientFlightPath(callsign);
+    if (pointsData == null) {
         showError("获取飞行路径失败")
         return;
     }
-
-    const pointsData = response.data
 
     const coordinates = pointsData.map(point =>
         fromLonLat([point.longitude, point.latitude])
@@ -500,22 +494,27 @@ const showPopup = (feature: Feature, coordinate: number[]) => {
 
     if (isPilot) {
         const callsign = feature.get('callsign') as string;
-        const flightPlan = feature.get('flightPlan') as FlightPlanModel;
+        const flightPlan = feature.get('flightPlan') as Nullable<FlightPlanModel>;
         const groundSpeed = feature.get('groundSpeed') as number;
         const altitude = feature.get('altitude') as number;
         const transponder = feature.get('transponder') as string;
         const cid = feature.get('cid') as string;
 
-        popupContent.value = `
+        let content = `
             <h3>${callsign}</h3>
-            <p>${cid}</p>
+            <p>${formatCid(cid)}</p>
             <p>机型: ${flightPlan.aircraft.split("-")[0]}</p>
             <p>应答机: ${transponder}</p>
             <p>地速：${groundSpeed}kt</p>
             <p>高度：${altitude}ft</p>
+          `;
+        if (flightPlan != null) {
+            content += `
             <p>出发机场: ${flightPlan.departure}</p>
             <p>到达机场: ${flightPlan.arrival}</p>
-          `;
+            `;
+        }
+        popupContent.value = content;
     } else {
         const callsign = feature.get('callsign') as string;
         const frequency = (Number(feature.get('frequency')) / 1000).toFixed(3);
@@ -527,7 +526,7 @@ const showPopup = (feature: Feature, coordinate: number[]) => {
         popupContent.value = `
         <h3>${callsign}</h3>
         <p>频率: ${frequency}</p>
-        <p>CID: ${cid}</p>
+        <p>CID: ${formatCid(cid)}</p>
         <p>关扇时间: ${offline_time ? offline_time + 'Z' : '未提供'}</p>
         <p>暂时离开: ${is_break ? '是' : '否'}</p>
         <p>ATC-INFO: </p>

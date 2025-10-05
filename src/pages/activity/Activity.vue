@@ -1,36 +1,17 @@
 <script setup lang="ts">
-import ActivityCalendar from "@/components/ActivityCalendar.vue";
 import {Clock} from "@element-plus/icons-vue";
+import {computed, Ref, ref} from "vue";
+
+import type {ActivityCalendarInterface} from "@/components/ActivityCalendar.js";
+import ActivityCalendar from "@/components/ActivityCalendar.vue";
 import ActivityCard from "@/components/card/ActivityCard.vue";
-import {useActivityStore} from "@/store/activity.js";
-import {computed, onMounted, ref} from "vue";
-import {showError} from "@/utils/message.js";
-import moment from "moment";
 
-const activityStore = useActivityStore();
-const activities = ref<ActivityModel[]>()
-const activitiesRecord = ref<{ [key: string]: ActivityModel }>({})
+const activityCalendarRef: Ref<ActivityCalendarInterface> = ref();
 
-const fetchActivities = async (date: number) => {
-    const time = moment(date).format('YYYY-MM')
-    const data = await activityStore.getActivities(time)
-    if (data == null) {
-        showError("获取活动数据失败")
-        return
-    }
-    activities.value = data
-    activitiesRecord.value = activityStore.translateActivityData(activities.value)
-}
-
-onMounted(async () => {
-    await fetchActivities(Date.now())
-})
-
-const nearByActivity = computed(() => activities.value?.filter(activity => {
+const nearByActivity = computed(() => activityCalendarRef.value?.activities.filter(activity => {
     const activityTime = new Date(activity.active_time);
     return activityTime.getTime() > Date.now();
 }));
-
 </script>
 
 <template>
@@ -47,7 +28,7 @@ const nearByActivity = computed(() => activities.value?.filter(activity => {
             </div>
             <el-empty v-else description="看起来近期并没有活动"/>
         </el-card>
-        <ActivityCalendar class="activity-calendar"/>
+        <ActivityCalendar ref="activityCalendarRef" class="activity-calendar"/>
     </div>
 </template>
 

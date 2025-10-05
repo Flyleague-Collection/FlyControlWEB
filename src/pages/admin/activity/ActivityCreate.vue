@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import {useActivityStore} from "@/store/activity.js";
-import {useRouter} from "vue-router";
 import {ref, Ref} from "vue";
-import {showSuccess} from "@/utils/message.js";
-import ActivityEditCard from "@/components/card/ActivityEditCard.vue";
+import {useRouter} from "vue-router";
 
-const activityStore = useActivityStore();
+import ApiActivity from "@/api/activity.js";
+import ActivityEditCard from "@/components/card/ActivityEditCard.vue";
+import {showSuccess} from "@/utils/message.js";
+
 const router = useRouter();
 
 const activity: Ref<ActivityModel> = ref({
@@ -26,10 +26,10 @@ const activity: Ref<ActivityModel> = ref({
 });
 
 const createNewActivity = async () => {
-    if (await activityStore.createActivity(activity.value)) {
-        showSuccess("活动添加成功")
+    if (await ApiActivity.createActivity(activity.value)) {
+        showSuccess("活动添加成功");
     }
-    cancelBtn()
+    cancelBtn();
 }
 
 const reset = () => {

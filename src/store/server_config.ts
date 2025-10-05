@@ -1,151 +1,42 @@
-import {defineStore} from "pinia";
 import {FormItemRule} from "element-plus";
+import {defineStore} from "pinia";
 import {computed, ComputedRef, Ref, ref} from "vue";
 
-import request from "@/api/request.js";
-import {useUserStore} from "@/store/user.js";
+import ApiServer from "@/api/server.js";
+import {showError} from "@/utils/message.js";
+import ApiUser from "@/api/user.js";
 
 export const useServerConfigStore = defineStore("server-config-store", () => {
+    const limits = ref({
+        username_length_min: 4,
+        username_length_max: 16,
+        password_length_min: 6,
+        password_length_max: 64,
+        email_length_min: 4,
+        email_length_max: 64,
+        cid_min: 1,
+        cid_max: 9999
+    })
     const config: Ref<ServerConfigModel> = ref({
-        limits: {
-            username_length_min: 4,
-            username_length_max: 16,
-            password_length_min: 6,
-            password_length_max: 64,
-            email_length_min: 4,
-            email_length_max: 64,
-            cid_min: 1,
-            cid_max: 9999,
-            simulator_server: true
-        },
         image_limit: {
-            max_allow_size: 5242880,
-            allowed_ext: [".jpg", ".png", ".bmp", ".jpeg"]
+            max_allow_size: 0,
+            allowed_ext: []
         },
-        email_send_interval: 60,
-        facilities: [
-            {
-                id: 0,
-                short_name: "OBS",
-                long_name: "Observer"
-            },
-            {
-                id: 1,
-                short_name: "FSS",
-                long_name: "Flight Service Station"
-            },
-            {
-                id: 2,
-                short_name: "DEL",
-                long_name: "Clearance Delivery"
-            },
-            {
-                id: 3,
-                short_name: "GND",
-                long_name: "Ground"
-            },
-            {
-                id: 4,
-                short_name: "TWR",
-                long_name: "Tower"
-            },
-            {
-                id: 5,
-                short_name: "APP",
-                long_name: "Approach/Departure"
-            },
-            {
-                id: 6,
-                short_name: "CTR",
-                long_name: "Enroute"
-            },
-            {
-                id: 7,
-                short_name: "Pilot",
-                long_name: "Pilot"
-            }
-        ],
-        ratings: [
-            {
-                id: -1,
-                short_name: "Baned",
-                long_name: "Suspended"
-            },
-            {
-                id: 0,
-                short_name: "Normal",
-                long_name: "Normal"
-            },
-            {
-                id: 1,
-                short_name: "OBS",
-                long_name: "Observer"
-            },
-            {
-                id: 2,
-                short_name: "S1",
-                long_name: "Tower Trainee"
-            },
-            {
-                id: 3,
-                short_name: "S2",
-                long_name: "Tower Controller"
-            },
-            {
-                id: 4,
-                short_name: "S3",
-                long_name: "Senior Student"
-            },
-            {
-                id: 5,
-                short_name: "C1",
-                long_name: "Enroute Controller"
-            },
-            {
-                id: 6,
-                short_name: "C2",
-                long_name: "Controller 2 (not in use)"
-            },
-            {
-                id: 7,
-                short_name: "C3",
-                long_name: "Senior Controller"
-            },
-            {
-                id: 8,
-                short_name: "I1",
-                long_name: "Instructor"
-            },
-            {
-                id: 9,
-                short_name: "I2",
-                long_name: "Instructor 2 (not in use)"
-            },
-            {
-                id: 10,
-                short_name: "I3",
-                long_name: "Senior Instructor"
-            },
-            {
-                id: 11,
-                short_name: "SUP",
-                long_name: "Supervisor"
-            },
-            {
-                id: 12,
-                short_name: "ADM",
-                long_name: "Administrator"
-            }
-        ]
+        file_limit: {
+            max_allow_size: 0,
+            allowed_ext: []
+        },
+        email_send_interval: 0,
+        facilities: [],
+        ratings: []
     })
 
-    const userStore = useUserStore();
-
     const getConfigFromServer = async () => {
-        const response = await request.get<ServerConfigModel>(`/server/config`)
-        if (response.status == 200) {
-            config.value = response.data
+        const data = await ApiServer.getServerConfig();
+        if (data == null) {
+            showError("加载服务器配置失败, 请联系管理员");
         }
+        config.value = data;
     }
 
     const usernameLimit: ComputedRef<FormItemRule[]> = computed<FormItemRule[]>((): FormItemRule[] => {
@@ -156,47 +47,47 @@ export const useServerConfigStore = defineStore("server-config-store", () => {
                 trigger: 'blur'
             },
             {
-                min: config.value.limits.username_length_min,
-                max: config.value.limits.username_length_max,
-                message: `长度在${config.value.limits.username_length_min}到${config.value.limits.username_length_max}个字符`,
+                min: limits.value.username_length_min,
+                max: limits.value.username_length_max,
+                message: `长度在${limits.value.username_length_min}到${limits.value.username_length_max}个字符`,
                 trigger: 'blur'
             },
             {
                 asyncValidator: async (_, value: string, callback) => {
-                    if (await userStore.checkUsername(value)) {
-                        callback()
-                        return
+                    if (await ApiUser.checkUsername(value)) {
+                        callback();
+                        return;
                     }
-                    callback(`该用户名已被注册`)
+                    callback(`该用户名已被注册`);
                 },
                 trigger: 'blur'
             }
-        ]
+        ];
     })
 
     const passwordLimit: ComputedRef<FormItemRule[]> = computed<FormItemRule[]>((): FormItemRule[] => {
         return [
             {
-                min: config.value.limits.password_length_min,
-                max: config.value.limits.password_length_max,
-                message: `长度在${config.value.limits.password_length_min}到${config.value.limits.password_length_max}个字符`,
+                min: limits.value.password_length_min,
+                max: limits.value.password_length_max,
+                message: `长度在${limits.value.password_length_min}到${limits.value.password_length_max}个字符`,
                 trigger: 'blur'
             }
-        ]
+        ];
     })
 
     const emailLimit: ComputedRef<FormItemRule[]> = computed<FormItemRule[]>((): FormItemRule[] => {
         return [
             {type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur'},
             {
-                min: config.value.limits.email_length_min,
-                max: config.value.limits.email_length_max,
-                message: `长度在${config.value.limits.email_length_min}到${config.value.limits.email_length_max}个字符`,
+                min: limits.value.email_length_min,
+                max: limits.value.email_length_max,
+                message: `长度在${limits.value.email_length_min}到${limits.value.email_length_max}个字符`,
                 trigger: 'blur'
             },
             {
                 asyncValidator: async (_, value: string, callback) => {
-                    if (await userStore.checkEmail(value)) {
+                    if (await ApiUser.checkEmail(value)) {
                         callback()
                         return
                     }
@@ -204,55 +95,71 @@ export const useServerConfigStore = defineStore("server-config-store", () => {
                 },
                 trigger: 'blur'
             }
-        ]
+        ];
     })
 
     const cidLimit: ComputedRef<FormItemRule[]> = computed<FormItemRule[]>((): FormItemRule[] => {
         return [
+            {pattern: /^[0-9]+$/, message: 'CID必须由纯数字组成', trigger: 'blur'},
             {
-                asyncValidator: async (_, value: string, callback) => {
-                    const cid = Number.parseInt(value)
+                asyncValidator: async (_, value: string, callback: Callback1<string | undefined>) => {
+                    const cid = Number.parseInt(value);
                     if (isNaN(cid)) {
-                        callback("CID必须由纯数字组成")
-                        return
+                        callback("CID必须由纯数字组成");
+                        return;
                     }
                     if (cid < 0) {
-                        callback(`CID不能小于0`)
-                        return
+                        callback("CID不能小于0");
+                        return;
                     }
-                    if (cid < config.value.limits.cid_min) {
-                        callback(`CID不能小于${config.value.limits.cid_min}`)
-                        return
+                    if (cid < limits.value.cid_min) {
+                        callback(`CID不能小于${limits.value.cid_min}`);
+                        return;
                     }
-                    if (cid > config.value.limits.cid_max) {
-                        callback(`CID不能大于${config.value.limits.cid_max}`)
-                        return
+                    if (cid > limits.value.cid_max) {
+                        callback(`CID不能大于${limits.value.cid_max}`);
+                        return;
                     }
-                    if (await userStore.checkCID(cid)) {
-                        callback()
-                        return
+                    if (await ApiUser.checkCID(cid)) {
+                        callback();
+                        return;
                     }
-                    callback(`该CID已被占用`)
+                    callback("该CID已被占用");
                 },
-                trigger: 'blur'
+                trigger: "blur"
             }
-        ]
+        ];
     })
-
+    
     const getRatingShortName = (rating: number): string => {
-        return config.value.ratings[rating + 1].short_name
+        return config.value.ratings[rating + 1].short_name;
+    }
+
+    const getRatingLongName = (rating: number): string => {
+        return config.value.ratings[rating + 1].long_name;
+    }
+
+    const getFacilityShortName = (facility: number): string => {
+        return config.value.facilities[facility + 1].short_name;
+    }
+
+    const getFacilityLongName = (facility: number): string => {
+        return config.value.facilities[facility + 1].long_name;
     }
 
     return {
         config,
         ratings: computed(() => config.value.ratings),
         facilities: computed(() => config.value.facilities),
-        limits: computed(() => config.value.limits),
+        limits: computed(() => limits.value),
         usernameLimit,
         passwordLimit,
         cidLimit,
         emailLimit,
         getConfigFromServer,
-        getRatingShortName
+        getRatingShortName,
+        getRatingLongName,
+        getFacilityShortName,
+        getFacilityLongName
     }
 })

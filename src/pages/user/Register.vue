@@ -1,259 +1,197 @@
 <script setup lang="ts">
-import {ref, reactive} from 'vue'
-import {useRouter} from 'vue-router'
 import type {FormInstance, FormRules} from 'element-plus'
 import {User, Lock, Message, Edit} from '@element-plus/icons-vue';
-import {useUserStore} from "@/store/user.js";
-import {showError, showSuccess} from "@/utils/message.js";
+import {ref, reactive, Ref, onBeforeMount} from 'vue'
+import {useRouter} from 'vue-router'
+
+import ApiUser from "@/api/user.js";
+import Api from "@/api/utils.js";
+import type {SendEmailButtonInterface} from "@/components/SendEmailButton.js";
+import SendEmailButton from "@/components/SendEmailButton.vue";
 import config from "@/config/index.js";
+import {useUserStore} from "@/store/user.js";
 import {useServerConfigStore} from "@/store/server_config.js";
-import request from "@/api/request.js";
-import AxiosXHR = Axios.AxiosXHR;
-import {useCountdown} from "@vueuse/core";
+import {showError, showSuccess} from "@/utils/message.js";
+import {formatCid} from "@/utils/utils.js";
 
 const serverConfig = useServerConfigStore();
-const userStore = useUserStore()
-const router = useRouter()
-const formRef = ref<FormInstance>()
-const loading = ref(false)
-const locked = ref(false)
-const btnText = ref("发送验证码")
+const userStore = useUserStore();
+const router = useRouter();
+const formRef = ref<FormInstance>();
+const loading = ref(false);
 
-const {remaining, start, reset} = useCountdown(serverConfig.config.email_send_interval, {
-    onComplete() {
-        locked.value = false
-        btnText.value = "发送验证码"
-        reset()
-    },
-    onTick() {
-        btnText.value = `${remaining.value}s`
-    }
+const registerForm = reactive<RegisterData>({
+    email: "",
+    email_code: "",
+    username: "",
+    password: "",
+    confirmPassword: ""
 })
-
-const registerForm = reactive<RegisterForm>({
-    username: '',
-    password: '',
-    confirmPassword: '',
-    email: ''
-} as RegisterForm)
 
 const rules = reactive<FormRules>({
     cid: [
-        {required: true, message: '请输入CID', trigger: 'blur'},
+        {required: true, message: "请输入CID", trigger: "blur"},
         ...serverConfig.cidLimit
     ],
     username: [
-        {required: true, message: '请输入用户名', trigger: 'blur'},
+        {required: true, message: "请输入用户名", trigger: "blur"},
         ...serverConfig.usernameLimit
     ],
     email: [
-        {required: true, message: '请输入邮箱', trigger: 'blur'},
+        {required: true, message: "'请输入邮箱", trigger: "blur"},
         ...serverConfig.emailLimit
     ],
     email_code: [
-        {required: true, message: '请输入邮箱验证码', trigger: 'blur'},
-        {min: 6, max: 6, message: '邮箱验证码必须为6位', trigger: 'blur'},
-        {pattern: /^[0-9]+$/, message: '验证码必须为纯数字', trigger: 'blur'}
+        {required: true, message: "请输入邮箱验证码", trigger: "blur"},
+        {min: 6, max: 6, message: "邮箱验证码必须为6位", trigger: "blur"},
+        {pattern: /^[0-9]+$/, message: "验证码必须为纯数字", trigger: "blur"}
     ],
     password: [
-        {required: true, message: '请输入密码', trigger: 'blur'},
+        {required: true, message: "请输入密码", trigger: "blur"},
         ...serverConfig.passwordLimit
     ],
     confirmPassword: [
-        {required: true, message: '请确认密码', trigger: 'blur'},
+        {required: true, message: "请再次输入密码", trigger: "blur"},
         {
-            validator: (rule, value, callback) => {
+            validator: (_, value: string, callback: Callback1<string | undefined>) => {
                 if (value !== registerForm.password) {
-                    callback('两次输入的密码不一致')
+                    callback("两次输入的密码不一致");
                 } else {
-                    callback()
+                    callback();
                 }
             },
-            trigger: 'blur'
+            trigger: "blur"
         }
     ]
 })
 
 const handleRegister = async () => {
     try {
-        await formRef.value?.validate()
-        loading.value = true
-        await userStore.register(registerForm)
-        showSuccess('注册成功，请登录')
-        new Promise(_ => setTimeout(() => router.push('/login'), 1000))
-    } finally {
-        loading.value = false
+        await formRef.value?.validate();
+    } catch {
+        return;
     }
+    loading.value = true;
+    registerForm.cid = Number(registerForm.cid);
+    if (await ApiUser.userRegister(registerForm)) {
+        showSuccess("注册成功，请登录");
+        await router.push("/login");
+    }
+    loading.value = false;
 }
+
+const generatingCid = ref(false);
 
 const getRandomInt = (max: number) => {
     return Math.floor(Math.random() * Math.floor(max));
 }
 
 const randomCid = async () => {
-    let cid = 0
+    let cid = 0;
+    generatingCid.value = true;
     do {
         cid = getRandomInt(serverConfig.limits.cid_max);
-    } while (!(await userStore.checkCID(cid)))
-    registerForm.cid = cid
+    } while (!(await ApiUser.checkCID(cid)));
+    registerForm.cid = formatCid(cid);
+    generatingCid.value = false;
+    await formRef.value?.validateField("cid");
 }
 
-const sendEmailCode = async () => {
-    if (locked.value) {
-        showError(`请在${remaining}后再次发送`)
-        return
+const sendEmailBtnRef: Ref<SendEmailButtonInterface> = ref(false);
+
+const sendEmailCode = async (callback: Callback1<boolean>) => {
+    try {
+        await formRef.value?.validateField("email");
+    } catch {
+        showError("邮箱验证失败");
+        callback(false);
+        return;
     }
-    if (registerForm.email == '') {
-        showError("邮箱验证失败")
-        return
+    try {
+        await formRef.value?.validateField("cid");
+    } catch {
+        showError("CID验证失败");
+        callback(false);
+        return;
+    }
+    if (await Api.sendEmailCode(registerForm.email, Number(registerForm.cid))) {
+        showSuccess("验证码发送成功, 请查看邮箱");
+        callback(true);
     } else {
-        try {
-            await formRef.value?.validateField('email')
-        } catch {
-            showError("邮箱验证失败")
-            return
-        }
-    }
-    if (registerForm.cid == undefined) {
-        showError("CID验证失败")
-        return
-    } else {
-        try {
-            await formRef.value?.validateField('cid')
-        } catch {
-            showError("CID验证失败")
-            return
-        }
-    }
-    const response = await request.post(`/codes`, {
-        email: registerForm.email,
-        cid: registerForm.cid
-    }) as AxiosXHR<any>
-    if (response.status == 200) {
-        showSuccess("验证码发送成功, 请查看邮箱")
-        locked.value = true
-        start()
+        callback(false);
     }
 }
+
+onBeforeMount(async () => {
+    if (userStore.isLogin) {
+        await router.push("/home");
+    }
+})
 </script>
 
 <template>
     <div class="register-container">
-        <div class="register-background">
-            <div class="stamp-pattern"></div>
-        </div>
-        <el-card class="register-box">
-            <div class="flex align-items-center justify-content-center margin-bottom-10">
+        <el-card class="register-box no-transform">
+            <el-space>
                 <img class="register-logo" :src="config.icon_path" alt="Icon"/>
-                <div class="register-title margin-left-10">
-                    {{ config.title }}
-                </div>
-            </div>
-            <el-form
-                :model="registerForm"
-                :rules="rules"
-                ref="formRef"
-                @keyup.enter="handleRegister"
-                class="register-form"
-            >
+                <div class="register-title">{{ config.title }}</div>
+            </el-space>
+            <el-form ref="formRef" :model="registerForm" :rules="rules" class="register-form">
                 <el-form-item prop="cid">
-                    <div class="flex align-items-center w-full">
-                        <el-input
-                            v-model.number="registerForm.cid"
-                            placeholder="请输入cid"
-                            :prefix-icon="Edit"
-                            class="custom-input">
-                        </el-input>
-                        <el-button round type="primary" size="large" class="margin-left-10" @click="randomCid">
+                    <el-space>
+                        <el-input v-model="registerForm.cid" placeholder="请输入cid"
+                                  :prefix-icon="Edit" class="custom-input"/>
+                        <el-button round type="primary" size="large" @click="randomCid()"
+                                   :loading="generatingCid" :disabled="generatingCid">
                             随机CID
                         </el-button>
-                    </div>
+                    </el-space>
                 </el-form-item>
                 <el-form-item prop="username">
-                    <el-input
-                        v-model="registerForm.username"
-                        placeholder="请输入用户名"
-                        :prefix-icon="User"
-                        class="custom-input"
-                    />
+                    <el-input v-model="registerForm.username" placeholder="请输入用户名"
+                              :prefix-icon="User" class="custom-input"/>
                 </el-form-item>
-
                 <el-form-item prop="email">
-                    <el-input
-                        v-model="registerForm.email"
-                        placeholder="请输入邮箱"
-                        :prefix-icon="Message"
-                        class="custom-input"
-                    />
+                    <el-input v-model="registerForm.email" placeholder="请输入邮箱"
+                              :prefix-icon="Message" class="custom-input"/>
                 </el-form-item>
-
                 <el-form-item prop="email_code">
-                    <div class="flex align-items-center w-full">
-                        <el-input
-                            v-model="registerForm.email_code"
-                            placeholder="请输入邮箱验证码"
-                            :prefix-icon="Message"
-                            class="custom-input"
-                        />
-                        <el-button round type="primary" size="large" @click="sendEmailCode" class="margin-left-10"
-                                   :disabled="locked" :loading="locked">
-                            {{ btnText }}
-                        </el-button>
-                    </div>
+                    <el-space>
+                        <el-input v-model="registerForm.email_code" placeholder="请输入邮箱验证码"
+                                  :prefix-icon="Message" class="custom-input" :disabled="registerForm.email == ''"/>
+                        <SendEmailButton ref="sendEmailBtnRef" @button-click-event="sendEmailCode"
+                                         size="large" round :disabled="registerForm.email == ''"/>
+                    </el-space>
                 </el-form-item>
-
                 <el-form-item prop="password">
-                    <el-input
-                        v-model="registerForm.password"
-                        type="password"
-                        placeholder="请输入密码"
-                        :prefix-icon="Lock"
-                        show-password
-                        class="custom-input"
-                    />
+                    <el-input v-model="registerForm.password" type="password"
+                              placeholder="请输入密码" :prefix-icon="Lock" show-password class="custom-input"/>
                 </el-form-item>
-
                 <el-form-item prop="confirmPassword">
-                    <el-input
-                        v-model="registerForm.confirmPassword"
-                        type="password"
-                        placeholder="请确认密码"
-                        :prefix-icon="Lock"
-                        show-password
-                        class="custom-input"
-                    />
+                    <el-input v-model="registerForm.confirmPassword" type="password"
+                              placeholder="请确认密码" :prefix-icon="Lock" show-password class="custom-input"/>
                 </el-form-item>
-
                 <el-form-item>
-                    <el-button
-                        type="primary"
-                        @click="handleRegister"
-                        :loading="loading"
-                        class="register-button"
-                    >
+                    <el-button type="primary" @click="handleRegister" :loading="loading" class="register-button">
                         注册
                     </el-button>
                 </el-form-item>
             </el-form>
-
             <div class="register-footer">
-                <a @click="router.push('/login')" class="login-link">已有账号？立即登录</a>
+                <router-link to="/login" class="register-link">已有账号？立即登录</router-link>
             </div>
         </el-card>
     </div>
 </template>
 
 <style scoped>
-.el-card {
-    transform: none !important;
-}
-
 .register-container {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
     width: 100vw;
+    transition: background-image 1.5s ease-in-out;
     background-image: url("/images/background.png");
     background-size: cover;
     background-repeat: no-repeat;
@@ -262,16 +200,6 @@ const sendEmailCode = async () => {
     top: 0;
     left: 0;
     overflow: hidden;
-}
-
-.register-background {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    opacity: 0.1;
-    z-index: 0;
 }
 
 .register-box {
@@ -284,13 +212,6 @@ const sendEmailCode = async () => {
     position: relative;
     z-index: 1;
     border: none;
-}
-
-.register-header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 32px;
 }
 
 .register-logo {
@@ -352,11 +273,11 @@ const sendEmailCode = async () => {
 }
 
 .register-footer {
-    margin-top: 24px;
+    margin-top: 12px;
     text-align: center;
 }
 
-.login-link {
+.register-link {
     color: var(--primary-color);
     text-decoration: none;
     font-size: 14px;
@@ -364,8 +285,9 @@ const sendEmailCode = async () => {
     cursor: pointer;
 }
 
-.login-link:hover {
+.register-link:hover {
     color: var(--accent-color);
+    text-decoration: underline #409eff solid 1px;
 }
 
 @media (max-width: 480px) {

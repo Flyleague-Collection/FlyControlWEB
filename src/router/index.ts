@@ -38,6 +38,7 @@ import Applications from "@/pages/admin/controller/Applications.vue";
 import FlightPlan from "@/pages/FlightPlan.vue";
 import FlightPlanList from "@/pages/admin/FlightPlanList.vue";
 import Announcement from "@/pages/admin/Announcement.vue";
+import ForgotPassword from "@/pages/user/ForgotPassword.vue";
 
 const isController = (userData: UserModel): boolean => {
     return userData.rating >= ratings.Observer;
@@ -134,6 +135,15 @@ const routes: RouteRecordRaw[] = [
         meta: {
             requireAuth: false,
             title: "登录页"
+        }
+    },
+    {
+        path: "/reset-password",
+        name: "ResetPassword",
+        component: ForgotPassword,
+        meta: {
+            requireAuth: false,
+            title: "重置密码"
         }
     },
     {

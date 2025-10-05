@@ -1,26 +1,28 @@
 <script setup lang="ts">
-import {useUserStore} from "@/store/user.js";
+import {FormInstance, FormRules} from "element-plus";
+import {CircleCheck, CircleClose, Clock, EditPen, List} from "@element-plus/icons-vue";
 import {onMounted, onUnmounted, ref, Ref} from "vue";
 import {useRouter} from "vue-router";
-import {ApplicationStatus, Global, Ratings} from "@/global.js";
-import {showError, showInfo, showSuccess, showWarning} from "@/utils/message.js";
-import request from "@/api/request.js";
-import AxiosXHR = Axios.AxiosXHR;
-import {Check, CircleCheck, CircleClose, Clock, Close, EditPen, List, Picture} from "@element-plus/icons-vue";
-import {formatCid} from "@/utils/utils.js";
-import FormDialog from "@/components/dialog/FormDialog.vue";
-import {FormDialogInstance} from "@/components/dialog/FormDialog.js";
-import {FormInstance, FormRules} from "element-plus";
-import ImageUpload from "@/components/ImageUpload.vue";
-import {ImageUploadInterface} from "@/components/ImageUpload.js";
+import {refManualReset} from "@vueuse/core";
+
+import ApiController from "@/api/controller.js";
 import ApplicationDescription from "@/components/ApplicationDescription.vue";
+import type {ConfirmDialogInstance} from "@/components/dialog/ConfirmDialog.js";
 import ConfirmDialog from "@/components/dialog/ConfirmDialog.vue";
-import {ConfirmDialogInstance} from "@/components/dialog/ConfirmDialog.js";
+import type {FormDialogInstance} from "@/components/dialog/FormDialog.js";
+import FormDialog from "@/components/dialog/FormDialog.vue";
+import type {ImageUploadInterface} from "@/components/ImageUpload.js";
+import ImageUpload from "@/components/ImageUpload.vue";
+import {ApplicationStatus, Global, Ratings} from "@/global.js";
+import {useUserStore} from "@/store/user.js";
+import {showError, showInfo, showSuccess} from "@/utils/message.js";
+import {useReactiveWidth} from "@/composables/useReactiveWidth.js";
 
 const userStore = useUserStore();
 const router = useRouter();
-const application: Ref<ControllerApplicationModel | null> = ref(null)
-const processStatus = ref(0)
+
+const application: Ref<Nullable<ControllerApplicationModel>> = ref(null);
+const processStatus = ref(0);
 
 enum ApplicationProgress {
     Submitted = 1,
@@ -30,56 +32,48 @@ enum ApplicationProgress {
 }
 
 const getSelfApplication = async () => {
-    const response = await request.get(`/controllers/applications/self`) as AxiosXHR<ControllerApplicationModel>
-    if (response.status == 200) {
-        application.value = response.data
-        if (response.data.status == ApplicationStatus.Submitted) {
-            processStatus.value = ApplicationProgress.Submitted
+    const data = await ApiController.getSelfApplication();
+    if (data != null) {
+        application.value = data;
+        if (data.status == ApplicationStatus.Submitted) {
+            processStatus.value = ApplicationProgress.Submitted;
         }
-        if (response.data.status == ApplicationStatus.Processing) {
-            processStatus.value = ApplicationProgress.Waiting
+        if (data.status == ApplicationStatus.Processing) {
+            processStatus.value = ApplicationProgress.Waiting;
         }
-        if (response.data.status >= ApplicationStatus.Passed) {
-            processStatus.value = ApplicationProgress.Result
+        if (data.status >= ApplicationStatus.Passed) {
+            processStatus.value = ApplicationProgress.Result;
         }
     }
 }
 
-let timeoutHandler = null;
+let timeoutHandler: Nullable<number> = null;
 
 onMounted(async () => {
-    if (userStore.userData.rating >= Ratings.Observer) {
-        showInfo("你已是管制员，正在跳转至管制员档案")
-        timeoutHandler = setTimeout(async () => {
-            await router.push("/controllers/profile")
-        }, 3000)
-    }
+    // if (userStore.userData.rating >= Ratings.Observer) {
+    //     showInfo("你已是管制员，正在跳转至管制员档案");
+    //     timeoutHandler = setTimeout(async () => await router.push("/controllers/profile"), 3000);
+    //     return;
+    // }
     await getSelfApplication();
 })
 
 onUnmounted(() => {
     if (timeoutHandler) {
         clearTimeout(timeoutHandler);
+        timeoutHandler = null;
     }
 })
 
-type ApplicationForm = {
-    why_want_to_be_controller: string;
-    controller_record: string;
-    is_guest: boolean;
-    platform: string;
-    evidence: string;
-}
-
 const applicationDialogRef: Ref<FormDialogInstance> = ref()
-const applicationFormData = ref<ApplicationForm>({
+const applicationFormData = ref<ApplicationData>({
     why_want_to_be_controller: "",
     controller_record: "",
     is_guest: false,
     platform: "",
     evidence: ""
 });
-const applicationFormRef: Ref<FormInstance> = ref()
+const applicationFormRef: Ref<FormInstance> = ref();
 const applicationFormRule: Ref<FormRules> = ref({
     why_want_to_be_controller: [
         {required: true, message: "此条目不能为空", trigger: "blur"}
@@ -96,26 +90,30 @@ const applicationFormRule: Ref<FormRules> = ref({
     evidence: [
         {required: true, message: "此条目不能为空", trigger: "blur"}
     ]
-})
-const imageUploadRef: Ref<ImageUploadInterface> = ref()
+});
+const imageUploadRef: Ref<ImageUploadInterface> = ref();
+const submitApplicationLoading = ref(false);
 
 const submitControllerApplication = async () => {
+    submitApplicationLoading.value = true;
     try {
-        await applicationFormRef.value.validate()
+        await applicationFormRef.value.validate();
     } catch {
-        return
+        submitApplicationLoading.value = false;
+        return;
     }
-    if (applicationFormData.value.is_guest) {
+    if (applicationFormData.value.is_guest && imageUploadRef.value?.hasImageSelected()) {
         if (await imageUploadRef.value?.upload() == null) {
-            return
+            submitApplicationLoading.value = false;
+            return;
         }
     } else {
-        applicationFormData.value.platform = "";
-        applicationFormData.value.evidence = "";
+        showError("客座申请提交失败, 请重试");
+        submitApplicationLoading.value = false;
+        return;
     }
-    const response = await request.post(`/controllers/applications`, applicationFormData.value) as AxiosXHR<boolean>
-    if (response.status == 200 && response.data) {
-        showSuccess("提交管制员申请成功")
+    if (await ApiController.submitApplication(applicationFormData.value)) {
+        showSuccess("提交管制员申请成功");
         applicationDialogRef.value?.hide();
         applicationFormData.value = {
             why_want_to_be_controller: "",
@@ -123,19 +121,21 @@ const submitControllerApplication = async () => {
             is_guest: false,
             platform: "",
             evidence: ""
-        }
+        };
         await getSelfApplication();
     }
+    submitApplicationLoading.value = false;
 }
 
 const confirmCancelDialogRef: Ref<ConfirmDialogInstance> = ref()
 const cancelApplication = async () => {
-    const response = await request.delete(`/controllers/applications/self`) as AxiosXHR<boolean>;
-    if (response.status == 200 && response.data) {
+    if (await ApiController.cancelApplication()) {
         showSuccess("成功取消管制员申请");
-        application.value = null
+        application.value = null;
     }
 }
+
+const {less400px} = useReactiveWidth();
 </script>
 
 <template>
@@ -143,8 +143,8 @@ const cancelApplication = async () => {
         <template #header>
             管制员申请进度
         </template>
-        <el-space wrap v-if="application != null" direction="vertical" class="w-full" fill>
-            <el-steps :active="processStatus" align-center class="w-full">
+        <el-space wrap v-if="application != null" direction="vertical" :class="{'w-full': !less400px}" fill>
+            <el-steps :active="processStatus" align-center class="w-full" v-if="!less400px">
                 <el-step title="已提交申请, 等待审核" :icon="EditPen" status="success"/>
                 <el-step title="空管中心已受理, 审核中" :icon="List"
                          :status="processStatus > ApplicationProgress.Processing ? 'success' : 'process'"/>
@@ -161,8 +161,13 @@ const cancelApplication = async () => {
                     </template>
                 </el-step>
             </el-steps>
-            <el-space class="justify-content-center" v-if="application?.status < ApplicationStatus.Passed">
+            <el-space :class="{'justify-content-center': !less400px}"
+                      v-if="application?.status < ApplicationStatus.Passed">
                 <el-button type="danger" round @click="confirmCancelDialogRef?.show()">取消申请</el-button>
+                <el-button type="primary" round @click="application = null; applicationDialogRef?.show()"
+                           v-if="less400px && application?.status == ApplicationStatus.Rejected">
+                    重新提交申请
+                </el-button>
             </el-space>
             <ApplicationDescription :application="application"/>
         </el-space>
@@ -170,14 +175,14 @@ const cancelApplication = async () => {
             <el-button type="primary" @click="applicationDialogRef?.show()">立刻提交</el-button>
         </el-empty>
     </el-card>
-    <form-dialog ref="applicationDialogRef" title="提交管制员申请" :width="500"
-                 @dialog-confirm-event="submitControllerApplication()">
+    <FormDialog ref="applicationDialogRef" title="提交管制员申请" :width="800"
+                @dialog-confirm-event="submitControllerApplication()" :loading="submitApplicationLoading">
         <el-form :model="applicationFormData" :rules="applicationFormRule" ref="applicationFormRef"
                  label-position="top">
-            <el-space fill>
+            <el-space fill class="w-full">
                 <el-alert type="primary" :closable="false" show-icon>
                     <p>此回答没有标准答案</p>
-                    <p>空管中心不会因此拒绝您的加入申请, 请放心填写</p>
+                    <p>空管中心一般不会因此拒绝您的加入申请, 请放心填写</p>
                 </el-alert>
                 <el-form-item label="为什么想要成为管制员" prop="why_want_to_be_controller">
                     <el-input v-model="applicationFormData.why_want_to_be_controller"
@@ -207,12 +212,11 @@ const cancelApplication = async () => {
                 </el-form-item>
             </el-space>
         </el-form>
-    </form-dialog>
+    </FormDialog>
     <ConfirmDialog ref="confirmCancelDialogRef"
                    body-content="确认取消申请吗？"
                    header-content="取消管制员申请"
-                   @confirm-event="cancelApplication"
-    />
+                   @confirm-event="cancelApplication"/>
 </template>
 
 <style scoped>

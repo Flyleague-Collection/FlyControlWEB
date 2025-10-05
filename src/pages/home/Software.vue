@@ -7,7 +7,6 @@ const jumpToUrl = (url: string) => {
 </script>
 
 <template>
-
     <div class="container">
         <span class="title">软件下载</span>
         <div class="content">
@@ -15,36 +14,36 @@ const jumpToUrl = (url: string) => {
                 <el-col v-for="item in homeConfig.software" :span="24" :sm="12">
                     <el-card>
                         <template #header>
-                            <div class="flex justify-content-between">
+                            <el-space class="flex justify-content-between w-full">
                                 <span>{{ item.name }}</span>
-                                <el-tag round effect="dark" type="success">
-                                    {{ item.version }}
-                                </el-tag>
-                            </div>
+                                <el-tag round effect="dark" type="success">{{ item.version }}</el-tag>
+                            </el-space>
                         </template>
                         <span>{{ item.description }}</span>
                         <template #footer>
-                            <div class="flex justify-content-between align-items-center">
-                                <div class="flex align-items-center">
-                                    <el-tag size="large" class="margin-right-5" round v-if="item.platform.windows">
+                            <el-space wrap class="flex justify-content-between w-full">
+                                <el-space wrap>
+                                    <el-tag size="large" round v-if="item.platform.windows">
                                         适用平台：Windows
                                     </el-tag>
-                                    <el-tag size="large" class="margin-right-5" round v-if="item.platform.linux">
+                                    <el-tag size="large" round v-if="item.platform.linux">
                                         适用平台：Linux
                                     </el-tag>
-                                    <el-tag size="large" class="margin-right-5" round v-if="item.platform.macos">
+                                    <el-tag size="large" round v-if="item.platform.macos">
                                         适用平台：MacOS
                                     </el-tag>
-                                </div>
-                                <div class="flex justify-content-flex-end">
-                                    <el-button :disabled="item.file_url == ''" dark round type="success" @click="jumpToUrl(item.file_url)">
+                                </el-space>
+                                <el-space wrap>
+                                    <el-button :disabled="item.file_url == ''" dark round type="success"
+                                               @click="jumpToUrl(item.file_url)">
                                         {{ item.file_url == '' ? '暂无镜像下载地址' : '镜像下载' }}
                                     </el-button>
-                                    <el-button :disabled="item.official_uri == ''" dark round type="primary" @click="jumpToUrl(item.official_uri)">
+                                    <el-button :disabled="item.official_uri == ''" dark round type="primary"
+                                               @click="jumpToUrl(item.official_uri)">
                                         {{ item.official_uri == '' ? '暂无官方下载地址' : '官方下载' }}
                                     </el-button>
-                                </div>
-                            </div>
+                                </el-space>
+                            </el-space>
                         </template>
                     </el-card>
                 </el-col>

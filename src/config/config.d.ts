@@ -24,7 +24,11 @@ type Config = {
     }[];
 }
 
-type Airports = { value: string }[]
+type Airport = {
+    value: string
+}
+
+type Airports = Airport[]
 
 type Facility = {
     value: string;
@@ -85,7 +89,7 @@ type HomeConfig = {
         version: string;
         file_url: string;
         official_uri: string;
-    }
+    }[];
     staff: {
         staffers: {
             [key: string]: StaffInfo;
@@ -97,5 +101,5 @@ type HomeConfig = {
             sector: Job[],
         },
         activity_department: Job[],
-    }
+    };
 }

@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import {useRouter} from "vue-router";
-import {useUserStore} from "@/store/user.js";
-import {computed, Ref, ref} from "vue";
-import {useServerConfigStore} from "@/store/server_config.js";
-import {showError, showSuccess, showWarning} from "@/utils/message.js";
-import type {PageListCardInstance, PageListResponse} from "@/components/card/PageListCard.js";
-import {EditPen} from "@element-plus/icons-vue";
-import PageListCard from "@/components/card/PageListCard.vue";
-import FormDialog from "@/components/dialog/FormDialog.vue";
-import type {FormDialogInstance} from "@/components/dialog/FormDialog.js";
-import config from "@/config/index.js";
-import {cloneDeep, padEnd} from "lodash";
-import request from "@/api/request.js";
-import AxiosXHR = Axios.AxiosXHR;
-import {handleImageUrl} from "@/utils/utils.js";
+import {cloneDeep} from "lodash";
 import moment from "moment";
-import {use} from "echarts/core";
+import {EditPen} from "@element-plus/icons-vue";
+import {computed, Ref, ref} from "vue";
+import {useRouter} from "vue-router";
+
+import ApiController from "@/api/controller.js";
+import ApiUser from "@/api/user.js";
+import type {PageListCardInstance, PageListResponse} from "@/components/card/PageListCard.js";
+import PageListCard from "@/components/card/PageListCard.vue";
+import type {FormDialogInstance} from "@/components/dialog/FormDialog.js";
+import FormDialog from "@/components/dialog/FormDialog.vue";
+import {useReactiveWidth} from "@/composables/useReactiveWidth.js";
+import config from "@/config/index.js";
+import {useServerConfigStore} from "@/store/server_config.js";
+import {useUserStore} from "@/store/user.js";
+import {showError, showSuccess, showWarning} from "@/utils/message.js";
 import {PermissionNode} from "@/utils/permission.js";
-import {padStart} from "lodash-es";
+import {formatCid, handleImageUrl} from "@/utils/utils.js";
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -33,7 +33,7 @@ const hasAnyEditPermission = computed(() => {
 
 const fetchUsers = async (page: number, pageSize: number): Promise<PageListResponse<UserModel>> => {
     const result: PageListResponse<UserModel> = {data: [], total: 0};
-    const data = await userStore.getUserPage(page, pageSize);
+    const data = await ApiUser.getUserPage(page, pageSize);
     if (data != null) {
         result.data = data.items;
         result.total = data.total;
@@ -43,7 +43,7 @@ const fetchUsers = async (page: number, pageSize: number): Promise<PageListRespo
 
 const fetchControllers = async (page: number, pageSize: number): Promise<PageListResponse<UserModel>> => {
     const result: PageListResponse<UserModel> = {data: [], total: 0};
-    const data = await userStore.getControllerPage(page, pageSize);
+    const data = await ApiController.getControllers(page, pageSize);
     if (data != null) {
         result.data = data.items;
         result.total = data.total;
@@ -57,19 +57,19 @@ const userInfo: Ref<UserModel> = ref({});
 
 const showEditRatingDialog = async (id: number) => {
     if (!hasAnyEditPermission) {
-        showError("你无权这么做")
-        return
+        showError("你无权这么做");
+        return;
     }
-    const user = await userStore.getUserByUid(id)
+    const user = await ApiUser.getUserByUid(id);
     if (user == null) {
-        return
+        return;
     }
     if (!user.under_solo) {
         user.solo_until = moment().format("YYYY-MM-DD HH:mm:ss");
     }
     userInfo.value = user;
     oldValue.value = cloneDeep(user);
-    editRatingDialogRef.value?.show()
+    editRatingDialogRef.value?.show();
 }
 
 const userListCardRef: Ref<PageListCardInstance> = ref(null);
@@ -77,52 +77,53 @@ const controllerListCardRef: Ref<PageListCardInstance> = ref(null);
 
 const confirmUpdateRating = async () => {
     if (!hasAnyEditPermission) {
-        showError("你无权这么做")
-        return
+        showError("你无权这么做");
+        return;
     }
     const requestData: Record<string, string | number | boolean> = {}
     if (userStore.permission.hasPermissionNode(PermissionNode.ControllerEditRating) && oldValue.value.rating != userInfo.value.rating) {
-        requestData.rating = userInfo.value.rating
+        requestData.rating = userInfo.value.rating;
     }
     if (userStore.permission.hasPermissionNode(PermissionNode.ControllerTier2Rating) && oldValue.value.tier2 != userInfo.value.tier2) {
-        requestData.tier2 = userInfo.value.tier2
+        requestData.tier2 = userInfo.value.tier2;
     }
     if (userStore.permission.hasPermissionNode(PermissionNode.ControllerChangeGuest) && oldValue.value.guest != userInfo.value.guest) {
-        requestData.guest = userInfo.value.guest
+        requestData.guest = userInfo.value.guest;
     }
     if (!userInfo.value.guest) {
         if (userStore.permission.hasPermissionNode(PermissionNode.ControllerChangeUnderMonitor) && oldValue.value.under_monitor != userInfo.value.under_monitor) {
-            requestData.under_monitor = userInfo.value.under_monitor
+            requestData.under_monitor = userInfo.value.under_monitor;
         }
         if (userStore.permission.hasPermissionNode(PermissionNode.ControllerChangeSolo) && oldValue.value.under_solo != userInfo.value.under_solo) {
-            requestData.under_solo = userInfo.value.under_solo
+            requestData.under_solo = userInfo.value.under_solo;
             if (userInfo.value.under_solo) {
                 if (moment(userInfo.value.solo_until).isBefore(moment())) {
-                    showError("Solo许可时间不得早于当前时间")
-                    return
+                    showError("Solo许可时间不得早于当前时间");
+                    return;
                 }
-                requestData.solo_until = userInfo.value.solo_until
+                requestData.solo_until = userInfo.value.solo_until;
             }
         }
     }
     if (Object.values(requestData).length == 0) {
-        showWarning("没有需要修改的部分")
-        return
+        showWarning("没有需要修改的部分");
+        return;
     }
-    requestData.rating = userInfo.value.rating
-    requestData.tier2 = userInfo.value.tier2
-    requestData.guest = userInfo.value.guest
-    requestData.under_monitor = userInfo.value.under_monitor
-    requestData.under_solo = userInfo.value.under_solo
-    requestData.solo_until = moment(userInfo.value.solo_until).utc().format()
-    const response = await request.put(`/controllers/${userInfo.value.id}/rating`, requestData) as AxiosXHR<boolean>
-    if (response.status == 200 && response.data) {
-        showSuccess("编辑管制权限成功")
-        editRatingDialogRef.value?.hide()
-        userListCardRef.value?.flushData()
-        controllerListCardRef.value?.flushData()
+    requestData.rating = userInfo.value.rating;
+    requestData.tier2 = userInfo.value.tier2;
+    requestData.guest = userInfo.value.guest;
+    requestData.under_monitor = userInfo.value.under_monitor;
+    requestData.under_solo = userInfo.value.under_solo;
+    requestData.solo_until = moment(userInfo.value.solo_until).utc().format();
+    if (await ApiController.updateControllerRating(userInfo.value.id, requestData)) {
+        showSuccess("编辑管制权限成功");
+        editRatingDialogRef.value?.hide();
+        userListCardRef.value?.flushData();
+        controllerListCardRef.value?.flushData();
     }
 }
+
+const {less900px, less500px, less400px} = useReactiveWidth();
 </script>
 
 <template>
@@ -131,20 +132,30 @@ const confirmUpdateRating = async () => {
                       :fetch-data="fetchUsers"
                       card-title="用户总览"
                       no-transform>
-            <el-table-column label="CID">
+            <el-table-column label="CID" :width="less900px ? less400px ? '' : 60 : ''">
                 <template #default="scope">
-                    <div class="flex align-items-center">
-                        <el-avatar v-if="scope.row.avatar_url == ''">{{ padStart(scope.row.cid, 4, '0') }}</el-avatar>
-                        <el-avatar v-else :src="handleImageUrl(scope.row.avatar_url)"/>
-                        <span class="margin-left-5">{{ padStart(scope.row.cid, 4, '0') }}</span>
-                    </div>
+                    <el-space wrap class="flex align-items-center">
+                        <span v-if="!less900px">
+                            <el-avatar v-if="scope.row.avatar_url == ''">
+                                {{ formatCid(scope.row.cid) }}
+                            </el-avatar>
+                            <el-avatar v-else :src="handleImageUrl(scope.row.avatar_url)"/>
+                        </span>
+                        <span>{{ formatCid(scope.row.cid) }}</span>
+                        <el-space wrap v-if="less400px">
+                            <el-button :icon="EditPen" type="primary"
+                                       size="small" @click="showEditRatingDialog(scope.row.id)">
+                                编辑
+                            </el-button>
+                        </el-space>
+                    </el-space>
                 </template>
             </el-table-column>
-            <el-table-column prop="username" label="用户名"/>
-            <el-table-column prop="email" label="邮箱"/>
-            <el-table-column label="管制权限">
+            <el-table-column prop="username" label="用户名" v-if="!less900px"/>
+            <el-table-column prop="email" label="邮箱" v-if="!less900px"/>
+            <el-table-column label="管制权限" v-if="!less500px">
                 <template #default="scope">
-                    <el-space>
+                    <el-space wrap>
                         <el-tag v-if="scope.row.tier2" type="success" round effect="dark">Tier2</el-tag>
                         <el-tag v-else type="danger" round effect="dark">Tier2</el-tag>
                         <el-tag class="level text-color-white border-none" round
@@ -157,7 +168,7 @@ const confirmUpdateRating = async () => {
                     </el-space>
                 </template>
             </el-table-column>
-            <el-table-column label="操作">
+            <el-table-column label="操作" v-if="!less400px">
                 <template #default="scope">
                     <el-button :icon="EditPen" type="primary" @click="showEditRatingDialog(scope.row.id)">
                         编辑
@@ -166,20 +177,36 @@ const confirmUpdateRating = async () => {
             </el-table-column>
         </PageListCard>
         <PageListCard ref="controllerListCardRef" :fetch-data="fetchControllers" card-title="管制员总览" no-transform>
-            <el-table-column label="CID">
+            <el-table-column label="CID" :width="less900px ? less400px ? '' : 60 : ''">
                 <template #default="scope">
-                    <div class="flex align-items-center">
-                        <el-avatar v-if="scope.row.avatar_url == ''">{{ padStart(scope.row.cid, 4, '0') }}</el-avatar>
-                        <el-avatar v-else :src="handleImageUrl(scope.row.avatar_url)"/>
-                        <span class="margin-left-5">{{ padStart(scope.row.cid, 4, '0') }}</span>
-                    </div>
+                    <el-space wrap class="flex align-items-center">
+                        <span v-if="!less900px">
+                            <el-avatar v-if="scope.row.avatar_url == ''">
+                                {{ formatCid(scope.row.cid) }}
+                            </el-avatar>
+                            <el-avatar v-else :src="handleImageUrl(scope.row.avatar_url)"/>
+                        </span>
+                        <span>{{ formatCid(scope.row.cid) }}</span>
+                        <el-space wrap v-if="less400px">
+                            <el-button :icon="EditPen" type="success" size="small"
+                                       @click="showEditRatingDialog(scope.row.id)"
+                                       :disabled="!hasAnyEditPermission">
+                                编辑权限
+                            </el-button>
+                            <el-button :icon="EditPen" type="primary" size="small"
+                                       @click="router.push(`/admin/controllers/${scope.row.id}`)"
+                                       :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ControllerShowRecord)">
+                                编辑履历
+                            </el-button>
+                        </el-space>
+                    </el-space>
                 </template>
             </el-table-column>
-            <el-table-column prop="username" label="用户名"/>
-            <el-table-column prop="email" label="邮箱"/>
-            <el-table-column label="管制权限">
+            <el-table-column prop="username" label="用户名" v-if="!less900px"/>
+            <el-table-column prop="email" label="邮箱" v-if="!less900px"/>
+            <el-table-column label="管制权限" v-if="!less500px">
                 <template #default="scope">
-                    <el-space>
+                    <el-space wrap>
                         <el-tag v-if="scope.row.tier2" type="success" round effect="dark">Tier2</el-tag>
                         <el-tag v-else type="danger" round effect="dark">Tier2</el-tag>
                         <el-tag class="level text-color-white border-none" round
@@ -192,29 +219,32 @@ const confirmUpdateRating = async () => {
                     </el-space>
                 </template>
             </el-table-column>
-            <el-table-column label="操作">
+            <el-table-column label="操作" v-if="!less400px">
                 <template #default="scope">
-                    <el-button :icon="EditPen" type="success"
-                               @click="showEditRatingDialog(scope.row.id)"
-                               :disabled="!hasAnyEditPermission">
-                        编辑权限
-                    </el-button>
-                    <el-button :icon="EditPen" type="primary"
-                               @click="router.push(`/admin/controllers/${scope.row.id}`)"
-                               :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ControllerShowRecord)">
-                        编辑履历
-                    </el-button>
+                    <el-space wrap>
+                        <el-button :icon="EditPen" type="success"
+                                   @click="showEditRatingDialog(scope.row.id)"
+                                   :disabled="!hasAnyEditPermission">
+                            编辑权限
+                        </el-button>
+                        <el-button :icon="EditPen" type="primary"
+                                   @click="router.push(`/admin/controllers/${scope.row.id}`)"
+                                   :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ControllerShowRecord)">
+                            编辑履历
+                        </el-button>
+                    </el-space>
                 </template>
             </el-table-column>
         </PageListCard>
     </el-space>
     <FormDialog ref="editRatingDialogRef"
+                class="a"
                 title="修改管制权限"
                 @dialog-confirm-event="confirmUpdateRating()"
                 :width="300">
         <el-form :model="userInfo">
             <el-form-item label="CID">
-                <el-input :placeholder="userInfo.cid.toString().padEnd(4, '0')" disabled/>
+                <el-input :placeholder="formatCid(userInfo.cid)" disabled/>
             </el-form-item>
             <el-form-item label="管制权限">
                 <el-select v-model.number="userInfo.rating" :options="config.ratings"
@@ -245,7 +275,5 @@ const confirmUpdateRating = async () => {
 </template>
 
 <style scoped>
-.el-card {
-    transform: none;
-}
+
 </style>

@@ -1,4 +1,4 @@
-type GetServerInfoResponse = {
+type ServerInfoModel = {
     total_user: number;
     total_controller: number;
     total_activity: number;
@@ -10,48 +10,28 @@ type ServerRatingModel = {
     time: number;
 }
 
-type GetServerRatingResponse = {
+type ServerRatingsModel = {
     pilots: ServerRatingModel[];
     controllers: ServerRatingModel[];
 }
 
-type OnlineControllerModel = {
-    atc_info: string[];
-    callsign: string;
-    cid: number;
-    facility: number;
-    frequency: number;
-    latitude: number;
-    logon_time: string;
-    offline_time: string;
-    is_break: boolean;
-    longitude: number;
-    rating: number;
-    real_name: string;
+type FileLimit = {
+    max_allow_size: number;
+    allowed_ext: string[];
 }
 
-type OnlinePilotModel = {
-    altitude: number;
-    callsign: string;
-    cid: number;
-    flight_plan: FlightPlanModel;
-    ground_speed: number;
-    heading: number;
-    latitude: number;
-    logon_time: string;
-    longitude: number;
-    real_name: string;
-    transponder: string;
+type FacilityName = {
+    id: number;
+    short_name: string;
+    long_name: string;
 }
 
-type GetOnlineClientResponse = {
-    general: {
-        connected_clients: number;
-        generate_time: string;
-        online_controller: number;
-        online_pilot: number;
-        version: number;
-    };
-    controllers: OnlineControllerModel[];
-    pilots: OnlinePilotModel[];
+type RatingName = FacilityName
+
+type ServerConfigModel = {
+    image_limit: FileLimit;
+    file_limit: FileLimit;
+    email_send_interval: number;
+    facilities: FacilityName[];
+    ratings: RatingName[]
 }

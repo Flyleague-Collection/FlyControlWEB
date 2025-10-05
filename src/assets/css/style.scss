@@ -147,3 +147,27 @@ body {
   margin: 0;
   padding: 0;
 }
+
+.popper {
+  background: transparent !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.dark .popper {
+  background: transparent !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.popper .el-menu,
+.popper .el-menu:hover {
+  border: none !important;
+  padding: 0 !important;
+  background: transparent linear-gradient(45deg, rgba(66, 60, 90, 0.15), rgba(66, 60, 90, 0.15)) !important;
+}
+
+.dark .popper .el-menu,
+.dark .popper .el-menu:hover {
+  border: none !important;
+  padding: 0 !important;
+  background: transparent linear-gradient(45deg, rgba(66, 60, 90, 0.15), rgba(66, 60, 90, 0.15)) !important;
+}

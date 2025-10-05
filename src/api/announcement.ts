@@ -1,8 +1,10 @@
 import request from "@/api/request.js";
+import Api from "@/api/utils.js";
 import AxiosXHR = Axios.AxiosXHR;
-import {getPageData} from "@/api/utils.js";
 
-export namespace Announcement {
+export namespace ApiAnnouncement {
+    import getPageData = Api.getPageData;
+
     export const deleteAnnouncement = async (announcementId: number): Promise<boolean> => {
         const response = await request.delete(`/announcements/${announcementId}`) as AxiosXHR<boolean>;
         return response.status == 200 && response.data
@@ -18,13 +20,13 @@ export namespace Announcement {
         return response.status == 200 && response.data
     }
 
-    export const getDetailAnnouncements = async (page: number, pageSize: number): Promise<PageDataResponse<AnnouncementModel>> => {
+    export const getDetailAnnouncements = async (page: number, pageSize: number): Promise<Nullable<PageDataResponse<AnnouncementModel>>> => {
         return getPageData<AnnouncementModel>(`/announcements/detail`, page, pageSize)
     }
 
-    export const getAnnouncements = async (page: number, pageSize: number): Promise<PageDataResponse<UserAnnouncementModel>> => {
+    export const getAnnouncements = async (page: number, pageSize: number): Promise<Nullable<PageDataResponse<UserAnnouncementModel>>> => {
         return getPageData<UserAnnouncementModel>(`/announcements`, page, pageSize)
     }
 }
 
-export default Announcement;
+export default ApiAnnouncement;

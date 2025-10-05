@@ -69,6 +69,7 @@ onMounted(() => {
              :collapse="!menuExpend"
              :close-on-click-outside="true"
              :unique-opened="true"
+             popper-class="popper"
              :router="true">
         <el-menu-item
             ref="expendRef"
@@ -195,8 +196,12 @@ onMounted(() => {
     margin: 10px;
 }
 
-.el-menu {
+.el-menu,
+.el-sub-menu,
+.el-menu:deep(.el-menu),
+.el-menu:deep(.el-menu-item) {
     border-right: none;
+    background-color: transparent;
 }
 
 .menu {
