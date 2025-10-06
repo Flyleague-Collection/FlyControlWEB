@@ -1,29 +1,40 @@
 <script setup lang="ts">
-import config from "@/config/index.js";
-import {handleImageUrl} from "@/utils/utils.js";
-import {padStart} from "lodash-es";
+import {formatCid, handleImageUrl} from "@/utils/utils.js";
+import {ActivityPilotStatus} from "@/global.js";
 
 defineProps<{ data: ActivityPilotModel }>()
 </script>
 
 <template>
     <el-card>
-        <div class="flex align-items-center justify-content-center-below-425px">
-            <el-avatar size="large" v-if="data.user.avatar_url == ''">{{ padStart(data.user.cid, 4, '0') }}</el-avatar>
+        <el-space>
+            <el-avatar size="large" v-if="data.user.avatar_url == ''">{{ formatCid(data.user.cid) }}</el-avatar>
             <el-avatar size="large" v-else :src="handleImageUrl(data.user.avatar_url)"/>
-            <div class="flex flex-direction-column margin-left-10">
+            <div class="flex flex-direction-column">
                 <span class="callsign">{{ data.callsign }}</span>
-                <span>CID: {{ padStart(data.user.cid, 4, '0') }}</span>
-                <div class="flex" :class="config.pilot_status[data.status].class">
-                    <el-tag class="border-none" round effect="dark">
+                <span>CID: {{ formatCid(data.user.cid) }}</span>
+                <el-space>
+                    <el-tag type="primary" effect="dark" round>
                         {{ data.aircraft_type }}
                     </el-tag>
-                    <el-tag class="pilot-status margin-left-10 border-none" round effect="dark">
-                        {{ config.pilot_status[data.status].label }}
+                    <el-tag type="primary" effect="dark" round
+                            v-if="data.status == ActivityPilotStatus.Sign">
+                        已报名
                     </el-tag>
-                </div>
+                    <el-tag type="success" effect="dark" round
+                            v-else-if="data.status == ActivityPilotStatus.Delivery">
+                        已放行
+                    </el-tag>
+                    <el-tag color="#b2c75e" effect="dark" class="border-none" round
+                            v-else-if="data.status == ActivityPilotStatus.Takeoff">
+                        已起飞
+                    </el-tag>
+                    <el-tag color="#c78636" effect="dark" class="border-none" round v-else>
+                        已落地
+                    </el-tag>
+                </el-space>
             </div>
-        </div>
+        </el-space>
     </el-card>
 </template>
 

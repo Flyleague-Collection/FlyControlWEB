@@ -2,6 +2,8 @@ import {useMediaQuery} from "@vueuse/core";
 
 export const useReactiveWidth = () => {
     return {
+        less1200px: useMediaQuery("(max-width: 1200px)"),
+        less1100px: useMediaQuery("(max-width: 1100px)"),
         less1000px: useMediaQuery("(max-width: 1000px)"),
         less900px: useMediaQuery("(max-width: 900px)"),
         less800px: useMediaQuery("(max-width: 800px)"),

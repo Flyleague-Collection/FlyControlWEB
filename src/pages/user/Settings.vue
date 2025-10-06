@@ -13,7 +13,7 @@ import {Global} from "@/global.js";
 import {useServerConfigStore} from "@/store/server_config.js";
 import {useUserStore} from "@/store/user.js";
 import {showError, showSuccess, showWarning} from "@/utils/message.js";
-import {formatCid, formatDate} from "@/utils/utils.js";
+import {formatCid} from "@/utils/utils.js";
 import {FormDialogInstance} from "@/components/dialog/FormDialog.js";
 import SendEmailButton from "@/components/SendEmailButton.vue";
 
@@ -30,7 +30,7 @@ const atcTime = computed(() => {
 });
 
 const ratings = computed(() => {
-    const rating = serverConfigStore.ratings[userData.rating]
+    const rating = serverConfigStore.ratings[userData.rating + 1]
     return `${rating.short_name}/${rating.long_name}`
 });
 
@@ -198,7 +198,7 @@ const submitUpdateUserInfoForm = async () => {
                                     <span class="font-size-12rem">CID: {{ formatCid(userData.cid) }}</span>
                                     <el-space wrap class="justify-content-center">
                                         <el-tag class="border-none" effect="dark"
-                                                :color="config.ratings[userData.rating].color">
+                                                :color="config.ratings[userData.rating + 1].color">
                                             {{ ratings }}
                                         </el-tag>
                                         <el-tag v-if="userData.tier2" type="success" effect="dark">Tier2</el-tag>

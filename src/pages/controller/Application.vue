@@ -3,7 +3,6 @@ import {FormInstance, FormRules} from "element-plus";
 import {CircleCheck, CircleClose, Clock, EditPen, List} from "@element-plus/icons-vue";
 import {onMounted, onUnmounted, ref, Ref} from "vue";
 import {useRouter} from "vue-router";
-import {refManualReset} from "@vueuse/core";
 
 import ApiController from "@/api/controller.js";
 import ApplicationDescription from "@/components/ApplicationDescription.vue";
@@ -50,11 +49,11 @@ const getSelfApplication = async () => {
 let timeoutHandler: Nullable<number> = null;
 
 onMounted(async () => {
-    // if (userStore.userData.rating >= Ratings.Observer) {
-    //     showInfo("你已是管制员，正在跳转至管制员档案");
-    //     timeoutHandler = setTimeout(async () => await router.push("/controllers/profile"), 3000);
-    //     return;
-    // }
+    if (userStore.userData.rating >= Ratings.Observer) {
+        showInfo("你已是管制员，正在跳转至管制员档案");
+        timeoutHandler = setTimeout(async () => await router.push("/controllers/profile"), 3000);
+        return;
+    }
     await getSelfApplication();
 })
 

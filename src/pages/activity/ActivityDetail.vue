@@ -11,6 +11,7 @@ import ActivityPilotCard from "@/components/card/ActivityPilotCard.vue";
 import ActivityFacilityCard from "@/components/card/ActivityFacilityCard.vue";
 import type {FormDialogInstance} from "@/components/dialog/FormDialog.js";
 import FormDialog from "@/components/dialog/FormDialog.vue";
+import {useReactiveWidth} from "@/composables/useReactiveWidth.js";
 import config from "@/config/index.js";
 import {useUserStore} from "@/store/user.js";
 import {showSuccess} from "@/utils/message.js";
@@ -148,6 +149,8 @@ const toFlightPlanPage = () => {
         }
     })
 }
+
+const {less900px} = useReactiveWidth();
 </script>
 
 <template>
@@ -156,9 +159,10 @@ const toFlightPlanPage = () => {
             <el-button :icon="ArrowLeft" text @click="router.push('/activities')"/>
             <span class="activity-title">{{ activity?.title }}</span>
         </div>
+        <img :src="activity?.image_url" alt="活动图片" class="activity-img" v-if="less900px"/>
         <div class="activity-content">
             <el-splitter>
-                <el-splitter-panel size="60%">
+                <el-splitter-panel size="60%" v-if="!less900px">
                     <img :src="activity?.image_url" alt="活动图片" class="activity-img"/>
                 </el-splitter-panel>
                 <el-splitter-panel>

@@ -1,6 +1,6 @@
 export const Global = {
-    version: "0.8.4",
-    whatsNew: "<p>1、修复管制员无法报名问题</p><p>2、为活动编辑页面添加保存草稿功能</p><p>3、添加了席位的自动补全</p>",
+    version: "0.8.5",
+    whatsNew: "<p>1、优化界面显示效果</p><p>2、添加活动登记</p>",
     controllerRecordTypes: [
         {
             label: "面试",
@@ -125,6 +125,19 @@ export enum ApplicationStatus {
     Processing,
     Passed,
     Rejected
+}
+
+export enum ActivityStatus {
+    Sign,
+    Active,
+    Finish
+}
+
+export enum ActivityPilotStatus {
+    Sign,
+    Delivery,
+    Takeoff,
+    Land
 }
 
 export const getAnnouncementTypeColor = (id: number): string => {

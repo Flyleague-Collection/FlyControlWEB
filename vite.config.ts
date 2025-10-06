@@ -53,6 +53,7 @@ export default defineConfig({
         }
     },
     build: {
+        chunkSizeWarningLimit: "1024",
         rollupOptions: {
             output: {
                 manualChunks: {
@@ -60,7 +61,19 @@ export default defineConfig({
                     'element-plus': ['element-plus'],
                     'element-plus-icon': ['@element-plus/icons-vue'],
                     'ol': ['ol', 'ol-mapbox-style'],
-                    'apis': ['./src/api/announcement.js', './src/api/file.js', './src/api/request.js', './src/api/server.js', './src/api/utils.js'],
+                    'apis': [
+                        "./src/api/activity.js",
+                        "./src/api/announcement.js",
+                        "./src/api/client.js",
+                        "./src/api/controller.js",
+                        "./src/api/file.js",
+                        "./src/api/flightplan.js",
+                        "./src/api/request.js",
+                        "./src/api/server.js",
+                        "./src/api/ticket.js",
+                        "./src/api/user.js",
+                        "./src/api/utils.js"
+                    ],
                     'utils': ['./src/utils/message.js', './src/utils/permission.js', './src/utils/utils.js']
                 },
                 entryFileNames: 'js/[name].[hash].js',

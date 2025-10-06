@@ -67,6 +67,16 @@ export namespace ApiActivity {
         const response = await request.delete(`/activities/${activityId}/controllers/${facilityId}`) as AxiosXHR<Nullable<Boolean>>;
         return response.status == 200 && response.data;
     }
+
+    export const updateActivityStatus = async (activityId: number, status: number): Promise<boolean> => {
+        const response = await request.put(`/activities/${activityId}/status`, {status: status}) as AxiosXHR<Nullable<Boolean>>;
+        return response.status == 200 && response.data;
+    }
+
+    export const updatePilotStatus = async (activityId: number, pilotId: number, status: number): Promise<boolean> => {
+        const response = await request.put(`/activities/${activityId}/pilots/${pilotId}/status`, {status: status}) as AxiosXHR<Nullable<Boolean>>;
+        return response.status == 200 && response.data;
+    }
 }
 
 export default ApiActivity;
