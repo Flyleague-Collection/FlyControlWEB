@@ -578,64 +578,85 @@ onUnmounted(() => {
                 <el-button type="primary" :icon="Cloudy" @click="toggleWeatherShow()" :loading="loadingWeather"/>
             </el-space>
         </div>
-        <div class="left-box" v-if="showDetailList">
-            <el-table :data="onlineData.pilots" height="100%" class="data-table">
-                <el-table-column label="呼号" prop="callsign"/>
-                <el-table-column label="CID">
-                    <template #default="scope">
-                        {{ formatCid(scope.row.cid) }}
-                    </template>
-                </el-table-column>
-                <el-table-column label="地速">
-                    <template #default="scope">
-                        {{ scope.row.ground_speed }} kt
-                    </template>
-                </el-table-column>
-                <el-table-column label="高度">
-                    <template #default="scope">
-                        {{ scope.row.altitude }} ft
-                    </template>
-                </el-table-column>
-                <el-table-column label="应答机" prop="transponder"/>
-            </el-table>
-        </div>
-        <div class="right-box" v-if="showDetailList">
-            <el-table :data="onlineData.controllers" height="100%" class="data-table">
-                <el-table-column label="呼号" prop="callsign"/>
-                <el-table-column label="CID">
-                    <template #default="scope">
-                        {{ formatCid(scope.row.cid) }}
-                    </template>
-                </el-table-column>
-                <el-table-column label="登录权限">
-                    <template #default="scope">
-                        <el-tag class="border-none"
-                                :color="config.ratings[scope.row.rating + 1].color"
-                                effect="dark">
-                            {{ config.ratings[scope.row.rating + 1].label }}
-                        </el-tag>
-                    </template>
-                </el-table-column>
-                <el-table-column label="席位">
-                    <template #default="scope">
-                        <el-tag class="border-none"
-                                :color="config.facilities[scope.row.facility]"
-                                effect="dark">
-                            {{ serverConfigStore.facilities[scope.row.facility].short_name }}
-                        </el-tag>
-                    </template>
-                </el-table-column>
-                <el-table-column label="频率">
-                    <template #default="scope">
-                        {{ (scope.row.frequency / 1000).toFixed(3) }}
-                    </template>
-                </el-table-column>
-            </el-table>
-        </div>
+        <Transition name="online">
+            <div class="left-box" v-if="showDetailList">
+                <el-table :data="onlineData.pilots" height="100%" class="data-table">
+                    <el-table-column label="呼号" prop="callsign"/>
+                    <el-table-column label="CID">
+                        <template #default="scope">
+                            {{ formatCid(scope.row.cid) }}
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="地速">
+                        <template #default="scope">
+                            {{ scope.row.ground_speed }} kt
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="高度">
+                        <template #default="scope">
+                            {{ scope.row.altitude }} ft
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="应答机" prop="transponder"/>
+                </el-table>
+            </div>
+        </Transition>
+        <Transition name="online">
+            <div class="right-box" v-if="showDetailList">
+                <el-table :data="onlineData.controllers" height="100%" class="data-table">
+                    <el-table-column label="呼号" prop="callsign"/>
+                    <el-table-column label="CID">
+                        <template #default="scope">
+                            {{ formatCid(scope.row.cid) }}
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="登录权限">
+                        <template #default="scope">
+                            <el-tag class="border-none"
+                                    :color="config.ratings[scope.row.rating + 1].color"
+                                    effect="dark">
+                                {{ config.ratings[scope.row.rating + 1].label }}
+                            </el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="席位">
+                        <template #default="scope">
+                            <el-tag class="border-none"
+                                    :color="config.facilities[scope.row.facility]"
+                                    effect="dark">
+                                {{ serverConfigStore.facilities[scope.row.facility].short_name }}
+                            </el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="频率">
+                        <template #default="scope">
+                            {{ (scope.row.frequency / 1000).toFixed(3) }}
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+        </Transition>
     </div>
 </template>
 
 <style scoped>
+.online-enter-from,
+.online-leave-to {
+    opacity: 0;
+    transform: translateY(-100px);
+}
+
+.online-enter-active,
+.online-leave-active {
+    transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+}
+
+.online-enter-to,
+.online-leave-from {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 .left-box,
 .right-box,
 .data-table {
