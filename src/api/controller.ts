@@ -65,7 +65,7 @@ export namespace ApiController {
     export const confirmControllerApplication = async (id: number, data: string[]): Promise<boolean> => {
         const response = await request.put(`/controllers/applications/${id}`, {
             status: ApplicationStatus.Processing,
-            time: data
+            times: data
         }) as AxiosXHR<boolean>;
         return response.status == 200 && response.data;
     }

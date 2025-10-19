@@ -1,6 +1,6 @@
 export const Global = {
-    version: "0.8.5",
-    whatsNew: "<p>1、优化界面显示效果</p><p>2、添加活动登记</p>",
+    version: "0.8.8",
+    whatsNew: "<p>1、修复活动机组报名成功之后框不会消失</p><p>2、修复计划航路无法输入空格</p>",
     controllerRecordTypes: [
         {
             label: "面试",

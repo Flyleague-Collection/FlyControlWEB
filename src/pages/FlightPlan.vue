@@ -6,7 +6,7 @@ import {cloneDeep, join} from "lodash";
 import {padStart} from "lodash-es";
 import moment from "moment";
 import {onMounted, Ref, ref} from "vue";
-import {refManualReset, useClipboard, useStorage} from "@vueuse/core";
+import {useClipboard, useStorage} from "@vueuse/core";
 import {useRoute} from "vue-router";
 
 import ApiFlightPlan from "@/api/flightplan.js";
@@ -14,11 +14,14 @@ import type {ConfirmDialogInstance} from "@/components/dialog/ConfirmDialog.js";
 import ConfirmDialog from "@/components/dialog/ConfirmDialog.vue";
 import type {FormDialogInstance} from "@/components/dialog/FormDialog.js";
 import FormDialog from "@/components/dialog/FormDialog.vue";
+import {useActivityStore} from "@/store/activity.js";
 import {showError, showSuccess, showWarning} from "@/utils/message.js";
 
 import AxiosXHR = Axios.AxiosXHR;
 
 const route = useRoute();
+
+const activityStore = useActivityStore();
 
 const flightRule = [{label: 'IFR(仪表飞行)', value: 'I'}, {label: 'VFR(目视飞行)', value: 'F'}]
 const wakeCategory = [
@@ -125,7 +128,7 @@ const defaultFlightPlanData = {
     voice: "/V/"
 }
 
-const flightPlanFormData = refManualReset<FlightPlanData>(defaultFlightPlanData);
+const flightPlanFormData = ref<FlightPlanData>(defaultFlightPlanData);
 
 const flightPlanFormRule: Ref<FormRules<FlightPlanData>> = ref({
     callsign: [
@@ -521,7 +524,7 @@ const confirmDeleteFlightPlanRef: Ref<ConfirmDialogInstance> = ref();
 const deleteFlightPlan = async () => {
     if (await ApiFlightPlan.deleteSelfFlightPlan()) {
         showSuccess("删除计划成功");
-        flightPlanFormData.reset();
+        flightPlanFormData.value = cloneDeep(defaultFlightPlanData);
         return;
     }
 }
@@ -563,8 +566,8 @@ onMounted(async () => {
         }
         flightPlanFormData.value.flight_rule = 'I';
         flightPlanFormData.value.voice = '/V/';
-        flightPlanFormData.value.departure = data[0];
-        flightPlanFormData.value.arrival = data[1];
+        flightPlanFormData.value.departure = data[0].split(" ")[0];
+        flightPlanFormData.value.arrival = data[1].split(" ")[0];
         flightPlanFormData.value.route = data[2];
         if (data.length >= 4) {
             flightPlanFormData.value.callsign = data[3];
@@ -584,6 +587,21 @@ onMounted(async () => {
     }
     flightPlanFormData.value = fromFlightPlanModel(data);
 })
+
+const handleDepartureSelect = (airport: Airport) => {
+    flightPlanFormData.value.departure = airport.icao;
+    flightPlanFormRef.value.clearValidate();
+}
+
+const handleArrivalSelect = (airport: Airport) => {
+    flightPlanFormData.value.arrival = airport.icao;
+    flightPlanFormRef.value.clearValidate();
+}
+
+const handleAlternateSelect = (airport: Airport) => {
+    flightPlanFormData.value.alternate = airport.icao;
+    flightPlanFormRef.value.clearValidate();
+}
 </script>
 
 <template>
@@ -667,7 +685,10 @@ onMounted(async () => {
                     <el-col :span="24" :md="12" :lg="6">
                         <el-form-item label="离场机场(ICAO)" prop="departure">
                             <el-tooltip content="请输入离场机场ICAO码" placement="top">
-                                <el-input v-model="flightPlanFormData.departure" placeholder="ZSSS"/>
+                                <el-autocomplete v-model="flightPlanFormData.departure" placeholder="ZSSS"
+                                                 :fetch-suggestions="activityStore.queryAirports"
+                                                 @select="airport => handleDepartureSelect(airport)"
+                                                 clearable/>
                             </el-tooltip>
                         </el-form-item>
                     </el-col>
@@ -699,6 +720,10 @@ onMounted(async () => {
                     <el-col :span="24" :md="12" :lg="6">
                         <el-form-item label="到达机场(ICAO)" prop="arrival">
                             <el-tooltip content="请输入到达机场ICAO码" placement="top">
+                                <el-autocomplete v-model="flightPlanFormData.arrival" placeholder="ZGHA"
+                                                 :fetch-suggestions="activityStore.queryAirports"
+                                                 @select="airport => handleArrivalSelect(airport)"
+                                                 clearable/>
                                 <el-input v-model="flightPlanFormData.arrival" placeholder="ZGHA"/>
                             </el-tooltip>
                         </el-form-item>
@@ -706,7 +731,10 @@ onMounted(async () => {
                     <el-col :span="24" :md="12" :lg="6">
                         <el-form-item label="备降机场(ICAO)">
                             <el-tooltip content="请输入备降机场ICAO码" placement="top">
-                                <el-input v-model="flightPlanFormData.alternate" placeholder="ZHHH"/>
+                                <el-autocomplete v-model="flightPlanFormData.alternate" placeholder="ZHHH"
+                                                 :fetch-suggestions="activityStore.queryAirports"
+                                                 @select="airport => handleAlternateSelect(airport)"
+                                                 clearable/>
                             </el-tooltip>
                         </el-form-item>
                     </el-col>
@@ -732,10 +760,8 @@ onMounted(async () => {
                 <el-row :gutter="10">
                     <el-col :span="24">
                         <el-form-item label="航路" prop="route">
-                            <el-tooltip content="请输入航路" placement="top">
-                                <el-input v-model="flightPlanFormData.route" type="textarea"
-                                          :autosize="{minRows: 6, maxRows: 12}"/>
-                            </el-tooltip>
+                            <el-input v-model="flightPlanFormData.route" type="textarea"
+                                      :autosize="{minRows: 6, maxRows: 12}"/>
                         </el-form-item>
                     </el-col>
                 </el-row>

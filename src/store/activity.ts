@@ -8,7 +8,7 @@ export const useActivityStore = defineStore("activity", () => {
     const airportsName = ref<Airports>(airports);
     const facilitiesName = ref<Facilities>(facilities);
 
-    const querySearch = (queryString: string, cb: Callback1<Airport[]>) => {
+    const queryAirports = (queryString: string, cb: Callback1<Airport[]>) => {
         if (queryString == "") {
             cb(airportsName.value);
         }
@@ -35,7 +35,7 @@ export const useActivityStore = defineStore("activity", () => {
     }
 
     return {
-        querySearch,
+        queryAirports,
         queryFacilities,
         translateActivityData
     }

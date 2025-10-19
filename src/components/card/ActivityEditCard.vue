@@ -184,6 +184,14 @@ const loadDraft = () => {
     drafts.value = null;
 }
 
+const handleDepartureSelect = (value: Airport) => {
+    model.value.departure_airport = value.value;
+}
+
+const handleArrivalSelect = (value: Airport) => {
+    model.value.arrival_airport = value.value;
+}
+
 const handleFacilitySelect = (index: number, value: Facility) => {
     const target = model.value.facilities[index];
     target.callsign = value.callsign;
@@ -222,11 +230,13 @@ onMounted(() => {
                     <ImageUpload v-model="model.image_url" ref="imageUploadRef"/>
                 </el-form-item>
                 <el-form-item label="出发机场" prop="departure_airport">
-                    <el-autocomplete v-model="model.departure_airport" :fetch-suggestions="activityStore.querySearch"
+                    <el-autocomplete v-model="model.departure_airport" :fetch-suggestions="activityStore.queryAirports"
+                                     @select="airport => handleDepartureSelect(airport)"
                                      clearable/>
                 </el-form-item>
                 <el-form-item label="到达机场" prop="arrival_airport">
-                    <el-autocomplete v-model="model.arrival_airport" :fetch-suggestions="activityStore.querySearch"
+                    <el-autocomplete v-model="model.arrival_airport" :fetch-suggestions="activityStore.queryAirports"
+                                     @select="airport => handleArrivalSelect(airport)"
                                      clearable/>
                 </el-form-item>
                 <el-form-item label="航路" prop="route">

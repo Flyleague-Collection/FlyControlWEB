@@ -407,7 +407,7 @@ const drawLine = async (callsign: string) => {
         lineFeature = null;
     }
 
-    const pointsData = ApiClient.getClientFlightPath(callsign);
+    const pointsData = await ApiClient.getClientFlightPath(callsign);
     if (pointsData == null) {
         showError("获取飞行路径失败")
         return;
@@ -513,6 +513,8 @@ const showPopup = (feature: Feature, coordinate: number[]) => {
             <p>出发机场: ${flightPlan.departure}</p>
             <p>到达机场: ${flightPlan.arrival}</p>
             `;
+        } else {
+            content += `<p>无飞行计划</p>`
         }
         popupContent.value = content;
     } else {

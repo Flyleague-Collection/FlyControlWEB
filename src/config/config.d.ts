@@ -25,7 +25,8 @@ type Config = {
 }
 
 type Airport = {
-    value: string
+    icao: string;
+    value: string;
 }
 
 type Airports = Airport[]

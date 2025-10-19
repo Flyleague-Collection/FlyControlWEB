@@ -144,6 +144,7 @@ const {less900px, less500px, less400px} = useReactiveWidth();
                         <span>{{ formatCid(scope.row.cid) }}</span>
                         <el-space wrap v-if="less400px">
                             <el-button :icon="EditPen" type="primary"
+                                       :disabled="!hasAnyEditPermission"
                                        size="small" @click="showEditRatingDialog(scope.row.id)">
                                 编辑
                             </el-button>
@@ -170,7 +171,9 @@ const {less900px, less500px, less400px} = useReactiveWidth();
             </el-table-column>
             <el-table-column label="操作" v-if="!less400px">
                 <template #default="scope">
-                    <el-button :icon="EditPen" type="primary" @click="showEditRatingDialog(scope.row.id)">
+                    <el-button :icon="EditPen" type="primary"
+                               :disabled="!hasAnyEditPermission"
+                               @click="showEditRatingDialog(scope.row.id)">
                         编辑
                     </el-button>
                 </template>
@@ -256,7 +259,7 @@ const {less900px, less500px, less400px} = useReactiveWidth();
             </el-form-item>
             <el-form-item label="UM权限" v-if="!userInfo.guest">
                 <el-switch v-model="userInfo.under_monitor"
-                           :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ControllerChangeSolo)"/>
+                           :disabled="!userStore.permission.hasPermissionNode(PermissionNode.ControllerChangeUnderMonitor)"/>
             </el-form-item>
             <el-form-item label="Solo权限" v-if="!userInfo.guest">
                 <el-switch v-model="userInfo.under_solo"

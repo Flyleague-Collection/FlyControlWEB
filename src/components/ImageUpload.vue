@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {Delete, Plus, ZoomIn} from "@element-plus/icons-vue";
-import {onBeforeUpdate, onMounted, onUpdated, ref} from "vue";
+import {onBeforeUpdate, ref} from "vue";
 import {genFileId, UploadFile, UploadInstance, UploadRawFile, UploadUserFile} from "element-plus";
 import {showError} from "@/utils/message.js";
 import {handleImageUrl, sizeToString} from "@/utils/utils.js";

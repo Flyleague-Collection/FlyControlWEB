@@ -87,6 +87,7 @@ const submitPilotSign = async () => {
     if (await ApiActivity.pilotSign(activity.value.id, pilotSignFormData.value.callsign, pilotSignFormData.value.aircraft_type)) {
         showSuccess("报名成功, 祝联飞顺利");
         await getActivityInfo();
+        pilotSignFormDialogRef.value?.hide();
     }
     pilotSignLoading.value = false;
 }

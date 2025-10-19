@@ -40,11 +40,14 @@ const handleLogin = async () => {
         return;
     }
     loading.value = true;
-    if (await userStore.login(loginForm.username, loginForm.password)) {
-        showInfo(`欢迎登录, ${loginForm.username}, 祝连飞顺利`);
-        await router.push(redirectPath.value as string);
+    try {
+        if (await userStore.login(loginForm.username, loginForm.password)) {
+            showInfo(`欢迎登录, ${loginForm.username}, 祝连飞顺利`);
+            await router.push(redirectPath.value as string);
+        }
+    } finally {
+        loading.value = false;
     }
-    loading.value = false;
 }
 
 onBeforeMount(async () => {

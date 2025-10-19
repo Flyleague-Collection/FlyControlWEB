@@ -13,6 +13,7 @@ import {getAnnouncementTypeColor, getAnnouncementTypeLabel} from "@/global.js";
 import DOMPurify from "dompurify";
 import {marked} from "marked";
 import ApiClient from "@/api/client.js";
+import {useReactiveWidth} from "@/composables/useReactiveWidth.js";
 
 const userStore = useUserStore();
 const totalUser = ref(0);
@@ -118,6 +119,8 @@ onMounted(async () => {
         announcementDialogShow.value = true;
     }, 100)
 })
+
+const {less800px, less400px} = useReactiveWidth();
 </script>
 
 <template>
@@ -173,14 +176,17 @@ onMounted(async () => {
                         <div v-for="(item, index) in data" :key="index" class="announcement"
                              :class="{'announcement-item': index != data.length - 1}"
                              @click.prevent="showAnnouncementDialog(index)">
-                            <span style="font-size: .8em">{{ moment(item.created_at).format("YYYY-MM-DD") }}</span>
-                            <el-space>
-                                <el-tag type="warning" effect="dark" v-if="item.important" size="small">
-                                    重要
-                                </el-tag>
-                                <el-tag :color="getAnnouncementTypeColor(item.type)" effect="dark" size="small">
-                                    {{ getAnnouncementTypeLabel(item.type) }}
-                                </el-tag>
+                            <span style="font-size: .8em"
+                                  class="margin-bottom-10">{{ moment(item.created_at).format("YYYY-MM-DD") }}</span>
+                            <el-space class="justify-content-flex-start" fill>
+                                <el-space class="w-full">
+                                    <el-tag type="warning" effect="dark" v-if="item.important" size="small">
+                                        重要
+                                    </el-tag>
+                                    <el-tag :color="getAnnouncementTypeColor(item.type)" effect="dark" size="small">
+                                        {{ getAnnouncementTypeLabel(item.type) }}
+                                    </el-tag>
+                                </el-space>
                                 <span>{{ item.title }}</span>
                             </el-space>
                         </div>
@@ -239,26 +245,29 @@ onMounted(async () => {
             </el-col>
         </el-row>
     </div>
-    <el-dialog v-model="announcementDialogShow" footer-class="flex justify-content-flex-end" style="max-width: 600px;"
+    <el-dialog v-model="announcementDialogShow" footer-class="flex justify-content-flex-end"
+               :width="less800px ? '100%' : ''"
                @close="closeAnnouncementDialog()">
         <template #title>
             <el-space fill wrap class="w-full">
-                <el-space wrap>
+                <el-space wrap fill>
                     <span style="font-size: 1.25rem">{{ targetAnnouncement.title }}</span>
-                    <el-tag type="warning" effect="dark" v-if="targetAnnouncement.important" size="small">
-                        重要
-                    </el-tag>
-                    <el-tag :color="getAnnouncementTypeColor(targetAnnouncement.type)" effect="dark" size="small">
-                        {{ getAnnouncementTypeLabel(targetAnnouncement.type) }}
-                    </el-tag>
+                    <el-space>
+                        <el-tag type="warning" effect="dark" v-if="targetAnnouncement.important" size="small">
+                            重要
+                        </el-tag>
+                        <el-tag :color="getAnnouncementTypeColor(targetAnnouncement.type)" effect="dark" size="small">
+                            {{ getAnnouncementTypeLabel(targetAnnouncement.type) }}
+                        </el-tag>
+                    </el-space>
                 </el-space>
-                <el-space>
-                <span style="font-size: .8em">
-                    发布时间：{{ moment(targetAnnouncement.created_at).format("YYYY-MM-DD") }}
-                </span>
+                <el-space :fill="less400px">
                     <span style="font-size: .8em">
-                    更新时间：{{ moment(targetAnnouncement.updated_at).format("YYYY-MM-DD") }}
-                </span>
+                        发布时间：{{ moment(targetAnnouncement.created_at).format("YYYY-MM-DD") }}
+                    </span>
+                    <span style="font-size: .8em">
+                        更新时间：{{ moment(targetAnnouncement.updated_at).format("YYYY-MM-DD") }}
+                    </span>
                 </el-space>
             </el-space>
         </template>
@@ -287,6 +296,13 @@ onMounted(async () => {
     .pagination {
         grid-template-columns: 1fr;
         grid-template-rows: 1fr 1fr;
+    }
+}
+
+@media (max-width: 550px) {
+    .pagination {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr;
     }
 }
 

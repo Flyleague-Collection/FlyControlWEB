@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import Header from "@/components/Header.vue";
 import Footer from "@/components/Footer.vue";
+import {useReactiveWidth} from "@/composables/useReactiveWidth.js";
+
+const {less800px} = useReactiveWidth();
 </script>
 
 <template>
@@ -10,8 +13,9 @@ import Footer from "@/components/Footer.vue";
         </el-header>
         <el-main class="main">
             <router-view></router-view>
+            <Footer v-if="less800px"/>
         </el-main>
-        <el-footer class="flex align-items-center">
+        <el-footer class="flex align-items-center" v-if="!less800px">
             <Footer/>
         </el-footer>
     </el-container>
@@ -19,6 +23,7 @@ import Footer from "@/components/Footer.vue";
 
 <style scoped>
 .el-container {
+    align-items: center;
     transition: background-color 0.5s ease-in-out;
     background: rgba(255, 255, 255, 0.8) url("/images/background.png") no-repeat center center;
     background-size: cover;
@@ -26,6 +31,7 @@ import Footer from "@/components/Footer.vue";
 }
 
 .dark .el-container {
+    align-items: center;
     background: rgba(0, 0, 0, 0.8) url("/images/background.png") no-repeat center center;
     background-size: cover;
     background-blend-mode: overlay;
@@ -47,5 +53,6 @@ import Footer from "@/components/Footer.vue";
     flex-grow: 1;
     display: flex;
     width: 100%;
+    flex-direction: column;
 }
 </style>

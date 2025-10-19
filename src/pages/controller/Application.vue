@@ -85,9 +85,6 @@ const applicationFormRule: Ref<FormRules> = ref({
     ],
     platform: [
         {required: true, message: "此条目不能为空", trigger: "blur"}
-    ],
-    evidence: [
-        {required: true, message: "此条目不能为空", trigger: "blur"}
     ]
 });
 const imageUploadRef: Ref<ImageUploadInterface> = ref();
@@ -101,15 +98,19 @@ const submitControllerApplication = async () => {
         submitApplicationLoading.value = false;
         return;
     }
-    if (applicationFormData.value.is_guest && imageUploadRef.value?.hasImageSelected()) {
-        if (await imageUploadRef.value?.upload() == null) {
+    if (applicationFormData.value.is_guest) {
+        if (imageUploadRef.value?.hasImageSelected()) {
+            const imageUrl = await imageUploadRef.value?.upload();
+            if (imageUrl == null) {
+                submitApplicationLoading.value = false;
+                return;
+            }
+            applicationFormData.value.evidence = imageUrl;
+        } else {
+            showError("缺少佐证材料");
             submitApplicationLoading.value = false;
             return;
         }
-    } else {
-        showError("客座申请提交失败, 请重试");
-        submitApplicationLoading.value = false;
-        return;
     }
     if (await ApiController.submitApplication(applicationFormData.value)) {
         showSuccess("提交管制员申请成功");
@@ -206,7 +207,7 @@ const {less400px} = useReactiveWidth();
                     <p>只能上传一张图片, 请上传最明确的材料</p>
                     <p>比如说包含对应客座平台名字的权限公示表</p>
                 </el-alert>
-                <el-form-item label="佐证材料" label-position="left" prop="evidence">
+                <el-form-item label="佐证材料" label-position="left" required>
                     <ImageUpload ref="imageUploadRef" v-model="applicationFormData.evidence"/>
                 </el-form-item>
             </el-space>

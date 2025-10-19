@@ -11,7 +11,7 @@ const stateStore = useStateStore();
 const userStore = useUserStore();
 const router = useRouter();
 
-const mql = window.matchMedia("(max-width: 750px)");
+const mql = window.matchMedia("(max-width: 850px)");
 
 const menuEllipsis = ref(false);
 
@@ -20,7 +20,7 @@ mql.onchange = (e) => {
 }
 
 onMounted(() => {
-    menuEllipsis.value = window.innerWidth <= 750;
+    menuEllipsis.value = window.innerWidth <= 850;
 })
 </script>
 
@@ -96,10 +96,10 @@ onMounted(() => {
                 <el-menu-item class="no-hover">
                     <PersonCard :expend="false" style="cursor: pointer;" v-if="userStore.isLogin"
                                 @click.stop.prevent="router.push('/profile')"/>
-                    <div class="flex" v-else>
+                    <el-space>
                         <el-button type="primary" @click="router.push('/register')">注册</el-button>
                         <el-button type="success" @click="router.push('/login')">登录</el-button>
-                    </div>
+                    </el-space>
                 </el-menu-item>
             </el-space>
         </el-menu>

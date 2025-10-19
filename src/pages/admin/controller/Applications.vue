@@ -118,8 +118,7 @@ const submitApplicationRefuseForm = async () => {
         showError("无效的申请ID");
         return;
     }
-    applicationProcessorFormData.value.times = timePointsInputRef.value?.getTimePoints();
-    if (await ApiController.refuseControllerApplication(targetApplicationId.value, applicationAgreeFormData.value.message)) {
+    if (await ApiController.refuseControllerApplication(targetApplicationId.value, applicationRefuseFormData.value.message)) {
         showSuccess("拒绝申请成功");
         applicationRefuseDialogRef.value?.hide();
         applicationRefuseFormData.value.message = "";

@@ -112,6 +112,13 @@ const router = useRouter();
         align-items: center;
         justify-content: center;
 
+        .images {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
         .images a {
             margin: 0 10px;
         }
@@ -126,5 +133,15 @@ const router = useRouter();
 a {
     text-decoration: none;
     color: inherit;
+}
+
+@media (max-width: 768px) {
+    .container {
+        text-align: center;
+
+        div {
+            margin: 15px 0;
+        }
+    }
 }
 </style>
